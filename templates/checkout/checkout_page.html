@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ checkout_page.title }} - Checkout</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: {{ checkout_page.primary_color }};
+            --secondary-color: {{ checkout_page.secondary_color }};
+            --background-color: {{ checkout_page.background_color }};
+        }
+        
+        .primary-bg { background-color: var(--primary-color); }
+        .secondary-bg { background-color: var(--secondary-color); }
+        .primary-text { color: var(--primary-color); }
+        .secondary-text { color: var(--secondary-color); }
+        .primary-border { border-color: var(--primary-color); }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .checkout-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .payment-method-card {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .payment-method-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .payment-method-card.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-input {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .card-input:focus {
+            background: white;
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body style="background-color: var(--background-color); min-height: 100vh;">
+    <!-- Header -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    {% if checkout_page.logo %}
+                        <img src="{{ checkout_page.logo.url }}" alt="{{ merchant.business_name }}" class="h-8 w-auto mr-3">
+                    {% endif %}
+                    <span class="text-white font-bold text-xl">{{ merchant.business_name }}</span>
+                </div>
+                <div class="text-white text-sm">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Secure Checkout
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="min-h-screen gradient-bg py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Checkout Card -->
+            <div class="checkout-card rounded-3xl shadow-2xl border border-white/30 overflow-hidden animate-fade-in">
+                <!-- Header -->
+                <div class="primary-bg p-6 text-white text-center">
+                    <h1 class="text-2xl font-bold">{{ checkout_page.title }}</h1>
+                    {% if checkout_page.description %}
+                        <p class="mt-2 text-white/80">{{ checkout_page.description }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Checkout Form -->
+                <div class="p-8">
+                    <form id="checkoutForm" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Amount Section (if custom amounts allowed) -->
+                        {% if checkout_page.allow_custom_amount %}
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Amount</h3>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">
+                                    {{ checkout_page.currency.symbol }}
+                                </span>
+                                <input 
+                                    type="number" 
+                                    id="amount" 
+                                    name="amount"
+                                    min="{{ checkout_page.min_amount }}"
+                                    max="{{ checkout_page.max_amount }}"
+                                    step="0.01"
+                                    class="form-input block w-full pl-8 pr-3 py-4 border border-gray-300 rounded-xl text-xl font-semibold"
+                                    placeholder="0.00"
+                                    required
+                                />
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">
+                                Amount must be between {{ checkout_page.currency.symbol }}{{ checkout_page.min_amount }} and {{ checkout_page.currency.symbol }}{{ checkout_page.max_amount }}
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Customer Information -->
+                        {% if checkout_page.require_customer_info %}
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="customerEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Email Address *
+                                    </label>
+                                    <input 
+                                        type="email" 
+                                        id="customerEmail" 
+                                        name="customer_email"
+                                        class="form-input block w-full px-3 py-3 border border-gray-300 rounded-lg"
+                                        placeholder="your.email@example.com"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Full Name *
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="customerName" 
+                                        name="customer_name"
+                                        class="form-input block w-full px-3 py-3 border border-gray-300 rounded-lg"
+                                        placeholder="John Doe"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label for="customerPhone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number (Optional)
+                                </label>
+                                <input 
+                                    type="tel" 
+                                    id="customerPhone" 
+                                    name="customer_phone"
+                                    class="form-input block w-full px-3 py-3 border border-gray-300 rounded-lg"
+                                    placeholder="+1 (555) 123-4567"
+                                />
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Payment Methods -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment Method</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                                {% for method in payment_methods %}
+                                <label class="payment-method-option cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="payment_method" 
+                                        value="{{ method.payment_method }}"
+                                        class="sr-only"
+                                        {% if forloop.first %}checked{% endif %}
+                                    />
+                                    <div class="payment-method-card rounded-lg p-4 text-center">
+                                        {% if method.payment_method == 'visa' %}
+                                            <img src="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/flags/4x3/us.svg" alt="Visa" class="w-8 h-6 mx-auto mb-2 rounded">
+                                            <i class="fab fa-cc-visa text-2xl text-blue-600 mb-2"></i>
+                                        {% elif method.payment_method == 'mastercard' %}
+                                            <i class="fab fa-cc-mastercard text-2xl text-red-600 mb-2"></i>
+                                        {% elif method.payment_method == 'amex' %}
+                                            <i class="fab fa-cc-amex text-2xl text-green-600 mb-2"></i>
+                                        {% elif method.payment_method == 'discover' %}
+                                            <i class="fab fa-cc-discover text-2xl text-orange-600 mb-2"></i>
+                                        {% elif method.payment_method == 'paypal' %}
+                                            <i class="fab fa-paypal text-2xl text-blue-500 mb-2"></i>
+                                        {% elif method.payment_method == 'apple_pay' %}
+                                            <i class="fab fa-apple-pay text-2xl text-gray-800 mb-2"></i>
+                                        {% elif method.payment_method == 'google_pay' %}
+                                            <i class="fab fa-google-pay text-2xl text-blue-500 mb-2"></i>
+                                        {% elif method.payment_method == 'bank_transfer' %}
+                                            <i class="fas fa-university text-2xl text-gray-600 mb-2"></i>
+                                        {% elif method.payment_method == 'crypto' %}
+                                            <i class="fab fa-bitcoin text-2xl text-yellow-500 mb-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-credit-card text-2xl text-gray-600 mb-2"></i>
+                                        {% endif %}
+                                        <div class="text-xs font-medium text-gray-800">
+                                            {{ method.get_display_name }}
+                                        </div>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Card Details (shown when card payment is selected) -->
+                            <div id="cardDetails" class="space-y-4">
+                                <h4 class="text-md font-semibold text-gray-800">Card Details</h4>
+                                <div>
+                                    <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Card Number
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        id="cardNumber" 
+                                        name="card_number"
+                                        class="card-input w-full"
+                                        placeholder="1234 5678 9012 3456"
+                                        maxlength="19"
+                                    />
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="cardExpiry" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Expiry Date
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            id="cardExpiry" 
+                                            name="card_expiry"
+                                            class="card-input w-full"
+                                            placeholder="MM/YY"
+                                            maxlength="5"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label for="cardCvv" class="block text-sm font-medium text-gray-700 mb-2">
+                                            CVV
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            id="cardCvv" 
+                                            name="card_cvv"
+                                            class="card-input w-full"
+                                            placeholder="123"
+                                            maxlength="4"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label for="cardName" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Cardholder Name
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            id="cardName" 
+                                            name="card_holder_name"
+                                            class="card-input w-full"
+                                            placeholder="John Doe"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Alternative Payment Details -->
+                            <div id="alternativePaymentDetails" class="hidden space-y-4">
+                                <div class="text-center p-8 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                                    <i class="fas fa-arrow-right text-3xl text-gray-400 mb-4"></i>
+                                    <p class="text-gray-600">Click "Pay Now" to continue with your selected payment method</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Subtotal:</span>
+                                    <span id="subtotalAmount" class="font-semibold">{{ checkout_page.currency.symbol }}0.00</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Processing Fee:</span>
+                                    <span id="processingFee" class="font-semibold">{{ checkout_page.currency.symbol }}0.00</span>
+                                </div>
+                                <hr class="my-3">
+                                <div class="flex justify-between text-lg font-bold">
+                                    <span>Total:</span>
+                                    <span id="totalAmount" class="primary-text">{{ checkout_page.currency.symbol }}0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit" 
+                            id="payButton"
+                            class="btn-primary w-full py-4 px-6 text-white font-bold rounded-xl text-lg shadow-lg"
+                        >
+                            <span id="payButtonText" class="flex items-center justify-center">
+                                <i class="fas fa-lock mr-3"></i>
+                                Pay Now
+                            </span>
+                            <span id="payButtonSpinner" class="hidden flex items-center justify-center">
+                                <i class="fas fa-spinner spinner mr-3"></i>
+                                Processing...
+                            </span>
+                        </button>
+                        
+                        <!-- Security Notice -->
+                        <div class="text-center">
+                            <div class="flex items-center justify-center text-sm text-gray-500">
+                                <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+                                <span>Secured by PexiLabs SSL Encryption</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Your payment information is encrypted and secure
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Powered by PexiLabs -->
+            <div class="text-center mt-8">
+                <p class="text-white/60 text-sm">
+                    Powered by 
+                    <a href="/" class="text-white hover:text-white/80 font-medium transition-colors">
+                        PexiLabs
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize checkout page
+        const checkoutPage = {
+            slug: '{{ checkout_page.slug }}',
+            currency: {
+                code: '{{ checkout_page.currency.code }}',
+                symbol: '{{ checkout_page.currency.symbol }}'
+            },
+            minAmount: {{ checkout_page.min_amount }},
+            maxAmount: {{ checkout_page.max_amount }},
+            allowCustomAmount: {{ checkout_page.allow_custom_amount|yesno:"true,false" }}
+        };
+        
+        let currentSession = null;
+        
+        // Payment method selection
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Update UI for selected payment method
+                document.querySelectorAll('.payment-method-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                this.parentElement.querySelector('.payment-method-card').classList.add('selected');
+                
+                // Show/hide card details
+                const isCardMethod = ['visa', 'mastercard', 'amex', 'discover'].includes(this.value);
+                document.getElementById('cardDetails').style.display = isCardMethod ? 'block' : 'none';
+                document.getElementById('alternativePaymentDetails').style.display = isCardMethod ? 'none' : 'block';
+                
+                updatePayButton();
+            });
+        });
+        
+        // Initialize first payment method
+        document.querySelector('input[name="payment_method"]:checked').dispatchEvent(new Event('change'));
+        
+        // Amount input handling
+        const amountInput = document.getElementById('amount');
+        if (amountInput) {
+            amountInput.addEventListener('input', function() {
+                updateOrderSummary();
+            });
+            
+            // Set initial amount if not custom
+            if (!checkoutPage.allowCustomAmount) {
+                amountInput.value = checkoutPage.minAmount;
+                updateOrderSummary();
+            }
+        }
+        
+        // Card number formatting
+        const cardNumberInput = document.getElementById('cardNumber');
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+                e.target.value = formattedValue;
+            });
+        }
+        
+        // Card expiry formatting
+        const cardExpiryInput = document.getElementById('cardExpiry');
+        if (cardExpiryInput) {
+            cardExpiryInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+        }
+        
+        // CVV input
+        const cardCvvInput = document.getElementById('cardCvv');
+        if (cardCvvInput) {
+            cardCvvInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        }
+        
+        function updateOrderSummary() {
+            const amount = parseFloat(amountInput?.value || checkoutPage.minAmount || 0);
+            const processingFee = amount * 0.029 + 0.30; // 2.9% + $0.30
+            const total = amount + processingFee;
+            
+            document.getElementById('subtotalAmount').textContent = 
+                checkoutPage.currency.symbol + amount.toFixed(2);
+            document.getElementById('processingFee').textContent = 
+                checkoutPage.currency.symbol + processingFee.toFixed(2);
+            document.getElementById('totalAmount').textContent = 
+                checkoutPage.currency.symbol + total.toFixed(2);
+        }
+        
+        function updatePayButton() {
+            const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+            const payButtonText = document.getElementById('payButtonText');
+            const amount = parseFloat(amountInput?.value || checkoutPage.minAmount || 0);
+            
+            if (selectedMethod) {
+                const methodName = selectedMethod.parentElement.querySelector('.payment-method-card div').textContent.trim();
+                payButtonText.innerHTML = `
+                    <i class="fas fa-lock mr-3"></i>
+                    Pay ${checkoutPage.currency.symbol}${amount.toFixed(2)} with ${methodName}
+                `;
+            }
+        }
+        
+        // Form submission
+        document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const payButton = document.getElementById('payButton');
+            const payButtonText = document.getElementById('payButtonText');
+            const payButtonSpinner = document.getElementById('payButtonSpinner');
+            
+            // Show loading state
+            payButton.disabled = true;
+            payButtonText.classList.add('hidden');
+            payButtonSpinner.classList.remove('hidden');
+            
+            try {
+                // First, create a checkout session
+                if (!currentSession) {
+                    const sessionData = {
+                        checkout_page_slug: checkoutPage.slug,
+                        customer_email: document.getElementById('customerEmail')?.value,
+                        customer_name: document.getElementById('customerName')?.value,
+                        customer_phone: document.getElementById('customerPhone')?.value,
+                    };
+                    
+                    if (checkoutPage.allowCustomAmount) {
+                        sessionData.amount = parseFloat(document.getElementById('amount').value);
+                    }
+                    
+                    const sessionResponse = await fetch('/checkout/api/sessions/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify(sessionData)
+                    });
+                    
+                    if (!sessionResponse.ok) {
+                        const error = await sessionResponse.json();
+                        throw new Error(error.detail || 'Failed to create checkout session');
+                    }
+                    
+                    currentSession = await sessionResponse.json();
+                }
+                
+                // Process payment
+                const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+                const paymentData = {
+                    session_token: currentSession.session_token,
+                    payment_method: selectedMethod
+                };
+                
+                // Add card details if card payment
+                if (['visa', 'mastercard', 'amex', 'discover'].includes(selectedMethod)) {
+                    paymentData.card_number = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                    paymentData.card_holder_name = document.getElementById('cardName').value;
+                    
+                    const expiry = document.getElementById('cardExpiry').value.split('/');
+                    paymentData.card_expiry_month = expiry[0];
+                    paymentData.card_expiry_year = expiry[1];
+                    paymentData.card_cvv = document.getElementById('cardCvv').value;
+                }
+                
+                const paymentResponse = await fetch('/checkout/api/process-payment/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                const result = await paymentResponse.json();
+                
+                if (paymentResponse.ok && result.success) {
+                    // Success - show success message or redirect
+                    showSuccessMessage(result);
+                    
+                    if (result.redirect_url) {
+                        setTimeout(() => {
+                            window.location.href = result.redirect_url;
+                        }, 2000);
+                    }
+                } else {
+                    throw new Error(result.message || 'Payment failed');
+                }
+                
+            } catch (error) {
+                showErrorMessage(error.message);
+            } finally {
+                // Reset loading state
+                payButton.disabled = false;
+                payButtonText.classList.remove('hidden');
+                payButtonSpinner.classList.add('hidden');
+            }
+        });
+        
+        function showSuccessMessage(result) {
+            const form = document.getElementById('checkoutForm');
+            form.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-check text-white text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Payment Successful!</h2>
+                    <p class="text-gray-600 mb-4">Your payment has been processed successfully.</p>
+                    <p class="text-sm text-gray-500">Reference: ${result.payment_reference}</p>
+                </div>
+            `;
+        }
+        
+        function showErrorMessage(message) {
+            // Create or update error alert
+            let errorAlert = document.getElementById('errorAlert');
+            if (!errorAlert) {
+                errorAlert = document.createElement('div');
+                errorAlert.id = 'errorAlert';
+                errorAlert.className = 'mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 animate-fade-in';
+                document.getElementById('checkoutForm').insertBefore(errorAlert, document.getElementById('checkoutForm').firstChild);
+            }
+            
+            errorAlert.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-3"></i>
+                    ${message}
+                </div>
+            `;
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (errorAlert.parentNode) {
+                    errorAlert.parentNode.removeChild(errorAlert);
+                }
+            }, 5000);
+        }
+        
+        // Initialize order summary
+        updateOrderSummary();
+        updatePayButton();
+    </script>
+</body>
+</html>

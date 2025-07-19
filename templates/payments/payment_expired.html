@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Link Expired - PexiLabs</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .payment-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .payment-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen payment-bg">
+    <!-- Header -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center text-white font-bold text-xl">
+                        <i class="fas fa-cube mr-2"></i>
+                        PexiLabs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <div class="payment-card rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
+                <div class="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-clock text-white text-2xl"></i>
+                </div>
+                
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Payment Link Expired</h2>
+                
+                <p class="text-gray-600 mb-6">
+                    This payment link has expired and is no longer valid.
+                </p>
+                
+                <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div class="text-sm text-gray-600">
+                        <p><strong>Payment For:</strong> {{ payment_link.title }}</p>
+                        <p><strong>Amount:</strong> {{ payment_link.currency.code }} {{ payment_link.amount }}</p>
+                        <p><strong>Merchant:</strong> {{ payment_link.merchant.business_name }}</p>
+                        {% if payment_link.expires_at %}
+                        <p><strong>Expired:</strong> {{ payment_link.expires_at|date:"M d, Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <p class="text-sm text-gray-500">
+                        Please contact the merchant to request a new payment link.
+                    </p>
+                    
+                    {% if payment_link.merchant.business_email %}
+                    <a href="mailto:{{ payment_link.merchant.business_email }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-envelope mr-2"></i>
+                        Contact Merchant
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/10 backdrop-blur-md border-t border-white/20 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white/60 text-sm">
+                <p>&copy; 2024 PexiLabs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

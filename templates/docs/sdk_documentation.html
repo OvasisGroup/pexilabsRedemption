@@ -1,0 +1,649 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}SDK Documentation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sdk-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .sdk-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .code-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.5rem;
+        position: relative;
+    }
+    
+    .code-block pre {
+        margin: 0;
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: #475569;
+        border: none;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+    
+    .copy-btn:hover {
+        background: #64748b;
+    }
+    
+    .language-tabs {
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 1rem;
+    }
+    
+    .language-tab {
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: none;
+        border: none;
+        color: #6b7280;
+    }
+    
+    .language-tab.active {
+        border-bottom-color: #3b82f6;
+        color: #3b82f6;
+    }
+    
+    .language-content {
+        display: none;
+    }
+    
+    .language-content.active {
+        display: block;
+    }
+    
+    .feature-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">SDK Documentation</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Official SDKs and libraries to integrate PexiLabs payment processing into your applications quickly and securely.
+        </p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold mb-4">Available SDKs</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="#javascript-sdk" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fab fa-js-square text-yellow-500 text-2xl mr-3"></i>
+                <div>
+                    <div class="font-semibold">JavaScript SDK</div>
+                    <div class="text-sm text-gray-600">For web applications</div>
+                </div>
+            </a>
+            <a href="#python-sdk" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fab fa-python text-blue-500 text-2xl mr-3"></i>
+                <div>
+                    <div class="font-semibold">Python SDK</div>
+                    <div class="text-sm text-gray-600">For Python applications</div>
+                </div>
+            </a>
+            <a href="#php-sdk" class="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fab fa-php text-purple-500 text-2xl mr-3"></i>
+                <div>
+                    <div class="font-semibold">PHP SDK</div>
+                    <div class="text-sm text-gray-600">For PHP applications</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- JavaScript SDK -->
+    <div id="javascript-sdk" class="sdk-card rounded-lg shadow-lg p-8 mb-8">
+        <div class="flex items-center mb-6">
+            <i class="fab fa-js-square text-yellow-500 text-3xl mr-4"></i>
+            <div>
+                <h2 class="text-2xl font-bold">JavaScript SDK</h2>
+                <p class="text-gray-600">Client-side JavaScript library for web applications</p>
+            </div>
+        </div>
+
+        <!-- Installation -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Installation</h3>
+            
+            <div class="language-tabs">
+                <button class="language-tab active" data-target="js-npm">NPM</button>
+                <button class="language-tab" data-target="js-yarn">Yarn</button>
+                <button class="language-tab" data-target="js-cdn">CDN</button>
+            </div>
+            
+            <div id="js-npm" class="language-content active">
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                    <pre><code>npm install @pexilabs/js-sdk</code></pre>
+                </div>
+            </div>
+            
+            <div id="js-yarn" class="language-content">
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                    <pre><code>yarn add @pexilabs/js-sdk</code></pre>
+                </div>
+            </div>
+            
+            <div id="js-cdn" class="language-content">
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                    <pre><code>&lt;script src="https://cdn.pexilabs.com/js-sdk/v1/pexilabs.min.js"&gt;&lt;/script&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basic Usage -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Basic Usage</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>// Initialize the SDK
+import PexiLabs from '@pexilabs/js-sdk';
+
+const pexilabs = new PexiLabs({
+    apiKey: 'your-public-api-key',
+    environment: 'sandbox' // or 'production'
+});
+
+// Create a payment
+const payment = await pexilabs.createPayment({
+    amount: 1000, // Amount in cents
+    currency: 'USD',
+    description: 'Payment for order #123'
+});
+
+// Redirect to payment page
+window.location.href = payment.checkout_url;</code></pre>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Features</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-start space-x-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Payment Processing</h4>
+                        <p class="text-gray-600 text-sm">Create and manage payments</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Payment Links</h4>
+                        <p class="text-gray-600 text-sm">Generate payment links</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-webhook"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Webhook Handling</h4>
+                        <p class="text-gray-600 text-sm">Process payment events</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold">Secure by Default</h4>
+                        <p class="text-gray-600 text-sm">Built-in security features</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Python SDK -->
+    <div id="python-sdk" class="sdk-card rounded-lg shadow-lg p-8 mb-8">
+        <div class="flex items-center mb-6">
+            <i class="fab fa-python text-blue-500 text-3xl mr-4"></i>
+            <div>
+                <h2 class="text-2xl font-bold">Python SDK</h2>
+                <p class="text-gray-600">Server-side Python library for backend applications</p>
+            </div>
+        </div>
+
+        <!-- Installation -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Installation</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>pip install pexilabs-python</code></pre>
+            </div>
+        </div>
+
+        <!-- Basic Usage -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Basic Usage</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>import pexilabs
+
+# Initialize the client
+client = pexilabs.Client(
+    api_key='your-secret-api-key',
+    environment='sandbox'  # or 'production'
+)
+
+# Create a payment
+payment = client.payments.create({
+    'amount': 1000,  # Amount in cents
+    'currency': 'USD',
+    'description': 'Payment for order #123',
+    'metadata': {
+        'order_id': '123'
+    }
+})
+
+print(f"Payment created: {payment.id}")
+print(f"Checkout URL: {payment.checkout_url}")
+
+# Handle webhook
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    payload = request.get_data()
+    sig_header = request.headers.get('Pexilabs-Signature')
+    
+    try:
+        event = pexilabs.Webhook.construct_event(
+            payload, sig_header, 'your-webhook-secret'
+        )
+        
+        if event.type == 'payment.completed':
+            payment = event.data.object
+            # Handle successful payment
+            print(f"Payment {payment.id} completed")
+            
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return '', 400
+        
+    return '', 200</code></pre>
+            </div>
+        </div>
+
+        <!-- Django Integration -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Django Integration</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code># settings.py
+PEXILABS_API_KEY = 'your-secret-api-key'
+PEXILABS_WEBHOOK_SECRET = 'your-webhook-secret'
+PEXILABS_ENVIRONMENT = 'sandbox'
+
+# views.py
+from django.shortcuts import render, redirect
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+import pexilabs
+from django.conf import settings
+
+client = pexilabs.Client(
+    api_key=settings.PEXILABS_API_KEY,
+    environment=settings.PEXILABS_ENVIRONMENT
+)
+
+def create_payment(request):
+    if request.method == 'POST':
+        payment = client.payments.create({
+            'amount': int(request.POST.get('amount', 0)) * 100,
+            'currency': 'USD',
+            'description': request.POST.get('description', ''),
+            'return_url': request.build_absolute_uri('/payment/success/'),
+            'cancel_url': request.build_absolute_uri('/payment/cancel/')
+        })
+        
+        return redirect(payment.checkout_url)
+    
+    return render(request, 'payment_form.html')
+
+@csrf_exempt
+def webhook_view(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_PEXILABS_SIGNATURE')
+    
+    try:
+        event = pexilabs.Webhook.construct_event(
+            payload, sig_header, settings.PEXILABS_WEBHOOK_SECRET
+        )
+        
+        # Handle the event
+        if event.type == 'payment.completed':
+            # Payment successful
+            pass
+        elif event.type == 'payment.failed':
+            # Payment failed
+            pass
+            
+    except Exception as e:
+        return HttpResponse(status=400)
+        
+    return HttpResponse(status=200)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHP SDK -->
+    <div id="php-sdk" class="sdk-card rounded-lg shadow-lg p-8 mb-8">
+        <div class="flex items-center mb-6">
+            <i class="fab fa-php text-purple-500 text-3xl mr-4"></i>
+            <div>
+                <h2 class="text-2xl font-bold">PHP SDK</h2>
+                <p class="text-gray-600">Server-side PHP library for web applications</p>
+            </div>
+        </div>
+
+        <!-- Installation -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Installation</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>composer require pexilabs/php-sdk</code></pre>
+            </div>
+        </div>
+
+        <!-- Basic Usage -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Basic Usage</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>&lt;?php
+require_once 'vendor/autoload.php';
+
+use PexiLabs\Client;
+
+// Initialize the client
+$client = new Client([
+    'api_key' => 'your-secret-api-key',
+    'environment' => 'sandbox' // or 'production'
+]);
+
+// Create a payment
+$payment = $client->payments->create([
+    'amount' => 1000, // Amount in cents
+    'currency' => 'USD',
+    'description' => 'Payment for order #123',
+    'metadata' => [
+        'order_id' => '123'
+    ]
+]);
+
+echo "Payment created: " . $payment->id;
+echo "Checkout URL: " . $payment->checkout_url;
+
+// Handle webhook
+$payload = file_get_contents('php://input');
+$sig_header = $_SERVER['HTTP_PEXILABS_SIGNATURE'] ?? '';
+
+try {
+    $event = \PexiLabs\Webhook::constructEvent(
+        $payload, $sig_header, 'your-webhook-secret'
+    );
+    
+    switch ($event->type) {
+        case 'payment.completed':
+            $payment = $event->data->object;
+            // Handle successful payment
+            error_log("Payment {$payment->id} completed");
+            break;
+        case 'payment.failed':
+            $payment = $event->data->object;
+            // Handle failed payment
+            error_log("Payment {$payment->id} failed");
+            break;
+    }
+    
+} catch (Exception $e) {
+    error_log("Webhook error: " . $e->getMessage());
+    http_response_code(400);
+    exit();
+}
+
+http_response_code(200);
+?&gt;</code></pre>
+            </div>
+        </div>
+
+        <!-- Laravel Integration -->
+        <div class="mb-6">
+            <h3 class="text-xl font-semibold mb-3">Laravel Integration</h3>
+            <div class="code-block">
+                <button class="copy-btn" onclick="copyToClipboard(this)">Copy</button>
+                <pre><code>// config/pexilabs.php
+return [
+    'api_key' => env('PEXILABS_API_KEY'),
+    'webhook_secret' => env('PEXILABS_WEBHOOK_SECRET'),
+    'environment' => env('PEXILABS_ENVIRONMENT', 'sandbox'),
+];
+
+// app/Http/Controllers/PaymentController.php
+&lt;?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use PexiLabs\Client;
+
+class PaymentController extends Controller
+{
+    private $client;
+    
+    public function __construct()
+    {
+        $this->client = new Client([
+            'api_key' => config('pexilabs.api_key'),
+            'environment' => config('pexilabs.environment')
+        ]);
+    }
+    
+    public function create(Request $request)
+    {
+        $payment = $this->client->payments->create([
+            'amount' => $request->amount * 100,
+            'currency' => 'USD',
+            'description' => $request->description,
+            'return_url' => route('payment.success'),
+            'cancel_url' => route('payment.cancel')
+        ]);
+        
+        return redirect($payment->checkout_url);
+    }
+    
+    public function webhook(Request $request)
+    {
+        $payload = $request->getContent();
+        $sigHeader = $request->header('Pexilabs-Signature');
+        
+        try {
+            $event = \PexiLabs\Webhook::constructEvent(
+                $payload, $sigHeader, config('pexilabs.webhook_secret')
+            );
+            
+            switch ($event->type) {
+                case 'payment.completed':
+                    // Handle successful payment
+                    break;
+                case 'payment.failed':
+                    // Handle failed payment
+                    break;
+            }
+            
+        } catch (\Exception $e) {
+            return response('', 400);
+        }
+        
+        return response('', 200);
+    }
+}
+?&gt;</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- SDK Comparison -->
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6">SDK Comparison</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feature</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">JavaScript</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Python</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PHP</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Payment Creation</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Webhook Handling</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Payment Links</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Transaction Management</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Refunds</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Support -->
+    <div class="bg-gray-50 rounded-lg p-8 text-center">
+        <h2 class="text-2xl font-bold mb-4">Need Help?</h2>
+        <p class="text-gray-600 mb-6">Our developer support team is here to help you integrate successfully.</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="mailto:developers@pexilabs.com" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <i class="fas fa-envelope mr-2"></i>
+                Email Support
+            </a>
+            <a href="#" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fab fa-github mr-2"></i>
+                GitHub Repository
+            </a>
+            <a href="#" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fab fa-discord mr-2"></i>
+                Discord Community
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Tab functionality
+    document.querySelectorAll('.language-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const container = this.closest('.mb-6');
+            
+            // Remove active class from all tabs and contents in this container
+            container.querySelectorAll('.language-tab').forEach(t => t.classList.remove('active'));
+            container.querySelectorAll('.language-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            this.classList.add('active');
+            container.querySelector(`#${targetId}`).classList.add('active');
+        });
+    });
+    
+    // Copy to clipboard functionality
+    function copyToClipboard(button) {
+        const codeBlock = button.nextElementSibling;
+        const code = codeBlock.textContent;
+        
+        navigator.clipboard.writeText(code).then(function() {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.style.background = '#10b981';
+            
+            setTimeout(function() {
+                button.textContent = originalText;
+                button.style.background = '#475569';
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

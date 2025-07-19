@@ -1,0 +1,6016 @@
+openapi: 3.0.3
+info:
+  title: PexiLabs API
+  version: 1.0.0
+  description: Comprehensive API for user authentication, merchant onboarding, and
+    OTP verification system
+  contact:
+    name: PexiLabs Development Team
+    email: dev@pexilabs.com
+  license:
+    name: MIT License
+paths:
+  /api/auth/app-keys/:
+    get:
+      operationId: auth_app_keys_retrieve
+      description: Get a list of API keys for a specific partner or all partners.
+      summary: List app keys
+      parameters:
+      - in: query
+        name: key_type
+        schema:
+          type: string
+        description: Filter by key type
+      - in: query
+        name: partner
+        schema:
+          type: string
+          format: uuid
+        description: Filter by partner ID
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by status
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: auth_app_keys_create
+      description: Create a new API key for a whitelabel partner.
+      summary: Create app key
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/app-keys/{key_pk}/logs/:
+    get:
+      operationId: auth_app_keys_logs_retrieve
+      description: Get usage logs for a specific API key.
+      summary: List app key usage logs
+      parameters:
+      - in: path
+        name: key_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: 'Number of logs to return (default: 100)'
+      - in: query
+        name: method
+        schema:
+          type: string
+        description: Filter by HTTP method
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: Number of logs to skip
+      - in: query
+        name: status_code
+        schema:
+          type: integer
+        description: Filter by status code
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/app-keys/{key_pk}/regenerate/:
+    post:
+      operationId: auth_app_keys_regenerate_create
+      description: Regenerate the secret portion of an API key.
+      summary: Regenerate app key secret
+      parameters:
+      - in: path
+        name: key_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/app-keys/{key_pk}/stats/:
+    get:
+      operationId: auth_app_keys_stats_retrieve
+      description: Get usage statistics for an API key within a date range.
+      summary: Get app key usage statistics
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date (YYYY-MM-DD)
+      - in: path
+        name: key_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date (YYYY-MM-DD)
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/app-keys/{id}/:
+    get:
+      operationId: auth_app_keys_retrieve_2
+      description: Get detailed information about a specific API key.
+      summary: Get app key details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: auth_app_keys_update
+      description: Update API key configuration.
+      summary: Update app key
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: auth_app_keys_partial_update
+      description: Partially update API key configuration.
+      summary: Partially update app key
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: auth_app_keys_destroy
+      description: Delete an API key (revokes the key).
+      summary: Delete app key
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      description: Change password view
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/countries/:
+    get:
+      operationId: auth_countries_list
+      description: List all countries
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCountryList'
+          description: ''
+  /api/auth/create-merchant/:
+    post:
+      operationId: auth_create_merchant_create
+      description: Create merchant account for existing user
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/currencies/:
+    get:
+      operationId: auth_currencies_list
+      description: List all currencies
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPreferredCurrencyList'
+          description: ''
+  /api/auth/groups/:
+    get:
+      operationId: auth_groups_list
+      description: List all groups
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupList'
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: "\n        Authenticate user with email and password.\n       \
+        \ \n        **Features:**\n        - Email-based authentication\n        -\
+        \ JWT token generation (access + refresh)\n        - Session creation and\
+        \ tracking\n        - Last login timestamp update\n        - User profile\
+        \ information in response\n        \n        **Authentication Flow:**\n  \
+        \      1. Provide email and password\n        2. Receive JWT tokens (access\
+        \ + refresh)\n        3. Use access token for authenticated requests\n   \
+        \     4. Use refresh token to get new access tokens\n        \n        **Token\
+        \ Usage:**\n        - Include access token in Authorization header: `Bearer\
+        \ <access_token>`\n        - Access tokens expire in 60 minutes\n        -\
+        \ Refresh tokens expire in 7 days\n        "
+      summary: User Login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+            examples:
+              LoginRequest:
+                value:
+                  email: user@example.com
+                  password: SecurePassword123!
+                summary: Standard login
+                description: Login with email and password
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+        required: true
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+              examples:
+                LoginRequest:
+                  value:
+                    email: user@example.com
+                    password: SecurePassword123!
+                  summary: Standard login
+                  description: Login with email and password
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: User logout view
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/merchant-account/:
+    get:
+      operationId: auth_merchant_account_retrieve
+      description: "\n        Retrieve the authenticated user's merchant account information.\n\
+        \        \n        **Authentication Required:** Yes (Bearer token)\n     \
+        \   \n        **Features:**\n        - Get complete merchant account details\n\
+        \        - Includes business information, status, and verification details\n\
+        \        - Shows bank account information (if provided)\n        - Displays\
+        \ category and contact information\n        \n        **Access Control:**\n\
+        \        - Only the merchant account owner can access their data\n       \
+        \ - Admin users can access any merchant account via admin endpoints\n    \
+        \    "
+      summary: Get Merchant Account
+      tags:
+      - Merchant Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+    put:
+      operationId: auth_merchant_account_update
+      description: "\n        Update the authenticated user's merchant account information.\n\
+        \        \n        **Authentication Required:** Yes (Bearer token)\n     \
+        \   \n        **Updatable Fields:**\n        - Business name, email, phone,\
+        \ address\n        - Website URL and description\n        - Bank account information\n\
+        \        - Business registration number\n        \n        **Restrictions:**\n\
+        \        - Cannot change verification status\n        - Cannot change category\
+        \ (contact admin)\n        - Some fields may require re-verification\n   \
+        \     "
+      summary: Update Merchant Account
+      tags:
+      - Merchant Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MerchantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MerchantRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+    patch:
+      operationId: auth_merchant_account_partial_update
+      description: "\n        Partially update specific fields of the merchant account.\n\
+        \        \n        **Authentication Required:** Yes (Bearer token)\n     \
+        \   \n        **Features:**\n        - Update only the fields you want to\
+        \ change\n        - Useful for single field updates\n        - Same validation\
+        \ rules as full update\n        "
+      summary: Partially Update Merchant Account
+      tags:
+      - Merchant Management
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/merchant-categories/:
+    get:
+      operationId: auth_merchant_categories_list
+      description: "\n        Retrieve all active merchant categories available for\
+        \ business registration.\n        \n        **Features:**\n        - Lists\
+        \ all active merchant categories\n        - No authentication required\n \
+        \       - Supports pagination\n        - Used for merchant account creation\
+        \ during registration\n        \n        **Usage:**\n        - Call this endpoint\
+        \ to get available categories\n        - Use category ID when creating merchant\
+        \ accounts\n        - Categories include retail, healthcare, technology, etc.\n\
+        \        \n        **Categories Include:**\n        - Retail, Food & Beverage,\
+        \ Healthcare, Technology\n        - Professional Services, Education, Entertainment\n\
+        \        - Transportation, Hospitality, Beauty & Wellness\n        - E-commerce,\
+        \ Non-profit, and more\n        "
+      summary: List Merchant Categories
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - Reference Data
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - count
+                - results
+                properties:
+                  count:
+                    type: integer
+                    example: 123
+                  next:
+                    type: string
+                    nullable: true
+                    format: uri
+                    example: http://api.example.org/accounts/?page=4
+                  previous:
+                    type: string
+                    nullable: true
+                    format: uri
+                    example: http://api.example.org/accounts/?page=2
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: {}
+                      description: Unspecified response body
+          description: ''
+  /api/auth/merchant-stats/:
+    get:
+      operationId: auth_merchant_stats_retrieve
+      description: Get merchant statistics (admin/staff only)
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/merchants/:
+    get:
+      operationId: auth_merchants_list
+      description: List all merchants (admin/staff only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMerchantList'
+          description: ''
+  /api/auth/merchants/{merchant_id}/status/:
+    patch:
+      operationId: auth_merchants_status_partial_update
+      description: Update merchant status (admin/staff only)
+      parameters:
+      - in: path
+        name: merchant_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/partners/:
+    get:
+      operationId: auth_partners_retrieve
+      description: Get a list of all whitelabel partners with pagination and filtering.
+      summary: List whitelabel partners
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+        description: Filter by active status
+      - in: query
+        name: is_verified
+        schema:
+          type: boolean
+        description: Filter by verification status
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search by name, code, or email
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: auth_partners_create
+      description: Create a new whitelabel partner account.
+      summary: Create whitelabel partner
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/partners/{partner_pk}/app-keys/:
+    get:
+      operationId: auth_partners_app_keys_retrieve
+      description: Get all API keys for a specific whitelabel partner.
+      summary: Get partner app keys
+      parameters:
+      - in: path
+        name: partner_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/partners/{partner_pk}/webhook-secret/:
+    post:
+      operationId: auth_partners_webhook_secret_create
+      description: Generate a new webhook secret for a whitelabel partner.
+      summary: Generate webhook secret
+      parameters:
+      - in: path
+        name: partner_pk
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/partners/{id}/:
+    get:
+      operationId: auth_partners_retrieve_2
+      description: Get detailed information about a specific whitelabel partner.
+      summary: Get whitelabel partner details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: auth_partners_update
+      description: Update whitelabel partner information.
+      summary: Update whitelabel partner
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    patch:
+      operationId: auth_partners_partial_update
+      description: Partially update whitelabel partner information.
+      summary: Partially update whitelabel partner
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: auth_partners_destroy
+      description: Delete a whitelabel partner (admin only).
+      summary: Delete whitelabel partner
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/permissions/:
+    get:
+      operationId: auth_permissions_retrieve
+      description: Get current user's permissions
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      description: User profile view
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: auth_profile_update
+      description: User profile view
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    patch:
+      operationId: auth_profile_partial_update
+      description: User profile view
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: "\n        Register a new user with optional merchant account creation.\n\
+        \        \n        **Features:**\n        - User registration with email and\
+        \ password\n        - Optional business name for automatic merchant account\
+        \ creation  \n        - OTP generation and email sending for verification\n\
+        \        - Merchant account creation with business details\n        - Support\
+        \ for multiple registration scenarios\n        \n        **Registration Scenarios:**\n\
+        \        1. **Simple Registration**: Basic user registration without merchant\
+        \ account\n        2. **Business Registration**: Include business_name + create_merchant_account=true\
+        \ for automatic merchant creation\n        3. **Detailed Merchant Registration**:\
+        \ Provide full merchant_data for comprehensive business account\n        \n\
+        \        **Post-Registration Flow:**\n        1. User receives OTP via email\n\
+        \        2. User verifies OTP using /verify-otp/ endpoint\n        3. User\
+        \ gains access to authenticated endpoints\n        4. Merchant account (if\
+        \ created) is pending approval\n        "
+      summary: User Registration with Optional Merchant Account
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationWithMerchantRequest'
+            examples:
+              SimpleRegistration:
+                value:
+                  email: user@example.com
+                  password: SecurePassword123!
+                  password_confirm: SecurePassword123!
+                  first_name: John
+                  last_name: Doe
+                  phone_number: '+1234567890'
+                summary: Basic user registration
+                description: Register user without merchant account
+              BusinessRegistration:
+                value:
+                  email: business@example.com
+                  password: SecurePassword123!
+                  password_confirm: SecurePassword123!
+                  first_name: Jane
+                  last_name: Smith
+                  phone_number: '+1234567890'
+                  business_name: Jane's Coffee Shop
+                  create_merchant_account: true
+                summary: Registration with business name
+                description: Register user with automatic merchant account creation
+              DetailedMerchantRegistration:
+                value:
+                  email: merchant@example.com
+                  password: SecurePassword123!
+                  password_confirm: SecurePassword123!
+                  first_name: Bob
+                  last_name: Wilson
+                  phone_number: '+1234567890'
+                  create_merchant_account: true
+                  merchant_data:
+                    business_name: Wilson's Premium Services
+                    business_email: contact@wilsonservices.com
+                    business_phone: '+1234567890'
+                    business_address: 123 Business Ave, City, State 12345
+                    description: Premium business services provider
+                    category: category-uuid-here
+                summary: Registration with full merchant data
+                description: Register user with comprehensive merchant account details
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationWithMerchantRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationWithMerchantRequest'
+        required: true
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+              examples:
+                SimpleRegistration:
+                  value:
+                    email: user@example.com
+                    password: SecurePassword123!
+                    password_confirm: SecurePassword123!
+                    first_name: John
+                    last_name: Doe
+                    phone_number: '+1234567890'
+                  summary: Basic user registration
+                  description: Register user without merchant account
+                BusinessRegistration:
+                  value:
+                    email: business@example.com
+                    password: SecurePassword123!
+                    password_confirm: SecurePassword123!
+                    first_name: Jane
+                    last_name: Smith
+                    phone_number: '+1234567890'
+                    business_name: Jane's Coffee Shop
+                    create_merchant_account: true
+                  summary: Registration with business name
+                  description: Register user with automatic merchant account creation
+                DetailedMerchantRegistration:
+                  value:
+                    email: merchant@example.com
+                    password: SecurePassword123!
+                    password_confirm: SecurePassword123!
+                    first_name: Bob
+                    last_name: Wilson
+                    phone_number: '+1234567890'
+                    create_merchant_account: true
+                    merchant_data:
+                      business_name: Wilson's Premium Services
+                      business_email: contact@wilsonservices.com
+                      business_phone: '+1234567890'
+                      business_address: 123 Business Ave, City, State 12345
+                      description: Premium business services provider
+                      category: category-uuid-here
+                  summary: Registration with full merchant data
+                  description: Register user with comprehensive merchant account details
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/resend-otp/:
+    post:
+      operationId: auth_resend_otp_create
+      description: Resend OTP for email verification
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/resend-verification/:
+    post:
+      operationId: auth_resend_verification_create
+      description: Resend verification email (placeholder)
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/role-groups/:
+    get:
+      operationId: auth_role_groups_list
+      description: List role group mappings
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRoleGroupList'
+          description: ''
+  /api/auth/sessions/:
+    get:
+      operationId: auth_sessions_list
+      description: List user sessions
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserSessionList'
+          description: ''
+  /api/auth/sessions/{session_id}/deactivate/:
+    post:
+      operationId: auth_sessions_deactivate_create
+      description: Deactivate a specific session
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/stats/:
+    get:
+      operationId: auth_stats_retrieve
+      description: Get user statistics (admin only)
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/users/:
+    get:
+      operationId: auth_users_list
+      description: List all users (admin only)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserListList'
+          description: ''
+  /api/auth/users/{id}/role/:
+    get:
+      operationId: auth_users_role_retrieve
+      description: Manage user roles (admin only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRoleManagement'
+          description: ''
+    put:
+      operationId: auth_users_role_update
+      description: Manage user roles (admin only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRoleManagementRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRoleManagementRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRoleManagementRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRoleManagement'
+          description: ''
+    patch:
+      operationId: auth_users_role_partial_update
+      description: Manage user roles (admin only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleManagementRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleManagementRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRoleManagementRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRoleManagement'
+          description: ''
+  /api/auth/users/{user_id}/assign-role/:
+    post:
+      operationId: auth_users_assign_role_create
+      description: Assign role to a user (admin only)
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/verify-api-key/:
+    post:
+      operationId: auth_verify_api_key_create
+      description: Verify an API key and return key information (for integration testing).
+      summary: Verify API key
+      tags:
+      - App Key Management
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/verify-email/:
+    post:
+      operationId: auth_verify_email_create
+      description: Verify user email (placeholder for email verification logic)
+      tags:
+      - auth
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: No response body
+  /api/auth/verify-otp/:
+    post:
+      operationId: auth_verify_otp_create
+      description: "\n        Verify the OTP code sent to user's email address.\n\
+        \        \n        **Features:**\n        - Email OTP verification for registration\n\
+        \        - Automatic user verification on successful OTP validation\n    \
+        \    - JWT token generation after verification\n        - Session creation\
+        \ for authenticated access\n        \n        **Verification Flow:**\n   \
+        \     1. User receives OTP via email after registration\n        2. User submits\
+        \ email and OTP code to this endpoint\n        3. System validates OTP (6-digit\
+        \ code, not expired, not used)\n        4. User account is marked as verified\n\
+        \        5. JWT tokens are generated for immediate access\n        6. User\
+        \ session is created\n        \n        **OTP Validation Rules:**\n      \
+        \  - Must be exactly 6 digits\n        - Must not be expired (valid for 10\
+        \ minutes)\n        - Must not be already used\n        - Must match the email\
+        \ address\n        "
+      summary: Verify Email OTP
+      tags:
+      - OTP Verification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPVerificationRequest'
+            examples:
+              OTPVerification:
+                value:
+                  email: user@example.com
+                  otp_code: '123456'
+                summary: Verify OTP code
+                description: Submit email and 6-digit OTP code
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTPVerificationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTPVerificationRequest'
+        required: true
+      security:
+      - Bearer: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+              examples:
+                OTPVerification:
+                  value:
+                    email: user@example.com
+                    otp_code: '123456'
+                  summary: Verify OTP code
+                  description: Submit email and 6-digit OTP code
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/integrations/:
+    get:
+      operationId: integrations_list
+      description: List all available integrations
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntegrationListList'
+          description: ''
+  /api/integrations/{id}/:
+    get:
+      operationId: integrations_retrieve
+      description: Get integration details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationDetail'
+          description: ''
+  /api/integrations/api-calls/:
+    get:
+      operationId: integrations_api_calls_list
+      description: List integration API calls
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntegrationAPICallList'
+          description: ''
+  /api/integrations/bank/{integration__id}/:
+    get:
+      operationId: integrations_bank_retrieve
+      description: Get bank integration details
+      parameters:
+      - in: path
+        name: integration__id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankIntegration'
+          description: ''
+  /api/integrations/health/:
+    get:
+      operationId: integrations_health_list
+      description: Get health status for merchant's integrations
+      summary: Get integration health status
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntegrationHealth'
+          description: ''
+  /api/integrations/merchant/:
+    get:
+      operationId: integrations_merchant_list
+      description: List and create merchant integrations
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMerchantIntegrationListList'
+          description: ''
+    post:
+      operationId: integrations_merchant_create
+      description: List and create merchant integrations
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationCreateRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantIntegrationCreate'
+          description: ''
+  /api/integrations/merchant/{id}/:
+    get:
+      operationId: integrations_merchant_retrieve
+      description: Retrieve, update, or delete merchant integration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantIntegrationDetail'
+          description: ''
+    put:
+      operationId: integrations_merchant_update
+      description: Retrieve, update, or delete merchant integration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MerchantIntegrationUpdateRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantIntegrationUpdate'
+          description: ''
+    patch:
+      operationId: integrations_merchant_partial_update
+      description: Retrieve, update, or delete merchant integration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantIntegrationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantIntegrationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMerchantIntegrationUpdateRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantIntegrationUpdate'
+          description: ''
+    delete:
+      operationId: integrations_merchant_destroy
+      description: Retrieve, update, or delete merchant integration
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/integrations/stats/:
+    get:
+      operationId: integrations_stats_retrieve
+      description: Get statistics for merchant's integrations
+      summary: Get integration statistics
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationStats'
+          description: ''
+  /api/integrations/status-choices/:
+    get:
+      operationId: integrations_status_choices_list
+      description: Get available integration status choices
+      summary: Get integration status choices
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntegrationChoice'
+          description: ''
+  /api/integrations/type-choices/:
+    get:
+      operationId: integrations_type_choices_list
+      description: Get available integration type choices
+      summary: Get integration type choices
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntegrationChoice'
+          description: ''
+  /api/integrations/uba/account-inquiry/:
+    post:
+      operationId: integrations_uba_account_inquiry_create
+      description: Perform account name inquiry using UBA
+      summary: Account inquiry
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBAAccountInquiryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBAAccountInquiryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBAAccountInquiryRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Account information retrieved
+  /api/integrations/uba/balance-inquiry/:
+    post:
+      operationId: integrations_uba_balance_inquiry_create
+      description: Check account balance using UBA
+      summary: Balance inquiry
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBABalanceInquiryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBABalanceInquiryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBABalanceInquiryRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Account balance retrieved
+  /api/integrations/uba/bill-payment/:
+    post:
+      operationId: integrations_uba_bill_payment_create
+      description: Pay bills using UBA
+      summary: Bill payment
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBABillPaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBABillPaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBABillPaymentRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          description: Bill payment initiated
+  /api/integrations/uba/fund-transfer/:
+    post:
+      operationId: integrations_uba_fund_transfer_create
+      description: Perform fund transfer using UBA
+      summary: Fund transfer
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBAFundTransferRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBAFundTransferRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBAFundTransferRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          description: Fund transfer initiated
+  /api/integrations/uba/payment-page/:
+    post:
+      operationId: integrations_uba_payment_page_create
+      description: Create a payment page using UBA Kenya Pay integration
+      summary: Create UBA payment page
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBAPaymentPageRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBAPaymentPageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBAPaymentPageRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          description: Payment page created successfully
+  /api/integrations/uba/payment-status/{payment_id}/:
+    get:
+      operationId: integrations_uba_payment_status_retrieve
+      description: Get payment status from UBA
+      summary: Get payment status
+      parameters:
+      - in: path
+        name: payment_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Payment status retrieved
+  /api/integrations/uba/test-connection/:
+    get:
+      operationId: integrations_uba_test_connection_retrieve
+      description: Test connection to UBA API
+      summary: Test UBA connection
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Connection test result
+  /api/integrations/uba/transaction-history/:
+    post:
+      operationId: integrations_uba_transaction_history_create
+      description: Get transaction history using UBA
+      summary: Transaction history
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBATransactionHistoryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBATransactionHistoryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBATransactionHistoryRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Transaction history retrieved
+  /api/integrations/uba/webhook/:
+    post:
+      operationId: integrations_uba_webhook_create
+      description: Handle webhooks from UBA
+      summary: UBA webhook handler
+      tags:
+      - integrations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UBAWebhookRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UBAWebhookRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UBAWebhookRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Webhook processed
+  /api/integrations/webhooks/:
+    get:
+      operationId: integrations_webhooks_list
+      description: List integration webhooks
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - integrations
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntegrationWebhookList'
+          description: ''
+  /api/transactions/choices/payment-methods/:
+    get:
+      operationId: transactions_choices_payment_methods_list
+      description: Get available payment method choices
+      summary: Get payment method choices
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentMethodChoice'
+          description: ''
+  /api/transactions/choices/transaction-statuses/:
+    get:
+      operationId: transactions_choices_transaction_statuses_list
+      description: Get available transaction status choices
+      summary: Get transaction status choices
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionStatusChoice'
+          description: ''
+  /api/transactions/choices/transaction-types/:
+    get:
+      operationId: transactions_choices_transaction_types_list
+      description: Get available transaction type choices
+      summary: Get transaction type choices
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionTypeChoice'
+          description: ''
+  /api/transactions/gateways/:
+    get:
+      operationId: transactions_gateways_list
+      description: Retrieve a list of payment gateways with filtering and search capabilities
+      summary: List payment gateways
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_sandbox
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: supports_payments
+        schema:
+          type: boolean
+      - in: query
+        name: supports_refunds
+        schema:
+          type: boolean
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentGatewayList'
+          description: ''
+    post:
+      operationId: transactions_gateways_create
+      description: Create a new payment gateway configuration
+      summary: Create payment gateway
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGateway'
+          description: ''
+  /api/transactions/gateways/{id}/:
+    get:
+      operationId: transactions_gateways_retrieve
+      description: Retrieve detailed information about a specific payment gateway
+      summary: Get payment gateway details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGateway'
+          description: ''
+    put:
+      operationId: transactions_gateways_update
+      description: Update a payment gateway configuration
+      summary: Update payment gateway
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentGatewayRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGateway'
+          description: ''
+    patch:
+      operationId: transactions_gateways_partial_update
+      description: Partially update a payment gateway configuration
+      summary: Partially update payment gateway
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentGatewayRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentGatewayRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentGatewayRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGateway'
+          description: ''
+    delete:
+      operationId: transactions_gateways_destroy
+      description: Delete a payment gateway (if no transactions exist)
+      summary: Delete payment gateway
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/transactions/payment-links/:
+    get:
+      operationId: transactions_payment_links_list
+      description: Retrieve a list of payment links for the merchant
+      summary: List payment links
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_amount_flexible
+        schema:
+          type: boolean
+      - in: query
+        name: merchant
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentLinkList'
+          description: ''
+    post:
+      operationId: transactions_payment_links_create
+      description: Create a new payment link
+      summary: Create payment link
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkCreate'
+          description: ''
+  /api/transactions/payment-links/{id}/:
+    get:
+      operationId: transactions_payment_links_retrieve
+      description: Retrieve detailed information about a specific payment link
+      summary: Get payment link details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLink'
+          description: ''
+    put:
+      operationId: transactions_payment_links_update
+      description: Update a payment link
+      summary: Update payment link
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentLinkCreateRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkCreate'
+          description: ''
+    patch:
+      operationId: transactions_payment_links_partial_update
+      description: Partially update a payment link
+      summary: Partially update payment link
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentLinkCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentLinkCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPaymentLinkCreateRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkCreate'
+          description: ''
+    delete:
+      operationId: transactions_payment_links_destroy
+      description: Delete a payment link
+      summary: Delete payment link
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '204':
+          description: No response body
+  /api/transactions/stats/:
+    get:
+      operationId: transactions_stats_retrieve
+      description: Get transaction statistics for a merchant within a date range
+      summary: Get transaction statistics
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for statistics (YYYY-MM-DD)
+      - in: query
+        name: merchant_id
+        schema:
+          type: string
+          format: uuid
+        description: Merchant ID (for staff users only)
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for statistics (YYYY-MM-DD)
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStats'
+          description: ''
+  /api/transactions/transactions/:
+    get:
+      operationId: transactions_transactions_list
+      description: Retrieve a paginated list of transactions with filtering and search
+        capabilities
+      summary: List transactions
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: payment_method
+        schema:
+          type: string
+        description: Filter by payment method
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by transaction status
+      - in: query
+        name: transaction_type
+        schema:
+          type: string
+        description: Filter by transaction type
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTransactionListList'
+          description: ''
+    post:
+      operationId: transactions_transactions_create
+      description: Create a new payment transaction
+      summary: Create transaction
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionCreate'
+          description: ''
+  /api/transactions/transactions/{id}/:
+    get:
+      operationId: transactions_transactions_retrieve
+      description: Retrieve detailed information about a specific transaction including
+        events and webhooks
+      summary: Get transaction details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDetail'
+          description: ''
+    put:
+      operationId: transactions_transactions_update
+      description: Update transaction details (limited fields only)
+      summary: Update transaction
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionUpdate'
+          description: ''
+    patch:
+      operationId: transactions_transactions_partial_update
+      description: Partially update transaction details
+      summary: Partially update transaction
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTransactionUpdateRequest'
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionUpdate'
+          description: ''
+  /api/transactions/transactions/{transaction_id}/refund/:
+    post:
+      operationId: transactions_transactions_refund_create
+      description: Create a refund for a completed transaction
+      summary: Create refund
+      parameters:
+      - in: path
+        name: transaction_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - transactions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefundCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefundCreateRequest'
+        required: true
+      security:
+      - Bearer: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDetail'
+          description: ''
+components:
+  schemas:
+    AuthenticationTypeEnum:
+      enum:
+      - api_key
+      - bearer_token
+      - oauth2
+      - basic_auth
+      - jwt
+      - custom
+      type: string
+      description: |-
+        * `api_key` - API Key
+        * `bearer_token` - Bearer Token
+        * `oauth2` - OAuth 2.0
+        * `basic_auth` - Basic Authentication
+        * `jwt` - JWT Token
+        * `custom` - Custom Authentication
+    BankIntegration:
+      type: object
+      description: Serializer for bank integration details
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        bank_name:
+          type: string
+          maxLength: 100
+        bank_code:
+          type: string
+          maxLength: 20
+        country_code:
+          type: string
+          description: ISO country code
+          maxLength: 2
+        swift_code:
+          type: string
+          maxLength: 11
+        supports_account_inquiry:
+          type: boolean
+        supports_balance_inquiry:
+          type: boolean
+        supports_transaction_history:
+          type: boolean
+        supports_fund_transfer:
+          type: boolean
+        supports_bill_payment:
+          type: boolean
+        supports_standing_orders:
+          type: boolean
+        supports_direct_debit:
+          type: boolean
+        supported_currencies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        min_transfer_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        max_transfer_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        daily_transfer_limit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+        transfer_fee_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
+          description: Transfer fee as percentage
+        transfer_fee_fixed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Fixed transfer fee amount
+        inquiry_fee:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Fee for account/balance inquiries
+        operating_hours_start:
+          type: string
+          format: time
+          nullable: true
+        operating_hours_end:
+          type: string
+          format: time
+          nullable: true
+        operates_weekends:
+          type: boolean
+        operates_holidays:
+          type: boolean
+        settlement_time:
+          type: integer
+          description: Settlement time in hours
+        settlement_currency:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - bank_code
+      - bank_name
+      - country_code
+      - id
+      - supported_currencies
+    BlankEnum:
+      enum:
+      - ''
+    Country:
+      type: object
+      description: Serializer for Country model
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        code:
+          type: string
+          maxLength: 3
+        phone_code:
+          type: string
+          nullable: true
+          maxLength: 10
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - created_at
+      - id
+      - name
+      - updated_at
+    CountryRequest:
+      type: object
+      description: Serializer for Country model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        code:
+          type: string
+          minLength: 1
+          maxLength: 3
+        phone_code:
+          type: string
+          nullable: true
+          maxLength: 10
+      required:
+      - code
+      - name
+    Group:
+      type: object
+      description: Serializer for Django groups
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+      required:
+      - id
+      - name
+    GroupRequest:
+      type: object
+      description: Serializer for Django groups
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+      required:
+      - name
+    IntegrationAPICall:
+      type: object
+      description: Serializer for integration API calls
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        merchant_integration:
+          type: string
+          format: uuid
+        merchant_name:
+          type: string
+          readOnly: true
+        integration_name:
+          type: string
+          readOnly: true
+        method:
+          type: string
+          description: HTTP method
+          maxLength: 10
+        endpoint:
+          type: string
+          description: API endpoint called
+          maxLength: 255
+        operation_type:
+          type: string
+          description: Type of operation (transfer, inquiry, etc.)
+          maxLength: 50
+        reference_id:
+          type: string
+          description: Reference ID for the operation
+          maxLength: 100
+        status_code:
+          type: integer
+          nullable: true
+        response_time_ms:
+          type: integer
+          nullable: true
+        is_successful:
+          type: boolean
+        error_message:
+          type: string
+        error_code:
+          type: string
+          maxLength: 50
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - endpoint
+      - id
+      - integration_name
+      - merchant_integration
+      - merchant_name
+      - method
+      - operation_type
+    IntegrationChoice:
+      type: object
+      description: Serializer for choice fields
+      properties:
+        value:
+          type: string
+        display:
+          type: string
+      required:
+      - display
+      - value
+    IntegrationDetail:
+      type: object
+      description: Detailed serializer for integrations
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Integration name
+          maxLength: 100
+        code:
+          type: string
+          description: Unique integration code
+          maxLength: 50
+        description:
+          type: string
+          description: Integration description
+        integration_type:
+          $ref: '#/components/schemas/IntegrationTypeEnum'
+        provider_name:
+          type: string
+          description: Service provider name
+          maxLength: 100
+        provider_website:
+          type: string
+          format: uri
+          description: Provider website
+          maxLength: 200
+        provider_documentation:
+          type: string
+          format: uri
+          description: API documentation URL
+          maxLength: 200
+        base_url:
+          type: string
+          format: uri
+          description: Base API URL
+          maxLength: 200
+        is_sandbox:
+          type: boolean
+          description: Whether this is a sandbox environment
+        version:
+          type: string
+          description: API version
+          maxLength: 20
+        authentication_type:
+          $ref: '#/components/schemas/AuthenticationTypeEnum'
+        supports_webhooks:
+          type: boolean
+        supports_bulk_operations:
+          type: boolean
+        supports_real_time:
+          type: boolean
+        rate_limit_per_minute:
+          type: integer
+          nullable: true
+          description: API calls allowed per minute
+        rate_limit_per_hour:
+          type: integer
+          nullable: true
+          description: API calls allowed per hour
+        rate_limit_per_day:
+          type: integer
+          nullable: true
+          description: API calls allowed per day
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        is_global:
+          type: boolean
+          description: Whether this integration is available to all merchants
+        is_healthy:
+          type: boolean
+        health_check_interval:
+          type: integer
+          description: Health check interval in seconds
+        health_error_message:
+          type: string
+        last_health_check:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - base_url
+      - code
+      - created_at
+      - id
+      - last_health_check
+      - name
+      - provider_name
+      - updated_at
+    IntegrationHealth:
+      type: object
+      description: Serializer for integration health status
+      properties:
+        integration_id:
+          type: string
+          format: uuid
+        integration_name:
+          type: string
+        provider_name:
+          type: string
+        is_healthy:
+          type: boolean
+        last_health_check:
+          type: string
+          format: date-time
+        health_error_message:
+          type: string
+        status:
+          type: string
+        consecutive_failures:
+          type: integer
+        success_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+      required:
+      - consecutive_failures
+      - health_error_message
+      - integration_id
+      - integration_name
+      - is_healthy
+      - last_health_check
+      - provider_name
+      - status
+      - success_rate
+    IntegrationList:
+      type: object
+      description: Serializer for listing integrations
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Integration name
+          maxLength: 100
+        code:
+          type: string
+          description: Unique integration code
+          maxLength: 50
+        provider_name:
+          type: string
+          description: Service provider name
+          maxLength: 100
+        integration_type:
+          $ref: '#/components/schemas/IntegrationTypeEnum'
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        is_sandbox:
+          type: boolean
+          description: Whether this is a sandbox environment
+        is_global:
+          type: boolean
+          description: Whether this integration is available to all merchants
+        is_healthy:
+          type: boolean
+        supports_webhooks:
+          type: boolean
+        supports_bulk_operations:
+          type: boolean
+        supports_real_time:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - created_at
+      - id
+      - name
+      - provider_name
+      - updated_at
+    IntegrationStats:
+      type: object
+      description: Serializer for integration statistics
+      properties:
+        total_integrations:
+          type: integer
+        active_integrations:
+          type: integer
+        enabled_merchant_integrations:
+          type: integer
+        total_api_calls_today:
+          type: integer
+        successful_api_calls_today:
+          type: integer
+        failed_api_calls_today:
+          type: integer
+        success_rate_today:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        avg_response_time_ms:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        most_used_integration:
+          type: string
+        most_used_operation:
+          type: string
+      required:
+      - active_integrations
+      - avg_response_time_ms
+      - enabled_merchant_integrations
+      - failed_api_calls_today
+      - most_used_integration
+      - most_used_operation
+      - success_rate_today
+      - successful_api_calls_today
+      - total_api_calls_today
+      - total_integrations
+    IntegrationTypeEnum:
+      enum:
+      - bank
+      - payment_gateway
+      - sms
+      - email
+      - kyc
+      - accounting
+      - crm
+      - analytics
+      - other
+      type: string
+      description: |-
+        * `bank` - Bank Integration
+        * `payment_gateway` - Payment Gateway
+        * `sms` - SMS Service
+        * `email` - Email Service
+        * `kyc` - KYC/Identity Verification
+        * `accounting` - Accounting Software
+        * `crm` - Customer Relationship Management
+        * `analytics` - Analytics Platform
+        * `other` - Other Integration
+    IntegrationWebhook:
+      type: object
+      description: Serializer for integration webhooks
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        integration:
+          type: string
+          format: uuid
+        integration_name:
+          type: string
+          readOnly: true
+        event_type:
+          type: string
+          description: Type of webhook event
+          maxLength: 50
+        payload:
+          description: Webhook payload
+        headers:
+          description: Request headers
+        is_processed:
+          type: boolean
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        processing_error:
+          type: string
+        is_verified:
+          type: boolean
+        verification_method:
+          type: string
+          description: Method used to verify webhook (signature, token, etc.)
+          maxLength: 50
+        source_ip:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event_type
+      - id
+      - integration
+      - integration_name
+      - payload
+      - processed_at
+    Merchant:
+      type: object
+      description: Serializer for merchant accounts
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/UserProfile'
+          readOnly: true
+        business_name:
+          type: string
+          maxLength: 255
+        business_registration_number:
+          type: string
+          nullable: true
+          maxLength: 100
+        category:
+          allOf:
+          - $ref: '#/components/schemas/MerchantCategory'
+          readOnly: true
+        business_address:
+          type: string
+        business_phone:
+          type: string
+          maxLength: 20
+        business_email:
+          type: string
+          format: email
+          maxLength: 254
+        website_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+        description:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/MerchantStatusEnum'
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        verification_notes:
+          type: string
+          readOnly: true
+        verified_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        verified_by:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        bank_account_name:
+          type: string
+          maxLength: 255
+        bank_account_number:
+          type: string
+          maxLength: 50
+        bank_name:
+          type: string
+          maxLength: 255
+        bank_routing_number:
+          type: string
+          maxLength: 20
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - business_address
+      - business_email
+      - business_name
+      - business_phone
+      - category
+      - created_at
+      - id
+      - is_verified
+      - status
+      - updated_at
+      - user
+      - verification_notes
+      - verified_at
+      - verified_by
+    MerchantCategory:
+      type: object
+      description: Serializer for merchant categories
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        code:
+          type: string
+          maxLength: 20
+        description:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - created_at
+      - id
+      - name
+      - updated_at
+    MerchantCategoryRequest:
+      type: object
+      description: Serializer for merchant categories
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        code:
+          type: string
+          minLength: 1
+          maxLength: 20
+        description:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - code
+      - name
+    MerchantIntegrationCreate:
+      type: object
+      description: Serializer for creating merchant integrations
+      properties:
+        integration:
+          type: string
+          format: uuid
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+      required:
+      - integration
+    MerchantIntegrationCreateRequest:
+      type: object
+      description: Serializer for creating merchant integrations
+      properties:
+        integration:
+          type: string
+          format: uuid
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+        credentials:
+          writeOnly: true
+      required:
+      - integration
+    MerchantIntegrationDetail:
+      type: object
+      description: Detailed serializer for merchant integrations
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        integration:
+          type: string
+          format: uuid
+        integration_details:
+          allOf:
+          - $ref: '#/components/schemas/IntegrationDetail'
+          readOnly: true
+        bank_details:
+          allOf:
+          - $ref: '#/components/schemas/BankIntegration'
+          readOnly: true
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+        total_requests:
+          type: integer
+          readOnly: true
+        successful_requests:
+          type: integer
+          readOnly: true
+        failed_requests:
+          type: integer
+          readOnly: true
+        success_rate:
+          type: string
+          readOnly: true
+        consecutive_failures:
+          type: integer
+          readOnly: true
+        last_error_message:
+          type: string
+          readOnly: true
+        last_error_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_used_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        is_healthy:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - bank_details
+      - consecutive_failures
+      - created_at
+      - failed_requests
+      - id
+      - integration
+      - integration_details
+      - is_healthy
+      - last_error_at
+      - last_error_message
+      - last_used_at
+      - success_rate
+      - successful_requests
+      - total_requests
+      - updated_at
+    MerchantIntegrationList:
+      type: object
+      description: Serializer for listing merchant integrations
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        integration:
+          type: string
+          format: uuid
+        integration_name:
+          type: string
+          readOnly: true
+        integration_type:
+          type: string
+          readOnly: true
+        provider_name:
+          type: string
+          readOnly: true
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        total_requests:
+          type: integer
+          readOnly: true
+        successful_requests:
+          type: integer
+          readOnly: true
+        failed_requests:
+          type: integer
+          readOnly: true
+        success_rate:
+          type: string
+          readOnly: true
+        last_used_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - failed_requests
+      - id
+      - integration
+      - integration_name
+      - integration_type
+      - last_used_at
+      - provider_name
+      - success_rate
+      - successful_requests
+      - total_requests
+      - updated_at
+    MerchantIntegrationUpdate:
+      type: object
+      description: Serializer for updating merchant integrations
+      properties:
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+    MerchantIntegrationUpdateRequest:
+      type: object
+      description: Serializer for updating merchant integrations
+      properties:
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+        credentials:
+          writeOnly: true
+    MerchantOnboardingRequest:
+      type: object
+      description: Serializer for merchant onboarding during registration
+      properties:
+        business_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        business_registration_number:
+          type: string
+          nullable: true
+          maxLength: 100
+        business_address:
+          type: string
+          minLength: 1
+        business_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        business_email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        website_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+        description:
+          type: string
+        category:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - business_address
+      - business_email
+      - business_name
+      - business_phone
+    MerchantRequest:
+      type: object
+      description: Serializer for merchant accounts
+      properties:
+        business_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        business_registration_number:
+          type: string
+          nullable: true
+          maxLength: 100
+        category_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        business_address:
+          type: string
+          minLength: 1
+        business_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        business_email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        website_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+        description:
+          type: string
+        bank_account_name:
+          type: string
+          maxLength: 255
+        bank_account_number:
+          type: string
+          maxLength: 50
+        bank_name:
+          type: string
+          maxLength: 255
+        bank_routing_number:
+          type: string
+          maxLength: 20
+      required:
+      - business_address
+      - business_email
+      - business_name
+      - business_phone
+    MerchantStatusEnum:
+      enum:
+      - pending
+      - approved
+      - rejected
+      - suspended
+      - active
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `approved` - Approved
+        * `rejected` - Rejected
+        * `suspended` - Suspended
+        * `active` - Active
+    NewStatusEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      - cancelled
+      - expired
+      - refunded
+      - partially_refunded
+      - disputed
+      - frozen
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+        * `cancelled` - Cancelled
+        * `expired` - Expired
+        * `refunded` - Refunded
+        * `partially_refunded` - Partially Refunded
+        * `disputed` - Disputed
+        * `frozen` - Frozen
+    OTPVerificationRequest:
+      type: object
+      description: Serializer for OTP verification
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        otp_code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        purpose:
+          type: string
+          minLength: 1
+          default: registration
+      required:
+      - email
+      - otp_code
+    PaginatedCountryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Country'
+    PaginatedGroupList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    PaginatedIntegrationAPICallList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationAPICall'
+    PaginatedIntegrationListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationList'
+    PaginatedIntegrationWebhookList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationWebhook'
+    PaginatedMerchantIntegrationListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MerchantIntegrationList'
+    PaginatedMerchantList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merchant'
+    PaginatedPaymentGatewayList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentGateway'
+    PaginatedPaymentLinkList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentLink'
+    PaginatedPreferredCurrencyList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreferredCurrency'
+    PaginatedRoleGroupList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleGroup'
+    PaginatedTransactionListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionList'
+    PaginatedUserListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserList'
+    PaginatedUserSessionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSession'
+    PatchedMerchantIntegrationUpdateRequest:
+      type: object
+      description: Serializer for updating merchant integrations
+      properties:
+        is_enabled:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/StatusB44Enum'
+        configuration:
+          description: Merchant-specific configuration settings
+        credentials:
+          writeOnly: true
+    PatchedMerchantRequest:
+      type: object
+      description: Serializer for merchant accounts
+      properties:
+        business_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        business_registration_number:
+          type: string
+          nullable: true
+          maxLength: 100
+        category_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        business_address:
+          type: string
+          minLength: 1
+        business_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        business_email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        website_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 200
+        description:
+          type: string
+        bank_account_name:
+          type: string
+          maxLength: 255
+        bank_account_number:
+          type: string
+          maxLength: 50
+        bank_name:
+          type: string
+          maxLength: 255
+        bank_routing_number:
+          type: string
+          maxLength: 20
+    PatchedPaymentGatewayRequest:
+      type: object
+      description: Serializer for Payment Gateway
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Gateway name
+          maxLength: 100
+        code:
+          type: string
+          minLength: 1
+          description: Gateway code identifier
+          maxLength: 50
+        description:
+          type: string
+        api_endpoint:
+          type: string
+          format: uri
+          minLength: 1
+          description: Gateway API endpoint
+          maxLength: 200
+        webhook_endpoint:
+          type: string
+          format: uri
+          description: Webhook endpoint for notifications
+          maxLength: 200
+        merchant_id:
+          type: string
+          description: Merchant ID with gateway
+          maxLength: 100
+        supports_payments:
+          type: boolean
+        supports_refunds:
+          type: boolean
+        supports_payouts:
+          type: boolean
+        supports_webhooks:
+          type: boolean
+        supports_recurring:
+          type: boolean
+        supported_payment_methods:
+          type: string
+          minLength: 1
+          description: Comma-separated list of supported payment methods
+        supported_currencies:
+          type: string
+          minLength: 1
+          description: Comma-separated list of supported currency codes
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Minimum transaction amount
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Maximum transaction amount
+        transaction_fee_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
+          description: Transaction fee percentage (e.g., 2.9% = 0.0290)
+        transaction_fee_fixed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Fixed transaction fee amount
+        is_active:
+          type: boolean
+        is_sandbox:
+          type: boolean
+          description: Whether this is a sandbox/test gateway
+        priority:
+          type: integer
+          description: Gateway priority (lower = higher priority)
+    PatchedPaymentLinkCreateRequest:
+      type: object
+      description: Serializer for creating payment links
+      properties:
+        merchant:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          description: Payment link title
+          maxLength: 255
+        description:
+          type: string
+          description: Payment description
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Payment amount
+        is_amount_flexible:
+          type: boolean
+          description: Allow customers to change the amount
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Minimum amount (if flexible)
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Maximum amount (if flexible)
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this payment link expires
+        max_uses:
+          type: integer
+          nullable: true
+          description: Maximum number of times this link can be used
+        require_name:
+          type: boolean
+        require_email:
+          type: boolean
+        require_phone:
+          type: boolean
+        require_address:
+          type: boolean
+        allowed_payment_methods:
+          type: string
+          minLength: 1
+          description: Comma-separated list of allowed payment methods
+        success_url:
+          type: string
+          format: uri
+          description: URL to redirect after successful payment
+          maxLength: 200
+        cancel_url:
+          type: string
+          format: uri
+          description: URL to redirect after cancelled payment
+          maxLength: 200
+        metadata:
+          description: Additional metadata
+    PatchedTransactionUpdateRequest:
+      type: object
+      description: Serializer for updating transactions
+      properties:
+        status:
+          $ref: '#/components/schemas/NewStatusEnum'
+        external_reference:
+          type: string
+          description: External system reference (e.g., gateway transaction ID)
+          maxLength: 255
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        failure_reason:
+          type: string
+        failure_code:
+          type: string
+          maxLength: 50
+        settlement_date:
+          type: string
+          format: date
+          nullable: true
+        settlement_reference:
+          type: string
+          maxLength: 100
+        is_settled:
+          type: boolean
+        risk_score:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Risk score from 0-100
+        is_flagged:
+          type: boolean
+          description: Flagged for manual review
+    PatchedUserProfileRequest:
+      type: object
+      description: Serializer for user profile
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        country_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        preferred_currency_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+    PatchedUserRoleManagementRequest:
+      type: object
+      description: Serializer for managing user roles (admin only)
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+    PaymentGateway:
+      type: object
+      description: Serializer for Payment Gateway
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Gateway name
+          maxLength: 100
+        code:
+          type: string
+          description: Gateway code identifier
+          maxLength: 50
+        description:
+          type: string
+        api_endpoint:
+          type: string
+          format: uri
+          description: Gateway API endpoint
+          maxLength: 200
+        webhook_endpoint:
+          type: string
+          format: uri
+          description: Webhook endpoint for notifications
+          maxLength: 200
+        merchant_id:
+          type: string
+          description: Merchant ID with gateway
+          maxLength: 100
+        supports_payments:
+          type: boolean
+        supports_refunds:
+          type: boolean
+        supports_payouts:
+          type: boolean
+        supports_webhooks:
+          type: boolean
+        supports_recurring:
+          type: boolean
+        supported_payment_methods:
+          type: string
+          description: Comma-separated list of supported payment methods
+        supported_currencies:
+          type: string
+          description: Comma-separated list of supported currency codes
+        supported_payment_methods_list:
+          type: string
+          readOnly: true
+        supported_currencies_list:
+          type: string
+          readOnly: true
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Minimum transaction amount
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Maximum transaction amount
+        transaction_fee_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
+          description: Transaction fee percentage (e.g., 2.9% = 0.0290)
+        transaction_fee_fixed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Fixed transaction fee amount
+        is_active:
+          type: boolean
+        is_sandbox:
+          type: boolean
+          description: Whether this is a sandbox/test gateway
+        priority:
+          type: integer
+          description: Gateway priority (lower = higher priority)
+        transaction_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - api_endpoint
+      - code
+      - created_at
+      - id
+      - name
+      - supported_currencies_list
+      - supported_payment_methods_list
+      - transaction_count
+      - updated_at
+    PaymentGatewayRequest:
+      type: object
+      description: Serializer for Payment Gateway
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Gateway name
+          maxLength: 100
+        code:
+          type: string
+          minLength: 1
+          description: Gateway code identifier
+          maxLength: 50
+        description:
+          type: string
+        api_endpoint:
+          type: string
+          format: uri
+          minLength: 1
+          description: Gateway API endpoint
+          maxLength: 200
+        webhook_endpoint:
+          type: string
+          format: uri
+          description: Webhook endpoint for notifications
+          maxLength: 200
+        merchant_id:
+          type: string
+          description: Merchant ID with gateway
+          maxLength: 100
+        supports_payments:
+          type: boolean
+        supports_refunds:
+          type: boolean
+        supports_payouts:
+          type: boolean
+        supports_webhooks:
+          type: boolean
+        supports_recurring:
+          type: boolean
+        supported_payment_methods:
+          type: string
+          minLength: 1
+          description: Comma-separated list of supported payment methods
+        supported_currencies:
+          type: string
+          minLength: 1
+          description: Comma-separated list of supported currency codes
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Minimum transaction amount
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Maximum transaction amount
+        transaction_fee_percentage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,4})?$
+          description: Transaction fee percentage (e.g., 2.9% = 0.0290)
+        transaction_fee_fixed:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Fixed transaction fee amount
+        is_active:
+          type: boolean
+        is_sandbox:
+          type: boolean
+          description: Whether this is a sandbox/test gateway
+        priority:
+          type: integer
+          description: Gateway priority (lower = higher priority)
+      required:
+      - api_endpoint
+      - code
+      - name
+    PaymentLink:
+      type: object
+      description: Serializer for Payment Link
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        merchant:
+          type: string
+          format: uuid
+        title:
+          type: string
+          description: Payment link title
+          maxLength: 255
+        description:
+          type: string
+          description: Payment description
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Payment amount
+        is_amount_flexible:
+          type: boolean
+          description: Allow customers to change the amount
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Minimum amount (if flexible)
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Maximum amount (if flexible)
+        slug:
+          type: string
+          readOnly: true
+          description: Unique slug for the payment link
+        is_active:
+          type: boolean
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this payment link expires
+        max_uses:
+          type: integer
+          nullable: true
+          description: Maximum number of times this link can be used
+        current_uses:
+          type: integer
+          readOnly: true
+        require_name:
+          type: boolean
+        require_email:
+          type: boolean
+        require_phone:
+          type: boolean
+        require_address:
+          type: boolean
+        allowed_payment_methods:
+          type: string
+          description: Comma-separated list of allowed payment methods
+        allowed_payment_methods_list:
+          type: string
+          readOnly: true
+        success_url:
+          type: string
+          format: uri
+          description: URL to redirect after successful payment
+          maxLength: 200
+        cancel_url:
+          type: string
+          format: uri
+          description: URL to redirect after cancelled payment
+          maxLength: 200
+        metadata:
+          description: Additional metadata
+        is_usable:
+          type: string
+          readOnly: true
+        absolute_url:
+          type: string
+          readOnly: true
+        usage_display:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - absolute_url
+      - allowed_payment_methods_list
+      - amount
+      - created_at
+      - currency
+      - current_uses
+      - id
+      - is_usable
+      - merchant
+      - slug
+      - title
+      - updated_at
+      - usage_display
+    PaymentLinkCreate:
+      type: object
+      description: Serializer for creating payment links
+      properties:
+        merchant:
+          type: string
+          format: uuid
+        title:
+          type: string
+          description: Payment link title
+          maxLength: 255
+        description:
+          type: string
+          description: Payment description
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Payment amount
+        is_amount_flexible:
+          type: boolean
+          description: Allow customers to change the amount
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Minimum amount (if flexible)
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Maximum amount (if flexible)
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this payment link expires
+        max_uses:
+          type: integer
+          nullable: true
+          description: Maximum number of times this link can be used
+        require_name:
+          type: boolean
+        require_email:
+          type: boolean
+        require_phone:
+          type: boolean
+        require_address:
+          type: boolean
+        allowed_payment_methods:
+          type: string
+          description: Comma-separated list of allowed payment methods
+        success_url:
+          type: string
+          format: uri
+          description: URL to redirect after successful payment
+          maxLength: 200
+        cancel_url:
+          type: string
+          format: uri
+          description: URL to redirect after cancelled payment
+          maxLength: 200
+        metadata:
+          description: Additional metadata
+      required:
+      - amount
+      - currency
+      - merchant
+      - title
+    PaymentLinkCreateRequest:
+      type: object
+      description: Serializer for creating payment links
+      properties:
+        merchant:
+          type: string
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          description: Payment link title
+          maxLength: 255
+        description:
+          type: string
+          description: Payment description
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Payment amount
+        is_amount_flexible:
+          type: boolean
+          description: Allow customers to change the amount
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Minimum amount (if flexible)
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Maximum amount (if flexible)
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When this payment link expires
+        max_uses:
+          type: integer
+          nullable: true
+          description: Maximum number of times this link can be used
+        require_name:
+          type: boolean
+        require_email:
+          type: boolean
+        require_phone:
+          type: boolean
+        require_address:
+          type: boolean
+        allowed_payment_methods:
+          type: string
+          minLength: 1
+          description: Comma-separated list of allowed payment methods
+        success_url:
+          type: string
+          format: uri
+          description: URL to redirect after successful payment
+          maxLength: 200
+        cancel_url:
+          type: string
+          format: uri
+          description: URL to redirect after cancelled payment
+          maxLength: 200
+        metadata:
+          description: Additional metadata
+      required:
+      - amount
+      - currency
+      - merchant
+      - title
+    PaymentMethodChoice:
+      type: object
+      description: Serializer for payment method choices
+      properties:
+        value:
+          type: string
+        display:
+          type: string
+      required:
+      - display
+      - value
+    PaymentMethodEnum:
+      enum:
+      - bank_transfer
+      - card
+      - mobile_money
+      - wallet
+      - crypto
+      - cash
+      - other
+      type: string
+      description: |-
+        * `bank_transfer` - Bank Transfer
+        * `card` - Card Payment
+        * `mobile_money` - Mobile Money
+        * `wallet` - Digital Wallet
+        * `crypto` - Cryptocurrency
+        * `cash` - Cash
+        * `other` - Other
+    PreferredCurrency:
+      type: object
+      description: Serializer for PreferredCurrency model
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        code:
+          type: string
+          maxLength: 3
+        symbol:
+          type: string
+          maxLength: 10
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - created_at
+      - id
+      - name
+      - symbol
+      - updated_at
+    PreferredCurrencyRequest:
+      type: object
+      description: Serializer for PreferredCurrency model
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        code:
+          type: string
+          minLength: 1
+          maxLength: 3
+        symbol:
+          type: string
+          minLength: 1
+          maxLength: 10
+        is_active:
+          type: boolean
+      required:
+      - code
+      - name
+      - symbol
+    RefundCreateRequest:
+      type: object
+      description: Serializer for creating refunds
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        reason:
+          type: string
+          maxLength: 500
+      required:
+      - amount
+    RoleEnum:
+      enum:
+      - admin
+      - user
+      - moderator
+      - staff
+      type: string
+      description: |-
+        * `admin` - Admin
+        * `user` - User
+        * `moderator` - Moderator
+        * `staff` - Staff
+    RoleGroup:
+      type: object
+      description: Serializer for role group mappings
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        role_display:
+          type: string
+          readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - groups
+      - id
+      - role
+      - role_display
+      - updated_at
+    StatusB44Enum:
+      enum:
+      - draft
+      - active
+      - inactive
+      - error
+      - suspended
+      - testing
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `inactive` - Inactive
+        * `error` - Error
+        * `suspended` - Suspended
+        * `testing` - Testing
+    TransactionCreate:
+      type: object
+      description: Serializer for creating transactions
+      properties:
+        merchant:
+          type: string
+          format: uuid
+          description: Merchant processing the transaction
+        customer:
+          type: string
+          format: uuid
+          nullable: true
+          description: Customer making the payment (optional for guest payments)
+        customer_email:
+          type: string
+          format: email
+          description: Customer email for guest transactions
+          maxLength: 254
+        customer_phone:
+          type: string
+          description: Customer phone number
+          maxLength: 20
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        gateway:
+          type: string
+          format: uuid
+          nullable: true
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction amount
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+      required:
+      - amount
+      - currency
+      - merchant
+      - payment_method
+    TransactionCreateRequest:
+      type: object
+      description: Serializer for creating transactions
+      properties:
+        merchant:
+          type: string
+          format: uuid
+          description: Merchant processing the transaction
+        customer:
+          type: string
+          format: uuid
+          nullable: true
+          description: Customer making the payment (optional for guest payments)
+        customer_email:
+          type: string
+          format: email
+          description: Customer email for guest transactions
+          maxLength: 254
+        customer_phone:
+          type: string
+          description: Customer phone number
+          maxLength: 20
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        gateway:
+          type: string
+          format: uuid
+          nullable: true
+        currency:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction amount
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+          minLength: 1
+        user_agent:
+          type: string
+      required:
+      - amount
+      - currency
+      - merchant
+      - payment_method
+    TransactionDetail:
+      type: object
+      description: Detailed serializer for transaction details
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reference:
+          type: string
+          readOnly: true
+          description: Unique transaction reference
+        external_reference:
+          type: string
+          description: External system reference (e.g., gateway transaction ID)
+          maxLength: 255
+        merchant:
+          type: string
+          format: uuid
+          description: Merchant processing the transaction
+        merchant_name:
+          type: string
+          readOnly: true
+        customer:
+          type: string
+          format: uuid
+          nullable: true
+          description: Customer making the payment (optional for guest payments)
+        customer_email:
+          type: string
+          readOnly: true
+        customer_phone:
+          type: string
+          description: Customer phone number
+          maxLength: 20
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        status:
+          $ref: '#/components/schemas/NewStatusEnum'
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        gateway:
+          type: string
+          format: uuid
+          nullable: true
+        gateway_name:
+          type: string
+          readOnly: true
+        currency:
+          type: string
+          format: uuid
+        currency_code:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction amount
+        fee_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction fee amount
+        net_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          readOnly: true
+          description: Net amount after fees
+        original_currency:
+          type: string
+          description: Original currency if converted
+          maxLength: 3
+        original_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          nullable: true
+          description: Original amount before currency conversion
+        exchange_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,6})?$
+          nullable: true
+          description: Exchange rate used for conversion
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        processed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        failed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        failure_reason:
+          type: string
+        failure_code:
+          type: string
+          maxLength: 50
+        settlement_date:
+          type: string
+          format: date
+          nullable: true
+        settlement_reference:
+          type: string
+          maxLength: 100
+        is_settled:
+          type: boolean
+        parent_transaction:
+          type: string
+          format: uuid
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+        risk_score:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Risk score from 0-100
+        is_flagged:
+          type: boolean
+          description: Flagged for manual review
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionEvent'
+          readOnly: true
+        webhooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Webhook'
+          readOnly: true
+        child_transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionList'
+          readOnly: true
+        refunded_amount:
+          type: string
+          readOnly: true
+        remaining_refundable_amount:
+          type: string
+          readOnly: true
+        can_refund:
+          type: string
+          readOnly: true
+        transaction_hash:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - can_refund
+      - child_transactions
+      - completed_at
+      - created_at
+      - currency
+      - currency_code
+      - customer_email
+      - events
+      - failed_at
+      - gateway_name
+      - id
+      - merchant
+      - merchant_name
+      - net_amount
+      - payment_method
+      - processed_at
+      - reference
+      - refunded_amount
+      - remaining_refundable_amount
+      - transaction_hash
+      - updated_at
+      - webhooks
+    TransactionEvent:
+      type: object
+      description: Serializer for Transaction Event
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        event_type:
+          type: string
+          description: Type of event (status_change, webhook_received, etc.)
+          maxLength: 50
+        old_status:
+          oneOf:
+          - $ref: '#/components/schemas/NewStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        new_status:
+          oneOf:
+          - $ref: '#/components/schemas/NewStatusEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        description:
+          type: string
+        metadata: {}
+        source:
+          type: string
+          description: Source of the event (system, gateway, admin, etc.)
+          maxLength: 50
+        user:
+          type: string
+          format: uuid
+          nullable: true
+          description: User who triggered the event (if applicable)
+        user_email:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event_type
+      - id
+      - user_email
+    TransactionList:
+      type: object
+      description: Simplified serializer for transaction lists
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        reference:
+          type: string
+          description: Unique transaction reference
+          maxLength: 100
+        external_reference:
+          type: string
+          description: External system reference (e.g., gateway transaction ID)
+          maxLength: 255
+        merchant_name:
+          type: string
+          readOnly: true
+        customer_email:
+          type: string
+          readOnly: true
+        transaction_type:
+          $ref: '#/components/schemas/TransactionTypeEnum'
+        status:
+          $ref: '#/components/schemas/NewStatusEnum'
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethodEnum'
+        gateway_name:
+          type: string
+          readOnly: true
+        currency_code:
+          type: string
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction amount
+        amount_display:
+          type: string
+          readOnly: true
+        fee_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Transaction fee amount
+        net_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+          description: Net amount after fees
+        description:
+          type: string
+          description: Transaction description
+        can_refund:
+          type: string
+          readOnly: true
+        is_settled:
+          type: boolean
+        is_flagged:
+          type: boolean
+          description: Flagged for manual review
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - amount_display
+      - can_refund
+      - created_at
+      - currency_code
+      - customer_email
+      - gateway_name
+      - id
+      - merchant_name
+      - net_amount
+      - payment_method
+      - reference
+    TransactionStats:
+      type: object
+      description: Serializer for transaction statistics
+      properties:
+        total_transactions:
+          type: integer
+        completed_transactions:
+          type: integer
+        failed_transactions:
+          type: integer
+        success_rate:
+          type: number
+          format: double
+        total_volume:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        total_fees:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        net_volume:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+      required:
+      - completed_transactions
+      - failed_transactions
+      - net_volume
+      - success_rate
+      - total_fees
+      - total_transactions
+      - total_volume
+    TransactionStatusChoice:
+      type: object
+      description: Serializer for transaction status choices
+      properties:
+        value:
+          type: string
+        display:
+          type: string
+      required:
+      - display
+      - value
+    TransactionTypeChoice:
+      type: object
+      description: Serializer for transaction type choices
+      properties:
+        value:
+          type: string
+        display:
+          type: string
+      required:
+      - display
+      - value
+    TransactionTypeEnum:
+      enum:
+      - payment
+      - refund
+      - payout
+      - transfer
+      - fee
+      - reversal
+      - chargeback
+      - adjustment
+      type: string
+      description: |-
+        * `payment` - Payment
+        * `refund` - Refund
+        * `payout` - Payout
+        * `transfer` - Transfer
+        * `fee` - Fee
+        * `reversal` - Reversal
+        * `chargeback` - Chargeback
+        * `adjustment` - Adjustment
+    TransactionUpdate:
+      type: object
+      description: Serializer for updating transactions
+      properties:
+        status:
+          $ref: '#/components/schemas/NewStatusEnum'
+        external_reference:
+          type: string
+          description: External system reference (e.g., gateway transaction ID)
+          maxLength: 255
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        failure_reason:
+          type: string
+        failure_code:
+          type: string
+          maxLength: 50
+        settlement_date:
+          type: string
+          format: date
+          nullable: true
+        settlement_reference:
+          type: string
+          maxLength: 100
+        is_settled:
+          type: boolean
+        risk_score:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Risk score from 0-100
+        is_flagged:
+          type: boolean
+          description: Flagged for manual review
+    TransactionUpdateRequest:
+      type: object
+      description: Serializer for updating transactions
+      properties:
+        status:
+          $ref: '#/components/schemas/NewStatusEnum'
+        external_reference:
+          type: string
+          description: External system reference (e.g., gateway transaction ID)
+          maxLength: 255
+        description:
+          type: string
+          description: Transaction description
+        metadata:
+          description: Additional transaction metadata
+        payment_details:
+          description: Payment-specific details (card last 4, bank details, etc.)
+        failure_reason:
+          type: string
+        failure_code:
+          type: string
+          maxLength: 50
+        settlement_date:
+          type: string
+          format: date
+          nullable: true
+        settlement_reference:
+          type: string
+          maxLength: 100
+        is_settled:
+          type: boolean
+        risk_score:
+          type: integer
+          maximum: 100
+          minimum: 0
+          nullable: true
+          description: Risk score from 0-100
+        is_flagged:
+          type: boolean
+          description: Flagged for manual review
+    UBAAccountInquiryRequest:
+      type: object
+      description: Serializer for UBA account inquiry
+      properties:
+        account_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        bank_code:
+          type: string
+          minLength: 1
+          default: UBA_KE
+          maxLength: 10
+      required:
+      - account_number
+    UBABalanceInquiryRequest:
+      type: object
+      description: Serializer for UBA balance inquiry
+      properties:
+        account_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+      required:
+      - account_number
+    UBABillPaymentRequest:
+      type: object
+      description: Serializer for UBA bill payment
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        biller_code:
+          type: string
+          minLength: 1
+          maxLength: 20
+        customer_reference:
+          type: string
+          minLength: 1
+          maxLength: 50
+        source_account:
+          type: string
+          minLength: 1
+          maxLength: 20
+        narration:
+          type: string
+          maxLength: 255
+        reference:
+          type: string
+          maxLength: 100
+      required:
+      - amount
+      - biller_code
+      - customer_reference
+      - source_account
+    UBAFundTransferRequest:
+      type: object
+      description: Serializer for UBA fund transfer
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        source_account:
+          type: string
+          minLength: 1
+          maxLength: 20
+        destination_account:
+          type: string
+          minLength: 1
+          maxLength: 20
+        destination_bank_code:
+          type: string
+          minLength: 1
+          maxLength: 10
+        narration:
+          type: string
+          maxLength: 255
+        reference:
+          type: string
+          maxLength: 100
+      required:
+      - amount
+      - destination_account
+      - destination_bank_code
+      - source_account
+    UBAPaymentPageRequest:
+      type: object
+      description: Serializer for creating UBA payment pages
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,13}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          minLength: 1
+          default: KES
+          maxLength: 3
+        customer_email:
+          type: string
+          format: email
+        customer_phone:
+          type: string
+          maxLength: 20
+        description:
+          type: string
+          maxLength: 255
+        reference:
+          type: string
+          maxLength: 100
+        callback_url:
+          type: string
+          format: uri
+        redirect_url:
+          type: string
+          format: uri
+      required:
+      - amount
+    UBATransactionHistoryRequest:
+      type: object
+      description: Serializer for UBA transaction history
+      properties:
+        account_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        limit:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+      required:
+      - account_number
+    UBAWebhookRequest:
+      type: object
+      description: Serializer for UBA webhook validation
+      properties:
+        event_type:
+          type: string
+          minLength: 1
+          maxLength: 50
+        data: {}
+        timestamp:
+          type: string
+          format: date-time
+        signature:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - data
+      - event_type
+      - signature
+      - timestamp
+    UserList:
+      type: object
+      description: Serializer for listing users (admin only)
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_verified:
+          type: boolean
+        is_active:
+          type: boolean
+        last_login_at:
+          type: string
+          format: date-time
+          nullable: true
+        country_name:
+          type: string
+          readOnly: true
+        currency_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - country_name
+      - created_at
+      - currency_name
+      - email
+      - first_name
+      - full_name
+      - id
+      - last_name
+    UserLoginRequest:
+      type: object
+      description: Serializer for user login
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    UserProfile:
+      type: object
+      description: Serializer for user profile
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        role_display:
+          type: string
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        last_login_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        country:
+          allOf:
+          - $ref: '#/components/schemas/Country'
+          readOnly: true
+        preferred_currency:
+          allOf:
+          - $ref: '#/components/schemas/PreferredCurrency'
+          readOnly: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - country
+      - created_at
+      - email
+      - first_name
+      - full_name
+      - groups
+      - id
+      - is_active
+      - is_verified
+      - last_login_at
+      - last_name
+      - preferred_currency
+      - role
+      - role_display
+      - updated_at
+    UserProfileRequest:
+      type: object
+      description: Serializer for user profile
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        country_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        preferred_currency_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+      required:
+      - first_name
+      - last_name
+    UserRegistrationWithMerchantRequest:
+      type: object
+      description: Enhanced registration serializer with merchant onboarding
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 255
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone_number:
+          type: string
+          nullable: true
+          maxLength: 20
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+        business_name:
+          type: string
+          description: Optional business name for merchant account creation
+          maxLength: 255
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        country_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        preferred_currency_id:
+          type: string
+          format: uuid
+          writeOnly: true
+          nullable: true
+        merchant_data:
+          allOf:
+          - $ref: '#/components/schemas/MerchantOnboardingRequest'
+          nullable: true
+        create_merchant_account:
+          type: boolean
+          default: false
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - password_confirm
+    UserRoleManagement:
+      type: object
+      description: Serializer for managing user roles (admin only)
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        phone_number:
+          type: string
+          readOnly: true
+          nullable: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        role_display:
+          type: string
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - first_name
+      - full_name
+      - groups
+      - id
+      - is_verified
+      - last_name
+      - phone_number
+      - role_display
+      - updated_at
+    UserRoleManagementRequest:
+      type: object
+      description: Serializer for managing user roles (admin only)
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+    UserSession:
+      type: object
+      description: Serializer for user sessions
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        user_email:
+          type: string
+          readOnly: true
+        session_key:
+          type: string
+          maxLength: 255
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        is_expired:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - expires_at
+      - id
+      - is_expired
+      - session_key
+      - user_email
+    Webhook:
+      type: object
+      description: Serializer for Webhook
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          type: string
+          format: uri
+          description: Webhook delivery URL
+          maxLength: 200
+        event_type:
+          type: string
+          description: Event that triggered the webhook
+          maxLength: 50
+        payload:
+          description: Webhook payload sent
+        headers:
+          description: Headers sent with the webhook
+        status_code:
+          type: integer
+          nullable: true
+        response_body:
+          type: string
+        response_time_ms:
+          type: integer
+          nullable: true
+        attempts:
+          type: integer
+        max_attempts:
+          type: integer
+        is_delivered:
+          type: boolean
+        delivered_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        next_attempt_at:
+          type: string
+          format: date-time
+          nullable: true
+        error_message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - delivered_at
+      - event_type
+      - id
+      - payload
+      - updated_at
+      - url
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication. Get your token from the login endpoint.
+servers:
+- url: http://127.0.0.1:8000
+  description: Development Server
+- url: https://api.pexilabs.com
+  description: Production Server
+tags:
+- name: Authentication
+  description: User registration, login, logout, and profile management
+- name: OTP Verification
+  description: Email OTP generation, verification, and resend functionality
+- name: Merchant Management
+  description: Merchant account creation, management, and status updates
+- name: User Management
+  description: User profile, sessions, and role management
+- name: Reference Data
+  description: Countries, currencies, and merchant categories

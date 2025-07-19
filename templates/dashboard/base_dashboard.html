@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{{ page_title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        /* Custom styles */
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .sidebar-hidden {
+            transform: translateX(-100%);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .hover-lift {
+            transition: transform 0.2s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Scrollbar styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+
+        /* Notification specific styles */
+        .notification-item {
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background-color: #f9fafb;
+        }
+
+        #notificationMenu {
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Badge pulse animation */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        #notificationBadge.pulse {
+            animation: pulse 1s infinite;
+        }
+
+        /* Notification priority indicators */
+        .notification-urgent {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification-high {
+            border-left: 4px solid #f97316;
+        }
+
+        .notification-medium {
+            border-left: 4px solid #eab308;
+        }
+
+        .notification-low {
+            border-left: 4px solid #6b7280;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="flex h-screen bg-gray-50">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg sidebar-transition transform lg:translate-x-0 lg:static lg:inset-0">
+            <div class="flex items-center justify-center h-16 bg-gradient-to-r from-indigo-600 to-purple-600">
+                <a href="/" class="flex items-center text-white font-bold text-xl">
+                    <i class="fas fa-cube mr-2"></i>
+                    PexiLabs
+                </a>
+                <button id="sidebar-close" class="lg:hidden absolute right-4 text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- User Info -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-indigo-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</p>
+                        <p class="text-xs text-gray-500 capitalize">{{ user.role }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="mt-4 px-4 custom-scrollbar overflow-y-auto h-full">
+                {% block sidebar_nav %}
+                <div class="space-y-2">
+                    <a href="{% url 'dashboard:dashboard_redirect' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-tachometer-alt mr-3"></i>
+                        Dashboard
+                    </a>
+                    
+                    {% if user.role == 'admin' %}
+                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-users mr-3"></i>
+                            Manage Users
+                        </a>
+                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-store mr-3"></i>
+                            Manage Merchants
+                        </a>
+                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-cog mr-3"></i>
+                            Admin Panel
+                        </a>
+                    {% elif user.role == 'staff' or user.is_staff %}
+                        <a href="{% url 'dashboard:merchant_verifier_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-user-check mr-3"></i>
+                            Merchant Verifier
+                        </a>
+                        <a href="/admin/authentication/merchant/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-store mr-3"></i>
+                            Merchants
+                        </a>
+                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-tools mr-3"></i>
+                            Admin Tools
+                        </a>
+                    {% endif %}
+                    
+                    {% if user.merchant_account %}
+                        <a href="#" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            Analytics
+                        </a>
+                        <a href="{% url 'dashboard:merchant_transactions' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-credit-card mr-3"></i>
+                            Transactions
+                        </a>
+                        <a href="{% url 'dashboard:merchant_api_keys' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-key mr-3"></i>
+                            API Keys
+                        </a>
+                        <a href="{% url 'dashboard:merchant_documents' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-file-alt mr-3"></i>
+                            Documents
+                        </a>
+                        <a href="{% url 'dashboard:merchant_bank_details' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-university mr-3"></i>
+                            Bank Details
+                        </a>
+                        <a href="#" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-plug mr-3"></i>
+                            Integrations
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'dashboard:merchant_profile' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-user-circle mr-3"></i>
+                        Profile
+                    </a>
+                    
+                    <!-- Developer Documentation Section -->
+                    <div class="mt-6 mb-2">
+                        <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Developer Tools</h3>
+                    </div>
+                    <a href="{% url 'docs:api_documentation' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-book mr-3"></i>
+                        API Documentation
+                    </a>
+                    <a href="{% url 'docs:integration_guides' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-code mr-3"></i>
+                        Integration Guides
+                    </a>
+                    <a href="{% url 'docs:sdk_documentation' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-cube mr-3"></i>
+                        SDK Documentation
+                    </a>
+                    <a href="{% url 'docs:webhook_testing' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-webhook mr-3"></i>
+                        Webhook Testing
+                    </a>
+                    <a href="{% url 'docs:api_explorer' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-flask mr-3"></i>
+                        API Explorer
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-cog mr-3"></i>
+                        Settings
+                    </a>
+                    
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <a href="/api/docs/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-book mr-3"></i>
+                            API Docs
+                        </a>
+                        <a href="/contact/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-headset mr-3"></i>
+                            Support
+                        </a>
+                    </div>
+                </div>
+                {% endblock %}
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+                <a href="{% url 'auth:logout_page' %}" class="flex items-center justify-center w-full px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Logout
+                </a>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden lg:ml-0">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="lg:hidden text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h1 class="ml-4 lg:ml-0 text-xl font-semibold text-gray-900">
+                            {% block page_header %}Dashboard{% endblock %}
+                        </h1>
+                    </div>
+                    
+                    <!-- Top Bar Actions -->
+                    <div class="flex items-center space-x-4">
+                        {% block top_bar_actions %}
+                        <!-- Notifications Dropdown -->
+                        <div class="relative" id="notificationDropdown">
+                            <button 
+                                id="notificationButton"
+                                class="p-2 text-gray-400 hover:text-gray-600 relative transition-colors focus:outline-none"
+                                onclick="toggleNotificationDropdown()"
+                            >
+                                <i class="fas fa-bell text-xl"></i>
+                                <span 
+                                    id="notificationBadge"
+                                    class="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center hidden"
+                                ></span>
+                            </button>
+                            
+                            <!-- Notification Dropdown Menu -->
+                            <div 
+                                id="notificationMenu"
+                                class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden"
+                            >
+                                <!-- Header -->
+                                <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900">Notifications</h3>
+                                    <button 
+                                        onclick="markAllNotificationsRead()"
+                                        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        Mark all read
+                                    </button>
+                                </div>
+                                
+                                <!-- Notifications List -->
+                                <div id="notificationsList" class="max-h-96 overflow-y-auto">
+                                    <!-- Notifications will be loaded here via JavaScript -->
+                                    <div class="p-4 text-center text-gray-500">
+                                        <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                                        <p>Loading notifications...</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer -->
+                                <div class="px-4 py-3 border-t border-gray-200">
+                                    <a 
+                                        href="#" 
+                                        class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                                    >
+                                        View all notifications
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endblock %}
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Messages -->
+            {% if messages %}
+                <div class="px-6 py-2">
+                    {% for message in messages %}
+                        <div class="mb-2 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %}">
+                            <div class="flex items-center">
+                                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 px-6 py-6 custom-scrollbar">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden hidden"></div>
+    
+    <!-- JavaScript -->
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('sidebar-hidden');
+            sidebarOverlay.classList.toggle('hidden');
+        }
+        
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarClose.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+        
+        // Close sidebar on overlay click (mobile)
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth < 1024) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.add('sidebar-hidden');
+                }
+            }
+        });
+        
+        // Responsive sidebar handling
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('sidebar-hidden');
+            } else {
+                sidebar.classList.add('sidebar-hidden');
+            }
+        });
+        
+        // Initialize charts if Chart.js is loaded
+        window.createChart = function(ctx, config) {
+            return new Chart(ctx, config);
+        };
+        
+        // Function to scroll to documents section
+        function scrollToDocuments() {
+            const documentsSection = document.getElementById('documents-section');
+            if (documentsSection) {
+                documentsSection.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                // Add highlight effect
+                documentsSection.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
+                setTimeout(() => {
+                    documentsSection.style.boxShadow = '';
+                }, 2000);
+            }
+        }
+
+        // Notification System JavaScript
+        let isNotificationDropdownOpen = false;
+
+        // Function to get CSRF token
+        function getCSRFToken() {
+            // Try to get from meta tag first, then fallback to form input
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                   document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        }
+
+        // Function to toggle notification dropdown
+        function toggleNotificationDropdown() {
+            const menu = document.getElementById('notificationMenu');
+            isNotificationDropdownOpen = !isNotificationDropdownOpen;
+            
+            if (isNotificationDropdownOpen) {
+                menu.classList.remove('hidden');
+                loadNotifications();
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Function to load notifications
+        async function loadNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            
+            try {
+                const response = await fetch('/dashboard/api/notifications/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch notifications');
+                }
+                
+                const data = await response.json();
+                updateNotificationBadge(data.unread_count);
+                renderNotifications(data.notifications);
+                
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                notificationsList.innerHTML = `
+                    <div class="p-4 text-center text-red-500">
+                        <i class="fas fa-exclamation-circle text-xl mb-2"></i>
+                        <p>Failed to load notifications</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Function to update notification badge
+        function updateNotificationBadge(unreadCount) {
+            const badge = document.getElementById('notificationBadge');
+            const currentCount = parseInt(badge.textContent) || 0;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                badge.classList.remove('hidden');
+                
+                // Add pulse animation if count increased
+                if (unreadCount > currentCount) {
+                    badge.classList.add('pulse');
+                    setTimeout(() => {
+                        badge.classList.remove('pulse');
+                    }, 3000);
+                }
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('pulse');
+            }
+        }
+
+        // Function to render notifications
+        function renderNotifications(notifications) {
+            const notificationsList = document.getElementById('notificationsList');
+            
+            if (notifications.length === 0) {
+                notificationsList.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="fas fa-bell-slash text-xl mb-2"></i>
+                        <p>No notifications</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const notificationsHTML = notifications.map(notification => {
+                const priorityColors = {
+                    'low': 'text-gray-600',
+                    'medium': 'text-yellow-600',
+                    'high': 'text-orange-600',
+                    'urgent': 'text-red-600'
+                };
+                
+                const typeIcons = {
+                    'info': 'fa-info-circle text-blue-500',
+                    'warning': 'fa-exclamation-triangle text-yellow-500',
+                    'error': 'fa-exclamation-circle text-red-500',
+                    'success': 'fa-check-circle text-green-500'
+                };
+                
+                const priorityClass = `notification-${notification.priority}`;
+                
+                return `
+                    <div class="notification-item border-b border-gray-100 hover:bg-gray-50 transition-colors ${priorityClass} ${!notification.is_read ? 'bg-blue-50' : ''}" data-notification-id="${notification.id}">
+                        <div class="p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-3 flex-1">
+                                    <div class="flex-shrink-0 pt-1">
+                                        <i class="fas ${typeIcons[notification.type] || 'fa-bell text-blue-500'} text-lg"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="text-sm font-medium text-gray-900 ${!notification.is_read ? 'font-bold' : ''}">${notification.title}</h4>
+                                            ${!notification.is_read ? '<div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>' : ''}
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1 break-words">${notification.message}</p>
+                                        ${notification.action_url ? `
+                                            <a href="${notification.action_url}" 
+                                               class="inline-block mt-2 text-xs text-indigo-600 hover:text-indigo-700 font-medium bg-indigo-50 px-2 py-1 rounded"
+                                               onclick="markNotificationRead('${notification.id}')">
+                                                <i class="fas fa-external-link-alt mr-1"></i>
+                                                ${notification.action_text || 'Take Action'}
+                                            </a>
+                                        ` : ''}
+                                        <div class="flex items-center justify-between mt-2">
+                                            <p class="text-xs text-gray-400">${formatTimeAgo(notification.created_at)}</p>
+                                            <span class="text-xs ${priorityColors[notification.priority]} font-medium capitalize">${notification.priority}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-1 ml-2 flex-shrink-0">
+                                    ${!notification.is_read ? `
+                                        <button onclick="markNotificationRead('${notification.id}')" 
+                                                class="p-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded"
+                                                title="Mark as read">
+                                            <i class="fas fa-check text-xs"></i>
+                                        </button>
+                                    ` : ''}
+                                    <button onclick="dismissNotification('${notification.id}')" 
+                                            class="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"
+                                            title="Dismiss">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            notificationsList.innerHTML = notificationsHTML;
+        }
+
+        // Function to format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            } else if (diffInSeconds < 3600) {
+                const minutes = Math.floor(diffInSeconds / 60);
+                return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            } else if (diffInSeconds < 86400) {
+                const hours = Math.floor(diffInSeconds / 3600);
+                return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            } else {
+                const days = Math.floor(diffInSeconds / 86400);
+                return `${days} day${days > 1 ? 's' : ''} ago`;
+            }
+        }
+
+        // Function to mark notification as read
+        async function markNotificationRead(notificationId) {
+            try {
+                const response = await fetch(`/dashboard/api/notifications/${notificationId}/read/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                if (response.ok) {
+                    // Refresh notifications
+                    loadNotifications();
+                } else {
+                    console.error('Failed to mark notification as read');
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        // Function to dismiss notification
+        async function dismissNotification(notificationId) {
+            try {
+                const response = await fetch(`/dashboard/api/notifications/${notificationId}/dismiss/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                if (response.ok) {
+                    // Remove notification from DOM
+                    const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`);
+                    if (notificationElement) {
+                        notificationElement.style.opacity = '0.5';
+                        notificationElement.style.transform = 'translateX(100%)';
+                        setTimeout(() => {
+                            loadNotifications(); // Refresh the list
+                        }, 300);
+                    }
+                } else {
+                    console.error('Failed to dismiss notification');
+                }
+            } catch (error) {
+                console.error('Error dismissing notification:', error);
+            }
+        }
+
+        // Function to mark all notifications as read
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch('/dashboard/api/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                if (response.ok) {
+                    loadNotifications();
+                } else {
+                    console.error('Failed to mark all notifications as read');
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const menu = document.getElementById('notificationMenu');
+            
+            if (!dropdown.contains(e.target) && isNotificationDropdownOpen) {
+                menu.classList.add('hidden');
+                isNotificationDropdownOpen = false;
+            }
+        });
+
+        // Load initial notification count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load notification count without opening dropdown
+            loadNotificationCount();
+            
+            // Set up periodic refresh (every 30 seconds)
+            setInterval(loadNotificationCount, 30000);
+        });
+
+        // Function to load notification count only
+        async function loadNotificationCount() {
+            try {
+                const response = await fetch('/dashboard/api/notifications/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateNotificationBadge(data.unread_count);
+                }
+            } catch (error) {
+                console.error('Error loading notification count:', error);
+            }
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

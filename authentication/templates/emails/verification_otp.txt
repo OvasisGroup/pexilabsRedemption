@@ -1,0 +1,19 @@
+PexiLabs - Email Verification Required
+
+Hello {{ user.first_name }},
+
+Thank you for registering with PexiLabs! To complete your account setup, please verify your email address using the verification code below:
+
+Verification Code: {{ otp_code }}
+
+Please enter this 6-digit code in the verification form to activate your account.
+
+IMPORTANT: This verification code will expire in {{ validity_minutes }} minutes for security reasons. If you didn't request this verification, please ignore this email.
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Welcome to PexiLabs!
+
+---
+This email was sent from PexiLabs. Please do not reply to this email.
+© {{ current_year }} PexiLabs. All rights reserved.

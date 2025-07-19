@@ -1,0 +1,501 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Profile Settings</h1>
+            <p class="text-gray-600 mt-1">Manage your account information and business details</p>
+        </div>
+    </div>
+
+    <!-- Profile Overview -->
+    <div class="glass-card rounded-xl p-6">
+        <div class="flex items-center space-x-6 mb-6">
+            <div class="w-20 h-20 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-user text-white text-2xl"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900">{{ merchant.business_name }}</h2>
+                <p class="text-gray-600">{{ user.get_full_name }}</p>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if merchant.status == 'active' %}bg-green-100 text-green-800{% elif merchant.status == 'approved' %}bg-blue-100 text-blue-800{% elif merchant.status == 'pending' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">
+                    <i class="fas {% if merchant.status == 'active' %}fa-check-circle{% elif merchant.status == 'approved' %}fa-thumbs-up{% elif merchant.status == 'pending' %}fa-clock{% else %}fa-exclamation-circle{% endif %} mr-1"></i>
+                    {{ merchant.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Forms -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Personal Information -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Personal Information</h3>
+            
+            <form id="personalInfoForm" class="space-y-4">
+                {% csrf_token %}
+                
+                <!-- First Name -->
+                <div>
+                    <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        First Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name"
+                        value="{{ user.first_name }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your first name"
+                    />
+                </div>
+                
+                <!-- Last Name -->
+                <div>
+                    <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name"
+                        value="{{ user.last_name }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your last name"
+                    />
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        value="{{ user.email }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                        readonly
+                    />
+                    <p class="text-xs text-gray-500 mt-1">Email cannot be changed. Contact support if needed.</p>
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="phone_number" 
+                        name="phone_number"
+                        value="{{ user.phone_number }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your phone number"
+                    />
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                >
+                    Update Personal Information
+                </button>
+            </form>
+        </div>
+
+        <!-- Business Information -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Business Information</h3>
+            
+            <form id="businessInfoForm" class="space-y-4">
+                {% csrf_token %}
+                
+                <!-- Business Name -->
+                <div>
+                    <label for="business_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Business Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="business_name" 
+                        name="business_name"
+                        value="{{ merchant.business_name }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your business name"
+                    />
+                </div>
+                
+                <!-- Business Email -->
+                <div>
+                    <label for="business_email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Business Email
+                    </label>
+                    <input 
+                        type="email" 
+                        id="business_email" 
+                        name="business_email"
+                        value="{{ merchant.business_email }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your business email"
+                    />
+                </div>
+                
+                <!-- Business Phone -->
+                <div>
+                    <label for="business_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                        Business Phone
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="business_phone" 
+                        name="business_phone"
+                        value="{{ merchant.business_phone }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your business phone"
+                    />
+                </div>
+                
+                <!-- Business Address -->
+                <div>
+                    <label for="business_address" class="block text-sm font-medium text-gray-700 mb-2">
+                        Business Address
+                    </label>
+                    <textarea 
+                        id="business_address" 
+                        name="business_address"
+                        rows="3"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your business address"
+                    >{{ merchant.business_address }}</textarea>
+                </div>
+                
+                <!-- Registration Number -->
+                <div>
+                    <label for="business_registration_number" class="block text-sm font-medium text-gray-700 mb-2">
+                        Registration Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="business_registration_number" 
+                        name="business_registration_number"
+                        value="{{ merchant.business_registration_number }}"
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="Enter your business registration number"
+                    />
+                </div>
+                
+                <button 
+                    type="submit" 
+                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+                >
+                    Update Business Information
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Security Settings</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Change Password -->
+            <div>
+                <h4 class="text-md font-medium text-gray-800 mb-3">Change Password</h4>
+                <form id="passwordForm" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div>
+                        <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            Current Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="current_password" 
+                                name="current_password"
+                                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter current password"
+                            />
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('current_password')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <i id="current_password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            New Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="new_password" 
+                                name="new_password"
+                                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter new password"
+                            />
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('new_password')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <i id="new_password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                            Confirm New Password
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="password" 
+                                id="confirm_password" 
+                                name="confirm_password"
+                                class="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Confirm new password"
+                            />
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('confirm_password')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <i id="confirm_password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button 
+                        type="submit" 
+                        class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                    >
+                        Change Password
+                    </button>
+                </form>
+            </div>
+
+            <!-- Account Information -->
+            <div>
+                <h4 class="text-md font-medium text-gray-800 mb-3">Account Information</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Account Created</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.date_joined|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Last Login</span>
+                        <span class="text-sm font-medium text-gray-900">{{ user.last_login|date:"M d, Y H:i" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Account Type</span>
+                        <span class="text-sm font-medium text-gray-900 capitalize">{{ user.role }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-600">Email Verified</span>
+                        <span class="text-sm font-medium {% if user.is_verified %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if user.is_verified %}
+                                <i class="fas fa-check-circle mr-1"></i>Verified
+                            {% else %}
+                                <i class="fas fa-times-circle mr-1"></i>Not Verified
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="glass-card rounded-xl p-6 border-l-4 border-red-500">
+        <h3 class="text-lg font-medium text-red-900 mb-4">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Danger Zone
+        </h3>
+        <p class="text-sm text-red-700 mb-4">
+            These actions are irreversible. Please proceed with caution.
+        </p>
+        
+        <div class="space-y-3">
+            <button 
+                onclick="requestAccountDeletion()"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+            >
+                <i class="fas fa-trash mr-2"></i>
+                Request Account Deletion
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Toast -->
+<div id="successToast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+    <div class="flex items-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="successMessage">Success!</span>
+    </div>
+</div>
+
+<!-- Error Toast -->
+<div id="errorToast" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+    <div class="flex items-center">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorMessage">Error!</span>
+    </div>
+</div>
+
+<script>
+// Toast notification functions
+function showToast(message, type = 'success') {
+    const toast = document.getElementById(type + 'Toast');
+    const messageElement = document.getElementById(type + 'Message');
+    
+    messageElement.textContent = message;
+    toast.classList.remove('translate-x-full');
+    
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+    }, 3000);
+}
+
+// Toggle password visibility
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const toggle = document.getElementById(fieldId + '-toggle');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        toggle.className = 'fas fa-eye-slash text-gray-400 hover:text-gray-600 cursor-pointer';
+    } else {
+        field.type = 'password';
+        toggle.className = 'fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer';
+    }
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Personal Information Form
+document.getElementById('personalInfoForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/dashboard/api/profile/personal/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Personal information updated successfully', 'success');
+        } else {
+            showToast(result.error || 'Failed to update personal information', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while updating personal information', 'error');
+    }
+});
+
+// Business Information Form
+document.getElementById('businessInfoForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/dashboard/api/profile/business/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Business information updated successfully', 'success');
+        } else {
+            showToast(result.error || 'Failed to update business information', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while updating business information', 'error');
+    }
+});
+
+// Password Form
+document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const newPassword = document.getElementById('new_password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (newPassword !== confirmPassword) {
+        showToast('New passwords do not match', 'error');
+        return;
+    }
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/dashboard/api/profile/password/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Password changed successfully', 'success');
+            this.reset();
+        } else {
+            showToast(result.error || 'Failed to change password', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while changing password', 'error');
+    }
+});
+
+// Request account deletion
+function requestAccountDeletion() {
+    if (confirm('Are you sure you want to request account deletion? This action cannot be undone and all your data will be permanently removed.')) {
+        if (confirm('This is your final confirmation. Your account and all associated data will be deleted. Continue?')) {
+            // Implementation for account deletion request
+            showToast('Account deletion request submitted. You will be contacted by support.', 'success');
+        }
+    }
+}
+</script>
+{% endblock %}

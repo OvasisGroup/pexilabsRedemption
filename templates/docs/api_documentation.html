@@ -1,0 +1,917 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}API Documentation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .docs-nav {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .code-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.5rem;
+        position: relative;
+    }
+    
+    .code-block pre {
+        margin: 0;
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: #475569;
+        border: none;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+    
+    .copy-btn:hover {
+        background: #64748b;
+    }
+    
+    .endpoint-card {
+        border-left: 4px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+    
+    .method-get { border-left-color: #10b981; background: rgba(16, 185, 129, 0.05); }
+    .method-post { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
+    .method-put { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
+    .method-delete { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+    
+    .method-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .method-get-badge { background: #10b981; color: white; }
+    .method-post-badge { background: #3b82f6; color: white; }
+    .method-put-badge { background: #f59e0b; color: white; }
+    .method-delete-badge { background: #ef4444; color: white; }
+    
+    .toc {
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+    }
+    
+    .toc a {
+        transition: all 0.2s ease;
+    }
+    
+    .toc a:hover {
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 0.25rem;
+    }
+    
+    .response-tabs {
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .response-tab {
+        padding: 0.5rem 1rem;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .response-tab.active {
+        border-bottom-color: #3b82f6;
+        color: #3b82f6;
+    }
+    
+    .response-content {
+        display: none;
+    }
+    
+    .response-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="docs-nav text-white rounded-xl p-8 mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold">API Documentation</h1>
+                <p class="text-blue-100 mt-2">Complete guide for integrating with PexiLabs Payment API</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm text-blue-100">API Version</p>
+                    <p class="font-semibold">v1.0.0</p>
+                </div>
+                <div class="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-code text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-12 gap-8">
+        <!-- Table of Contents -->
+        <div class="col-span-12 lg:col-span-3">
+            <div class="toc bg-white rounded-xl shadow-sm border p-6">
+                <h3 class="font-semibold text-gray-900 mb-4">Table of Contents</h3>
+                <nav class="space-y-2">
+                    <a href="#getting-started" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-play mr-2"></i>Getting Started
+                    </a>
+                    <a href="#authentication" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-key mr-2"></i>Authentication
+                    </a>
+                    <a href="#api-endpoints" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-exchange-alt mr-2"></i>API Endpoints
+                    </a>
+                    <a href="#transactions" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 ml-4">
+                        <i class="fas fa-credit-card mr-2"></i>Transactions
+                    </a>
+                    <a href="#payment-links" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 ml-4">
+                        <i class="fas fa-link mr-2"></i>Payment Links
+                    </a>
+                    <a href="#webhooks" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 ml-4">
+                        <i class="fas fa-webhook mr-2"></i>Webhooks
+                    </a>
+                    <a href="#sdks" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-cube mr-2"></i>SDKs & Libraries
+                    </a>
+                    <a href="#examples" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-code mr-2"></i>Code Examples
+                    </a>
+                    <a href="#testing" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-vial mr-2"></i>Testing
+                    </a>
+                    <a href="#support" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-life-ring mr-2"></i>Support
+                    </a>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-span-12 lg:col-span-9">
+            <div class="space-y-8">
+                <!-- Getting Started Section -->
+                <section id="getting-started" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Getting Started</h2>
+                    
+                    <div class="prose max-w-none">
+                        <p class="text-gray-600 mb-6">
+                            Welcome to the PexiLabs Payment API! Our RESTful API allows you to integrate payment processing 
+                            capabilities into your applications with ease. This documentation provides everything you need to 
+                            get started with accepting payments, managing transactions, and handling webhooks.
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+                                <h4 class="font-semibold text-green-800 mb-2">
+                                    <i class="fas fa-rocket mr-2"></i>Quick Start
+                                </h4>
+                                <p class="text-green-700 text-sm">
+                                    Get up and running in minutes with our simple integration guide.
+                                </p>
+                            </div>
+                            <div class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                                <h4 class="font-semibold text-blue-800 mb-2">
+                                    <i class="fas fa-shield-alt mr-2"></i>Secure by Default
+                                </h4>
+                                <p class="text-blue-700 text-sm">
+                                    Built with security best practices including API key authentication and HTTPS.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Base URL</h3>
+                        <div class="code-block mb-6">
+                            <button class="copy-btn" onclick="copyToClipboard('{{ request.scheme }}://{{ request.get_host }}/api/v1/')">Copy</button>
+                            <pre><code>{{ request.scheme }}://{{ request.get_host }}/api/v1/</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Requirements</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-2 mb-6">
+                            <li>PexiLabs merchant account</li>
+                            <li>API keys (available in your dashboard)</li>
+                            <li>HTTPS endpoint for webhooks (production)</li>
+                            <li>JSON request/response handling capability</li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- Authentication Section -->
+                <section id="authentication" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Authentication</h2>
+                    
+                    <p class="text-gray-600 mb-6">
+                        PexiLabs API uses API keys to authenticate requests. You can view and manage your API keys in your 
+                        <a href="{% url 'dashboard:merchant_api_keys' %}" class="text-blue-600 hover:text-blue-700">dashboard</a>.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="border border-amber-200 rounded-lg p-4 bg-amber-50">
+                            <h4 class="font-semibold text-amber-800 mb-2">
+                                <i class="fas fa-key mr-2"></i>Test API Key
+                            </h4>
+                            <p class="text-amber-700 text-sm">
+                                Use test keys for development and testing. No real money is processed.
+                            </p>
+                        </div>
+                        <div class="border border-red-200 rounded-lg p-4 bg-red-50">
+                            <h4 class="font-semibold text-red-800 mb-2">
+                                <i class="fas fa-lock mr-2"></i>Live API Key
+                            </h4>
+                            <p class="text-red-700 text-sm">
+                                Live keys process real payments. Keep them secure and never expose in client-side code.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">API Key Authentication</h3>
+                    <p class="text-gray-600 mb-4">
+                        Include your API key in the Authorization header of every request:
+                    </p>
+                    
+                    <div class="code-block mb-6">
+                        <button class="copy-btn" onclick="copyToClipboard('Authorization: Bearer your_api_key_here')">Copy</button>
+                        <pre><code>Authorization: Bearer your_api_key_here</code></pre>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Example Request</h3>
+                    <div class="code-block mb-6">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>curl -X GET \
+  {{ request.scheme }}://{{ request.get_host }}/api/v1/transactions/ \
+  -H 'Authorization: Bearer pk_test_abc123' \
+  -H 'Content-Type: application/json'</code></pre>
+                    </div>
+                </section>
+                
+                <!-- API Endpoints Section -->
+                <section id="api-endpoints" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">API Endpoints</h2>
+                    
+                    <!-- Transactions Endpoints -->
+                    <div id="transactions" class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6">Transactions</h3>
+                        
+                        <!-- Create Transaction -->
+                        <div class="endpoint-card method-post rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="method-badge method-post-badge">POST</span>
+                                    <code class="text-lg font-mono">/api/v1/transactions/</code>
+                                </div>
+                                <button class="text-blue-600 hover:text-blue-700" onclick="toggleSection('create-transaction')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">Create a new payment transaction</p>
+                            
+                            <div id="create-transaction" class="space-y-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Request Body</h4>
+                                    <div class="code-block">
+                                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                        <pre><code>{
+  "amount": "100.00",
+  "currency": "USD",
+  "customer_email": "customer@example.com",
+  "description": "Payment for Order #12345",
+  "payment_method": "card",
+  "return_url": "https://yoursite.com/success",
+  "cancel_url": "https://yoursite.com/cancel"
+}</code></pre>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Response</h4>
+                                    <div class="response-tabs flex space-x-4 mb-4">
+                                        <button class="response-tab active" onclick="showResponseTab('create-success', this)">200 Success</button>
+                                        <button class="response-tab" onclick="showResponseTab('create-error', this)">400 Error</button>
+                                    </div>
+                                    
+                                    <div id="create-success" class="response-content active">
+                                        <div class="code-block">
+                                            <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                            <pre><code>{
+  "id": "txn_abc123def456",
+  "reference": "REF123456789",
+  "amount": "100.00",
+  "currency": "USD",
+  "status": "pending",
+  "payment_url": "https://checkout.pexilabs.com/pay/txn_abc123def456",
+  "created_at": "2025-07-05T10:30:00Z"
+}</code></pre>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="create-error" class="response-content">
+                                        <div class="code-block">
+                                            <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                            <pre><code>{
+  "error": "Invalid amount",
+  "details": {
+    "amount": ["Amount must be greater than 0"]
+  }
+}</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Get Transaction -->
+                        <div class="endpoint-card method-get rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="method-badge method-get-badge">GET</span>
+                                    <code class="text-lg font-mono">/api/v1/transactions/{id}/</code>
+                                </div>
+                                <button class="text-blue-600 hover:text-blue-700" onclick="toggleSection('get-transaction')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">Retrieve details of a specific transaction</p>
+                            
+                            <div id="get-transaction" class="space-y-6 hidden">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Parameters</h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Parameter</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                <tr>
+                                                    <td class="px-4 py-2 font-mono text-sm">id</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">string</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">Transaction ID</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Response</h4>
+                                    <div class="code-block">
+                                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                        <pre><code>{
+  "id": "txn_abc123def456",
+  "reference": "REF123456789",
+  "amount": "100.00",
+  "currency": "USD",
+  "status": "completed",
+  "customer_email": "customer@example.com",
+  "description": "Payment for Order #12345",
+  "payment_method": "card",
+  "created_at": "2025-07-05T10:30:00Z",
+  "completed_at": "2025-07-05T10:32:15Z"
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- List Transactions -->
+                        <div class="endpoint-card method-get rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="method-badge method-get-badge">GET</span>
+                                    <code class="text-lg font-mono">/api/v1/transactions/</code>
+                                </div>
+                                <button class="text-blue-600 hover:text-blue-700" onclick="toggleSection('list-transactions')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">List all transactions with optional filtering</p>
+                            
+                            <div id="list-transactions" class="space-y-6 hidden">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Query Parameters</h4>
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Parameter</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-200">
+                                                <tr>
+                                                    <td class="px-4 py-2 font-mono text-sm">status</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">string</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">Filter by status (pending, completed, failed)</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-4 py-2 font-mono text-sm">limit</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">integer</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">Number of results to return (default: 20)</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="px-4 py-2 font-mono text-sm">offset</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">integer</td>
+                                                    <td class="px-4 py-2 text-sm text-gray-600">Number of results to skip</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Links Section -->
+                    <div id="payment-links" class="mb-8">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6">Payment Links</h3>
+                        
+                        <!-- Create Payment Link -->
+                        <div class="endpoint-card method-post rounded-lg p-6 mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="method-badge method-post-badge">POST</span>
+                                    <code class="text-lg font-mono">/api/v1/payment-links/</code>
+                                </div>
+                                <button class="text-blue-600 hover:text-blue-700" onclick="toggleSection('create-payment-link')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                            
+                            <p class="text-gray-600 mb-4">Create a shareable payment link</p>
+                            
+                            <div id="create-payment-link" class="space-y-6 hidden">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Request Body</h4>
+                                    <div class="code-block">
+                                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                        <pre><code>{
+  "amount": "50.00",
+  "currency": "USD",
+  "description": "Invoice #INV-001",
+  "expires_at": "2025-07-12T23:59:59Z",
+  "success_url": "https://yoursite.com/success",
+  "cancel_url": "https://yoursite.com/cancel"
+}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Webhooks Section -->
+                <section id="webhooks" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Webhooks</h2>
+                    
+                    <p class="text-gray-600 mb-6">
+                        Webhooks allow you to receive real-time notifications when events occur in your PexiLabs account.
+                        Configure webhook endpoints in your <a href="{% url 'dashboard:merchant_profile' %}" class="text-blue-600 hover:text-blue-700">dashboard</a>.
+                    </p>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Webhook Events</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">transaction.completed</h4>
+                            <p class="text-sm text-gray-600">Sent when a transaction is successfully completed</p>
+                        </div>
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">transaction.failed</h4>
+                            <p class="text-sm text-gray-600">Sent when a transaction fails</p>
+                        </div>
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">refund.processed</h4>
+                            <p class="text-sm text-gray-600">Sent when a refund is processed</p>
+                        </div>
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-900 mb-2">payout.completed</h4>
+                            <p class="text-sm text-gray-600">Sent when a payout is completed</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Webhook Payload</h3>
+                    <div class="code-block mb-6">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>{
+  "event": "transaction.completed",
+  "data": {
+    "id": "txn_abc123def456",
+    "reference": "REF123456789",
+    "amount": "100.00",
+    "currency": "USD",
+    "status": "completed",
+    "customer_email": "customer@example.com",
+    "completed_at": "2025-07-05T10:32:15Z"
+  },
+  "created_at": "2025-07-05T10:32:20Z"
+}</code></pre>
+                    </div>
+                </section>
+                
+                <!-- SDKs Section -->
+                <section id="sdks" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">SDKs & Libraries</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-js-square text-blue-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">JavaScript</h3>
+                            <p class="text-sm text-gray-600 mb-4">Official JavaScript SDK for web applications</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-node-js text-green-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Node.js</h3>
+                            <p class="text-sm text-gray-600 mb-4">Server-side SDK for Node.js applications</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-python text-blue-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Python</h3>
+                            <p class="text-sm text-gray-600 mb-4">Python library for backend integration</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-php text-red-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">PHP</h3>
+                            <p class="text-sm text-gray-600 mb-4">PHP SDK for web applications</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-android text-purple-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">Android</h3>
+                            <p class="text-sm text-gray-600 mb-4">Native Android SDK</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6 text-center">
+                            <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                                <i class="fab fa-apple text-gray-600 text-2xl"></i>
+                            </div>
+                            <h3 class="font-semibold text-gray-900 mb-2">iOS</h3>
+                            <p class="text-sm text-gray-600 mb-4">Native iOS SDK</p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">View on GitHub →</a>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Code Examples Section -->
+                <section id="examples" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Code Examples</h2>
+                    
+                    <div class="space-y-8">
+                        <!-- JavaScript Example -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">JavaScript Example</h3>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                <pre><code>// Create a transaction
+const createTransaction = async () => {
+  try {
+    const response = await fetch('{{ request.scheme }}://{{ request.get_host }}/api/v1/transactions/', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer your_api_key',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        amount: '100.00',
+        currency: 'USD',
+        customer_email: 'customer@example.com',
+        description: 'Payment for Order #12345',
+        return_url: 'https://yoursite.com/success',
+        cancel_url: 'https://yoursite.com/cancel'
+      })
+    });
+    
+    const transaction = await response.json();
+    
+    if (response.ok) {
+      // Redirect to payment page
+      window.location.href = transaction.payment_url;
+    } else {
+      console.error('Transaction failed:', transaction.error);
+    }
+  } catch (error) {
+    console.error('Network error:', error);
+  }
+};</code></pre>
+                            </div>
+                        </div>
+                        
+                        <!-- Python Example -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Python Example</h3>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                <pre><code>import requests
+import json
+
+# Create a transaction
+def create_transaction():
+    url = '{{ request.scheme }}://{{ request.get_host }}/api/v1/transactions/'
+    headers = {
+        'Authorization': 'Bearer your_api_key',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        'amount': '100.00',
+        'currency': 'USD',
+        'customer_email': 'customer@example.com',
+        'description': 'Payment for Order #12345',
+        'return_url': 'https://yoursite.com/success',
+        'cancel_url': 'https://yoursite.com/cancel'
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        
+        if response.status_code == 200:
+            transaction = response.json()
+            print(f"Transaction created: {transaction['id']}")
+            return transaction['payment_url']
+        else:
+            print(f"Error: {response.json()}")
+            return None
+    except requests.RequestException as e:
+        print(f"Network error: {e}")
+        return None</code></pre>
+                            </div>
+                        </div>
+                        
+                        <!-- PHP Example -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">PHP Example</h3>
+                            <div class="code-block">
+                                <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                                <pre><code><?php
+// Create a transaction
+function createTransaction() {
+    $url = '{{ request.scheme }}://{{ request.get_host }}/api/v1/transactions/';
+    $data = [
+        'amount' => '100.00',
+        'currency' => 'USD',
+        'customer_email' => 'customer@example.com',
+        'description' => 'Payment for Order #12345',
+        'return_url' => 'https://yoursite.com/success',
+        'cancel_url' => 'https://yoursite.com/cancel'
+    ];
+    
+    $options = [
+        'http' => [
+            'header' => [
+                'Authorization: Bearer your_api_key',
+                'Content-Type: application/json'
+            ],
+            'method' => 'POST',
+            'content' => json_encode($data)
+        ]
+    ];
+    
+    $context = stream_context_create($options);
+    $result = file_get_contents($url, false, $context);
+    
+    if ($result !== false) {
+        $transaction = json_decode($result, true);
+        
+        if (isset($transaction['id'])) {
+            echo "Transaction created: " . $transaction['id'];
+            return $transaction['payment_url'];
+        }
+    }
+    
+    return null;
+}
+?></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Testing Section -->
+                <section id="testing" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Testing</h2>
+                    
+                    <div class="prose max-w-none">
+                        <p class="text-gray-600 mb-6">
+                            Use our test environment to develop and test your integration without processing real payments.
+                        </p>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Test Environment</h3>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-blue-800 mb-2">Test API Keys</h4>
+                                    <p class="text-blue-700 text-sm">
+                                        Test API keys start with <code>pk_test_</code> and <code>sk_test_</code>. 
+                                        No real money is charged when using test keys.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Test Card Numbers</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full border border-gray-200 rounded-lg">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Card Number</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-2 font-mono text-sm">4242424242424242</td>
+                                        <td class="px-4 py-2 text-sm">Visa</td>
+                                        <td class="px-4 py-2 text-sm text-green-600">Success</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 font-mono text-sm">4000000000000002</td>
+                                        <td class="px-4 py-2 text-sm">Visa</td>
+                                        <td class="px-4 py-2 text-sm text-red-600">Declined</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 font-mono text-sm">5555555555554444</td>
+                                        <td class="px-4 py-2 text-sm">Mastercard</td>
+                                        <td class="px-4 py-2 text-sm text-green-600">Success</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 font-mono text-sm">378282246310005</td>
+                                        <td class="px-4 py-2 text-sm">American Express</td>
+                                        <td class="px-4 py-2 text-sm text-green-600">Success</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Support Section -->
+                <section id="support" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Support</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border rounded-lg p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-book mr-2 text-blue-600"></i>
+                                Documentation
+                            </h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Comprehensive guides and API reference
+                            </p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Browse Documentation →
+                            </a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-headset mr-2 text-green-600"></i>
+                                Developer Support
+                            </h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Get help from our developer support team
+                            </p>
+                            <a href="mailto:developers@pexilabs.com" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Contact Support →
+                            </a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4">
+                                <i class="fab fa-github mr-2 text-gray-600"></i>
+                                GitHub
+                            </h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Open source SDKs and code examples
+                            </p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Visit GitHub →
+                            </a>
+                        </div>
+                        
+                        <div class="border rounded-lg p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-comments mr-2 text-purple-600"></i>
+                                Community
+                            </h3>
+                            <p class="text-gray-600 text-sm mb-4">
+                                Join our developer community
+                            </p>
+                            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                Join Community →
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        tooltip.textContent = 'Copied to clipboard!';
+        document.body.appendChild(tooltip);
+        
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    const button = event.target.closest('button');
+    const icon = button.querySelector('i');
+    
+    if (section.classList.contains('hidden')) {
+        section.classList.remove('hidden');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        section.classList.add('hidden');
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+function showResponseTab(tabId, button) {
+    // Hide all response content
+    const allContent = button.closest('.response-tabs').nextElementSibling.parentElement.querySelectorAll('.response-content');
+    allContent.forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    const allTabs = button.parentElement.querySelectorAll('.response-tab');
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected content and activate tab
+    document.getElementById(tabId).classList.add('active');
+    button.classList.add('active');
+}
+
+// Smooth scrolling for TOC links
+document.querySelectorAll('.toc a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

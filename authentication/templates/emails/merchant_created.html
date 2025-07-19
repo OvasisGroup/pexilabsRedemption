@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merchant Account Created - PexiLabs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .status-badge {
+            background-color: #fbbf24;
+            color: #92400e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
+        }
+        .info-box {
+            background-color: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">PexiLabs</div>
+            <h2>Merchant Account Created Successfully</h2>
+        </div>
+        
+        <p>Hello {{ user.first_name }},</p>
+        
+        <p>Congratulations! Your merchant account has been successfully created with PexiLabs.</p>
+        
+        <div class="info-box">
+            <h3>Account Details:</h3>
+            <p><strong>Business Name:</strong> {{ merchant.business_name }}</p>
+            <p><strong>Merchant ID:</strong> {{ merchant.id }}</p>
+            <p><strong>Status:</strong> <span class="status-badge">{{ merchant.get_status_display }}</span></p>
+            <p><strong>Created:</strong> {{ merchant.created_at|date:"F d, Y" }}</p>
+        </div>
+        
+        <h3>What's Next?</h3>
+        <ul>
+            <li>Complete your business verification documents</li>
+            <li>Set up your payment methods and banking information</li>
+            <li>Configure your merchant settings and preferences</li>
+            <li>Start accepting payments once approved</li>
+        </ul>
+        
+        <p>Our team will review your merchant application within 2-3 business days. You will receive an email notification once your account status is updated.</p>
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact our merchant support team.</p>
+        
+        <p>Thank you for choosing PexiLabs!</p>
+        
+        <div class="footer">
+            <p>This email was sent from PexiLabs. Please do not reply to this email.</p>
+            <p>&copy; {{ current_year }} PexiLabs. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

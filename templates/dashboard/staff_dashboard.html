@@ -1,0 +1,250 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Staff Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Staff Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Pending Merchants -->
+        <div class="glass-card rounded-xl p-6 hover-lift">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-white text-sm"></i>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Pending Merchants</dt>
+                        <dd class="text-lg font-medium text-gray-900">{{ pending_merchants }}</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'dashboard:merchant_verifier_dashboard' %}?status=pending" class="text-yellow-600 hover:text-yellow-700 text-sm font-medium">
+                    Review pending <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Need Review -->
+        <div class="glass-card rounded-xl p-6 hover-lift">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-white text-sm"></i>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Need Review</dt>
+                        <dd class="text-lg font-medium text-gray-900">{{ merchants_need_review }}</dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'dashboard:merchant_verifier_dashboard' %}" class="text-red-600 hover:text-red-700 text-sm font-medium">
+                    Review now <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Active Integrations -->
+        <div class="glass-card rounded-xl p-6 hover-lift">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-plug text-white text-sm"></i>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Active Integrations</dt>
+                        <dd class="text-lg font-medium text-gray-900">
+                            {% for integration in integrations_status %}
+                                {% if integration.is_enabled %}{{ forloop.counter }}{% endif %}
+                            {% endfor %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Today -->
+        <div class="glass-card rounded-xl p-6 hover-lift">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-tasks text-white text-sm"></i>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Tasks Today</dt>
+                        <dd class="text-lg font-medium text-gray-900">{{ pending_merchants|add:merchants_need_review }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Merchant Applications -->
+    <div class="glass-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">Recent Merchant Applications</h3>
+            <a href="/admin/authentication/user/" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                View all <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Business
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Owner
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Category
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Applied
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for merchant in recent_applications %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-store text-purple-600 text-xs"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">{{ merchant.business_name }}</div>
+                                    {% if merchant.website_url %}
+                                        <div class="text-sm text-gray-500">{{ merchant.website_url }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ merchant.user.get_full_name }}</div>
+                            <div class="text-sm text-gray-500">{{ merchant.user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ merchant.category.name|default:"Not specified" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                {% if merchant.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif merchant.status == 'approved' %}bg-green-100 text-green-800
+                                {% elif merchant.status == 'active' %}bg-blue-100 text-blue-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ merchant.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ merchant.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button class="text-indigo-600 hover:text-indigo-900">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if merchant.status == 'pending' %}
+                                <button class="text-green-600 hover:text-green-900">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            No recent applications
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Integration Status -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Integration Health Status</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for integration in integrations_status %}
+            <div class="p-4 border border-gray-200 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-sm font-medium text-gray-900">{{ integration.name }}</h4>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                        {% if integration.is_enabled %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {% if integration.is_enabled %}
+                            <i class="fas fa-check-circle mr-1"></i>Active
+                        {% else %}
+                            <i class="fas fa-times-circle mr-1"></i>Inactive
+                        {% endif %}
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500">
+                    Status: {{ integration.status|default:"Unknown" }}
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="{% url 'dashboard:merchant_verifier_dashboard' %}" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-user-check text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-900">Merchant Verifier</p>
+                    <p class="text-xs text-gray-500 mt-1">Review & approve merchants</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'dashboard:merchant_verifier_dashboard' %}?status=pending" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-file-alt text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-900">Review Documents</p>
+                    <p class="text-xs text-gray-500 mt-1">Check pending applications</p>
+                </div>
+            </a>
+            
+            <a href="/admin/integrations/" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-cog text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-900">Manage Integrations</p>
+                    <p class="text-xs text-gray-500 mt-1">Configure payment systems</p>
+                </div>
+            </a>
+            
+            <a href="/admin/authentication/merchant/" class="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors">
+                <div class="text-center">
+                    <i class="fas fa-chart-line text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-900">View Reports</p>
+                    <p class="text-xs text-gray-500 mt-1">Analytics & insights</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        .dashboard-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center text-gray-800 font-bold text-xl">
+                        <i class="fas fa-cube mr-2 text-indigo-600"></i>
+                        PexiLabs
+                    </a>
+                    <span class="ml-4 px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">
+                        Admin Dashboard
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600">Welcome, {{ request.user.get_full_name }}</span>
+                    <a href="{% url 'auth:logout_page' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-1"></i>
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 animate-fade-in">
+            <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <p class="mt-1 text-gray-600">System overview and management</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in">
+            <!-- Total Users -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ total_users }}</h3>
+                        <p class="text-sm text-gray-600">Total Users</p>
+                        <span class="text-xs text-green-600">+{{ user_growth_percentage }}% this week</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verified Users -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100">
+                        <i class="fas fa-user-check text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ verified_users }}</h3>
+                        <p class="text-sm text-gray-600">Verified Users</p>
+                        <span class="text-xs text-gray-500">{{ verified_users|floatformat:0 }}/{{ total_users }} verified</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Merchants -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100">
+                        <i class="fas fa-store text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ total_merchants }}</h3>
+                        <p class="text-sm text-gray-600">Total Merchants</p>
+                        <span class="text-xs text-gray-500">{{ active_merchants }} active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Revenue -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100">
+                        <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">${{ total_revenue|floatformat:2 }}</h3>
+                        <p class="text-sm text-gray-600">Total Revenue</p>
+                        <span class="text-xs text-gray-500">{{ completed_transactions }} transactions</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+            <!-- Pending Merchants -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ pending_merchants }}</h3>
+                        <p class="text-sm text-gray-600">Pending Merchants</p>
+                    </div>
+                    <i class="fas fa-clock text-orange-500 text-2xl"></i>
+                </div>
+                {% if pending_merchants > 0 %}
+                <div class="mt-4">
+                    <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">Requires Review</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Active Integrations -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ active_integrations }}</h3>
+                        <p class="text-sm text-gray-600">Active Integrations</p>
+                    </div>
+                    <i class="fas fa-plug text-green-500 text-2xl"></i>
+                </div>
+                <div class="mt-4">
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">All Systems Operational</span>
+                </div>
+            </div>
+
+            <!-- New Users This Week -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ new_users_week }}</h3>
+                        <p class="text-sm text-gray-600">New Users This Week</p>
+                    </div>
+                    <i class="fas fa-user-plus text-blue-500 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in">
+            <!-- User Growth Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">User Growth (Last 7 Days)</h3>
+                <canvas id="userGrowthChart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="/admin/" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
+                        <i class="fas fa-cog mr-2"></i>
+                        Django Admin Panel
+                    </a>
+                    <a href="#" class="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Review Pending Merchants
+                    </a>
+                    <a href="#" class="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        View System Reports
+                    </a>
+                    <a href="#" class="block w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
+                        <i class="fas fa-plug mr-2"></i>
+                        Monitor Integrations
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Users Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 animate-fade-in">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Recent Users</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in recent_users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-indigo-600"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ user.get_full_name }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.email }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if user.is_verified %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Verified</span>
+                                {% else %}
+                                    <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.created_at|date:"M d, Y" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">No users found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Script -->
+    <script>
+        // User Growth Chart
+        const ctx = document.getElementById('userGrowthChart').getContext('2d');
+        const userGrowthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ user_labels|safe }},
+                datasets: [{
+                    label: 'New Users',
+                    data: {{ user_data|safe }},
+                    borderColor: 'rgb(99, 102, 241)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

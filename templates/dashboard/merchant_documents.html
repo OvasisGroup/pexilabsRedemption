@@ -1,0 +1,436 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}{{ merchant.business_name }} - Documents{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Document Management Header -->
+    <div class="glass-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-xl font-semibold text-gray-900">Business Documents</h3>
+                <p class="text-sm text-gray-600 mt-1">Upload and manage your business verification documents</p>
+            </div>
+            <button onclick="openDocumentUploadModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>Upload Document
+            </button>
+        </div>
+
+        <!-- Document Statistics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gray-50 rounded-lg p-4 hover-lift">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-alt text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Documents</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ documents.all.count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4 hover-lift">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Approved</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ documents.approved.count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4 hover-lift">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending Review</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ documents.pending.count }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4 hover-lift">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-times-circle text-white"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Rejected</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ documents.rejected.count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Status Overview -->
+        <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+            <h4 class="text-sm font-medium text-blue-800 mb-3">
+                <i class="fas fa-info-circle mr-2"></i>Document Verification Status
+            </h4>
+            
+            {% if documents.all.count == 0 %}
+                <div class="text-sm text-blue-700">
+                    <p class="mb-2">🚨 <strong>Action Required:</strong> No documents uploaded yet.</p>
+                    <p>Please upload the required documents to complete your merchant verification.</p>
+                </div>
+            {% elif documents.approved.count == documents.all.count %}
+                <div class="text-sm text-green-700 bg-green-50 p-3 rounded border border-green-200">
+                    <p class="mb-1">✅ <strong>Verification Complete:</strong> All documents approved!</p>
+                    <p>Your merchant account is fully verified and ready for business.</p>
+                </div>
+            {% elif documents.pending.count > 0 %}
+                <div class="text-sm text-yellow-700">
+                    <p class="mb-2">⏳ <strong>Under Review:</strong> {{ documents.pending.count }} document(s) pending approval.</p>
+                    <p>We're reviewing your submitted documents. You'll be notified once the review is complete.</p>
+                </div>
+            {% elif documents.rejected.count > 0 %}
+                <div class="text-sm text-red-700">
+                    <p class="mb-2">❌ <strong>Action Required:</strong> {{ documents.rejected.count }} document(s) rejected.</p>
+                    <p>Please review the rejection reasons and re-upload corrected documents.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Required Documents Info -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <h4 class="text-sm font-medium text-gray-800 mb-3">
+                <i class="fas fa-list-check mr-2"></i>Required Documents for Full Verification
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div class="flex items-center p-2 bg-white rounded border">
+                    <i class="fas fa-certificate text-indigo-500 mr-3"></i>
+                    <span>Business License</span>
+                </div>
+                <div class="flex items-center p-2 bg-white rounded border">
+                    <i class="fas fa-file-invoice text-indigo-500 mr-3"></i>
+                    <span>Tax Certificate</span>
+                </div>
+                <div class="flex items-center p-2 bg-white rounded border">
+                    <i class="fas fa-file-contract text-indigo-500 mr-3"></i>
+                    <span>Business Registration</span>
+                </div>
+                <div class="flex items-center p-2 bg-white rounded border">
+                    <i class="fas fa-id-card text-indigo-500 mr-3"></i>
+                    <span>Identity Document (Owner/Director)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="glass-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-medium text-gray-900">Uploaded Documents</h3>
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2">
+                    <label for="documentFilter" class="text-sm font-medium text-gray-700">Filter:</label>
+                    <select id="documentFilter" onchange="filterDocuments()" class="text-sm border border-gray-300 rounded px-2 py-1">
+                        <option value="all">All Documents</option>
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {% if documents.all %}
+            <div id="documents-list" class="space-y-4">
+                {% for document in documents.all %}
+                <div class="document-item border rounded-lg p-4 hover:bg-gray-50 transition-colors" data-status="{{ document.status }}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-4 flex-1">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas {% if document.document_type == 'business_license' %}fa-certificate{% elif document.document_type == 'tax_certificate' %}fa-file-invoice{% elif document.document_type == 'bank_statement' %}fa-university{% elif document.document_type == 'identity_document' %}fa-id-card{% elif document.document_type == 'business_registration' %}fa-file-contract{% else %}fa-file-alt{% endif %} text-gray-500 text-lg"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">{{ document.title }}</h4>
+                                <p class="text-sm text-gray-500 mt-1">{{ document.get_document_type_display }}</p>
+                                {% if document.description %}
+                                <p class="text-xs text-gray-400 mt-1">{{ document.description|truncatewords:10 }}</p>
+                                {% endif %}
+                                <div class="flex items-center mt-2 text-xs text-gray-500">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    <span>Uploaded {{ document.uploaded_at|date:"M d, Y H:i" }}</span>
+                                    {% if document.expiry_date %}
+                                        <span class="mx-2">•</span>
+                                        <i class="fas fa-clock mr-1"></i>
+                                        <span>Expires {{ document.expiry_date|date:"M d, Y" }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                {% if document.status == 'approved' %}bg-green-100 text-green-800
+                                {% elif document.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif document.status == 'rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if document.status == 'approved' %}
+                                    <i class="fas fa-check-circle mr-1"></i>Approved
+                                {% elif document.status == 'pending' %}
+                                    <i class="fas fa-clock mr-1"></i>Pending Review
+                                {% elif document.status == 'rejected' %}
+                                    <i class="fas fa-times-circle mr-1"></i>Rejected
+                                {% else %}
+                                    {{ document.get_status_display }}
+                                {% endif %}
+                            </span>
+                            <div class="flex space-x-1">
+                                {% if document.document_file %}
+                                    <a href="{{ document.document_file.url }}" target="_blank" class="text-blue-600 hover:text-blue-700 p-2 hover:bg-blue-50 rounded" title="View Document">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ document.document_file.url }}" download class="text-green-600 hover:text-green-700 p-2 hover:bg-green-50 rounded" title="Download Document">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                {% endif %}
+                                <button onclick="deleteDocument('{{ document.id }}')" class="text-red-600 hover:text-red-700 p-2 hover:bg-red-50 rounded" title="Delete Document">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if document.status == 'rejected' and document.rejection_reason %}
+                    <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                        <p class="text-sm text-red-700">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Rejection Reason:</strong> {{ document.rejection_reason }}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-file-alt text-gray-300 text-3xl"></i>
+                </div>
+                <h4 class="text-lg font-medium text-gray-900 mb-2">No documents uploaded yet</h4>
+                <p class="text-gray-500 mb-6">Upload your business verification documents to get started with merchant verification.</p>
+                <button onclick="openDocumentUploadModal()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Upload Your First Document
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Document Upload Modal -->
+<div id="documentUploadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-xl bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Upload Business Document</h3>
+                <button onclick="closeDocumentUploadModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="documentUploadForm" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="document_type" class="block text-sm font-medium text-gray-700 mb-2">Document Type *</label>
+                    <select id="document_type" name="document_type" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Select document type</option>
+                        <option value="business_license">Business License</option>
+                        <option value="tax_certificate">Tax Certificate</option>
+                        <option value="bank_statement">Bank Statement</option>
+                        <option value="identity_document">Identity Document</option>
+                        <option value="business_registration">Business Registration</option>
+                        <option value="utility_bill">Utility Bill</option>
+                        <option value="insurance_certificate">Insurance Certificate</option>
+                        <option value="financial_statement">Financial Statement</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="document_title" class="block text-sm font-medium text-gray-700 mb-2">Document Title *</label>
+                    <input type="text" id="document_title" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter document title">
+                </div>
+                
+                <div>
+                    <label for="document_description" class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                    <textarea id="document_description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Additional notes about this document"></textarea>
+                </div>
+                
+                <div>
+                    <label for="document_file" class="block text-sm font-medium text-gray-700 mb-2">Document File *</label>
+                    <div class="mt-2 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-400 transition-colors">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl mb-3"></i>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="document_file" class="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                    <span>Upload a file</span>
+                                    <input id="document_file" name="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png" required class="sr-only" onchange="handleFileSelect(this)">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PDF, JPG, PNG up to 10MB</p>
+                            <div id="file-info" class="hidden mt-2 text-sm text-gray-700">
+                                <i class="fas fa-file mr-2"></i>
+                                <span id="file-name"></span>
+                                <span id="file-size" class="text-gray-500 ml-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="expiry_date" class="block text-sm font-medium text-gray-700 mb-2">Expiry Date (Optional)</label>
+                    <input type="date" id="expiry_date" name="expiry_date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeDocumentUploadModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Upload Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openDocumentUploadModal() {
+    document.getElementById('documentUploadModal').classList.remove('hidden');
+}
+
+function closeDocumentUploadModal() {
+    document.getElementById('documentUploadModal').classList.add('hidden');
+    document.getElementById('documentUploadForm').reset();
+    document.getElementById('file-info').classList.add('hidden');
+}
+
+function handleFileSelect(input) {
+    const file = input.files[0];
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    
+    if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+        fileInfo.classList.remove('hidden');
+    } else {
+        fileInfo.classList.add('hidden');
+    }
+}
+
+// Document filtering
+function filterDocuments() {
+    const filter = document.getElementById('documentFilter').value;
+    const documents = document.querySelectorAll('.document-item');
+    
+    documents.forEach(doc => {
+        const status = doc.getAttribute('data-status');
+        if (filter === 'all' || status === filter) {
+            doc.style.display = 'block';
+        } else {
+            doc.style.display = 'none';
+        }
+    });
+}
+
+// Document upload form submission
+document.getElementById('documentUploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+        
+        const response = await fetch('/dashboard/api/documents/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showAlert('Document uploaded successfully!', 'success');
+            closeDocumentUploadModal();
+            // Reload page to show new document
+            window.location.reload();
+        } else {
+            showAlert(data.error || 'Upload failed', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error occurred', 'error');
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+function deleteDocument(documentId) {
+    if (confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+        fetch(`/dashboard/api/documents/${documentId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showAlert('Document deleted successfully', 'success');
+                window.location.reload();
+            } else {
+                showAlert('Failed to delete document', 'error');
+            }
+        })
+        .catch(() => {
+            showAlert('Network error occurred', 'error');
+        });
+    }
+}
+
+// Utility functions
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    alertDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDocumentUploadModal();
+    }
+});
+</script>
+{% endblock %}

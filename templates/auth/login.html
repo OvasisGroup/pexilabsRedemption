@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        /* Custom gradient backgrounds */
+        .gradient-bg {
+            background: #1C427A;
+        }
+        
+        .gradient-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Smooth animations */
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom form styles */
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Navigation -->
+    
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 animate-fade-in">
+            <!-- Header -->
+   
+<!-- Replace line 67 with: -->
+<div class="text-center mb-8">
+    <img src="https://www.pexipay.com/_next/image?url=%2Fimages%2Fpexi_logo.png&w=256&q=75" alt="PexiPay Logo" class="mx-auto h-12 w-auto">
+</div> 
+            <!-- Login Form -->
+            <div class="gradient-card rounded-3xl shadow-2xl border border-white/30 p-8">
+                <!-- Alert Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="mb-6 p-4 rounded-xl {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %} animate-fade-in">
+                            <div class="flex items-center">
+                                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" id="loginForm" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Hidden next field -->
+                    {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
+                    {% endif %}
+                    
+                    <!-- Email Field -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email"
+                                required
+                                class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter your email address"
+                                autocomplete="email"
+                            />
+                        </div>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password"
+                                required
+                                class="form-input block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                            />
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('password')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <i id="password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Remember Me and Forgot Password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input 
+                                id="remember_me" 
+                                name="remember_me" 
+                                type="checkbox" 
+                                class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                            />
+                            <label for="remember_me" class="ml-2 block text-sm text-gray-700">
+                                Remember me
+                            </label>
+                        </div>
+                        
+                        <div class="text-sm">
+                            <!-- <a href="#" class="text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
+                                Forgot password?
+                            </a> -->
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div>
+                        <button 
+                            type="submit" 
+                            id="submit-btn"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-white font-medium rounded-xl bg-[#ED1C24] hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                            <span id="submit-text" class="flex items-center">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Sign In
+                            </span>
+                            <div id="submit-spinner" class="hidden flex items-center">
+                                <i class="fas fa-spinner spinner mr-2"></i>
+                                Signing In...
+                            </div>
+                        </button>
+                    </div>
+                    
+        
+                    
+                    
+                    
+                    <!-- Register Link -->
+                    <div class="text-center">
+                        <p class="text-gray-600">
+                            Don't have an account? 
+                            <a href="{% url 'auth:register_page' %}" class="text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
+                                Create one here
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Additional Links -->
+            <div class="text-center space-y-2">
+                <p class="text-white/60 text-sm">
+                    Need help? 
+                    <a href="/contact/" class="text-white hover:text-white/80 font-medium transition-colors">
+                        Contact Support
+                    </a>
+                </p>
+                <p class="text-white/60 text-sm">
+                    <a href="/api/docs/" class="text-white hover:text-white/80 font-medium transition-colors">
+                        API Documentation
+                    </a>
+                    •
+                    <a href="/privacy/" class="text-white hover:text-white/80 font-medium transition-colors">
+                        Privacy Policy
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = document.getElementById(fieldId + '-toggle');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.className = 'fas fa-eye-slash text-gray-400 hover:text-gray-600 cursor-pointer';
+            } else {
+                field.type = 'password';
+                toggle.className = 'fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer';
+            }
+        }
+        
+        // Form submission handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const submitSpinner = document.getElementById('submit-spinner');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
+            
+            // The form will submit normally, loading state will be visible until page redirect
+        });
+        
+        // Auto-focus email field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('email').focus();
+        });
+    </script>
+</body>
+</html>

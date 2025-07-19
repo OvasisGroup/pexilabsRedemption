@@ -1,0 +1,815 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Transactions & Payments{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transaction-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .transaction-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .status-pending { background-color: #fef3c7; color: #d97706; }
+    .status-processing { background-color: #dbeafe; color: #2563eb; }
+    .status-completed { background-color: #d1fae5; color: #059669; }
+    .status-failed { background-color: #fee2e2; color: #dc2626; }
+    .status-cancelled { background-color: #f3f4f6; color: #6b7280; }
+    
+    .payment-form {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .form-section {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Breadcrumb Navigation -->
+    <nav class="flex items-center space-x-2 text-sm">
+        <a href="{% url 'dashboard:merchant_dashboard' %}" class="text-gray-500 hover:text-gray-700">
+            <i class="fas fa-home mr-1"></i>Dashboard
+        </a>
+        <i class="fas fa-chevron-right text-gray-400"></i>
+        <span class="text-gray-900 font-medium">Transactions & Payments</span>
+    </nav>
+
+    
+
+    <!-- Filters and Controls -->
+    <div class="flex flex-wrap gap-4 justify-between items-center">
+        <div class="flex flex-wrap gap-3">
+            <button onclick="refreshTransactions()" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Refresh
+            </button>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <select id="statusFilter" class="border border-gray-300 rounded-lg px-3 py-2 bg-white" onchange="filterTransactions()">
+                <option value="">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            
+            <input type="date" id="dateFilter" class="border border-gray-300 rounded-lg px-3 py-2 bg-white" onchange="filterTransactions()">
+        </div>
+    </div>
+
+    <!-- Transaction Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="transaction-card rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-credit-card text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Today's Transactions</p>
+                    <p class="text-2xl font-bold text-gray-900" id="todayCount">{{ stats.today_count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transaction-card rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dollar-sign text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Today's Volume</p>
+                    <p class="text-2xl font-bold text-gray-900" id="todayVolume">${{ stats.today_volume|default:0|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transaction-card rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Success Rate</p>
+                    <p class="text-2xl font-bold text-gray-900" id="successRate">{{ stats.success_rate|default:0|floatformat:1 }}%</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="transaction-card rounded-xl p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Pending</p>
+                    <p class="text-2xl font-bold text-gray-900" id="pendingCount">{{ stats.pending_count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="transaction-card rounded-xl">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Transactions</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTableBody" class="bg-white divide-y divide-gray-200">
+                    {% for transaction in transactions %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ transaction.reference }}</div>
+                                <div class="text-sm text-gray-500">{{ transaction.payment_method|title }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {% if transaction.customer %}
+                                    {{ transaction.customer.get_full_name }}
+                                {% else %}
+                                    {{ transaction.customer_email|default:"Guest" }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ transaction.currency.code }} {{ transaction.amount }}
+                            </div>
+                            {% if transaction.fee_amount > 0 %}
+                            <div class="text-xs text-gray-500">
+                                Fee: {{ transaction.currency.code }} {{ transaction.fee_amount }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge status-{{ transaction.status }}">
+                                {{ transaction.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ transaction.created_at|date:"M d, Y H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="viewTransaction('{{ transaction.id }}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if transaction.status == 'completed' and transaction.transaction_type == 'payment' %}
+                            <button onclick="refundTransaction('{{ transaction.id }}')" class="text-orange-600 hover:text-orange-900">
+                                <i class="fas fa-undo"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-receipt text-4xl mb-4 text-gray-300"></i>
+                            <p>No transactions found</p>
+                            <button onclick="openTransactionModal()" class="mt-2 text-blue-600 hover:text-blue-800">
+                                Create your first transaction
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if transactions.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200">
+            <nav class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if transactions.has_previous %}
+                        <a href="?page={{ transactions.previous_page_number }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Previous</a>
+                    {% endif %}
+                    {% if transactions.has_next %}
+                        <a href="?page={{ transactions.next_page_number }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">Next</a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ transactions.start_index }}</span> to <span class="font-medium">{{ transactions.end_index }}</span> of <span class="font-medium">{{ transactions.paginator.count }}</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            {% if transactions.has_previous %}
+                                <a href="?page={{ transactions.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in transactions.paginator.page_range %}
+                                {% if transactions.number == num %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">{{ num }}</span>
+                                {% else %}
+                                    <a href="?page={{ num }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">{{ num }}</a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if transactions.has_next %}
+                                <a href="?page={{ transactions.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<br/><br/>
+<!-- Transaction Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <a href="{% url 'dashboard:merchant_transactions' %}" class="glass-card rounded-xl p-6 hover-lift transition-all duration-200 group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:from-blue-700 group-hover:to-purple-700 transition-all">
+                        <i class="fas fa-credit-card text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Manage</p>
+                    <p class="text-lg font-bold text-gray-900">Transactions</p>
+                </div>
+            </div>
+        </a>
+        
+        <button onclick="openTransactionModal()" class="glass-card rounded-xl p-6 hover-lift transition-all duration-200 group text-left">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg flex items-center justify-center group-hover:from-green-700 group-hover:to-teal-700 transition-all">
+                        <i class="fas fa-plus text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Create</p>
+                    <p class="text-lg font-bold text-gray-900">Payment</p>
+                </div>
+            </div>
+        </button>
+        
+        <button onclick="openPaymentLinkModal()" class="glass-card rounded-xl p-6 hover-lift transition-all duration-200 group text-left">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center group-hover:from-purple-700 group-hover:to-pink-700 transition-all">
+                        <i class="fas fa-link text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Generate</p>
+                    <p class="text-lg font-bold text-gray-900">Pay Link</p>
+                </div>
+            </div>
+        </button>
+        
+        <a href="{% url 'dashboard:merchant_documents' %}" class="glass-card rounded-xl p-6 hover-lift transition-all duration-200 group">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gradient-to-r from-amber-600 to-orange-600 rounded-lg flex items-center justify-center group-hover:from-amber-700 group-hover:to-orange-700 transition-all">
+                        <i class="fas fa-file-alt text-white"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Manage</p>
+                    <p class="text-lg font-bold text-gray-900">Documents</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+<!-- Create Transaction Modal -->
+<div id="transactionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="payment-form p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Create New Transaction</h3>
+                <button onclick="closeTransactionModal()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <form id="transactionForm" class="p-6 space-y-6">
+            {% csrf_token %}
+            <!-- Ensure CSRF token is present and valid -->
+            
+            <!-- Transaction Type -->
+            <div class="form-section rounded-xl p-4">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Transaction Details</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="transactionType" class="block text-sm font-medium text-gray-700 mb-2">Transaction Type</label>
+                        <select id="transactionType" name="transaction_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <option value="payment">Payment</option>
+                            <option value="refund">Refund</option>
+                            <option value="payout">Payout</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                        <select id="paymentMethod" name="payment_method" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            <option value="card">Card Payment</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="mobile_money">Mobile Money</option>
+                            <option value="wallet">Digital Wallet</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Amount Details -->
+            <div class="form-section rounded-xl p-4">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Amount Details</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00" required>
+                    </div>
+                    
+                    <div>
+                        <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                        <select id="currency" name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                            {% for currency in currencies %}
+                            <option value="{{ currency.id }}" {% if currency.code == 'USD' %}selected{% endif %}>{{ currency.code }} - {{ currency.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Customer Information -->
+            <div class="form-section rounded-xl p-4">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Customer Information</h4>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="customerEmail" class="block text-sm font-medium text-gray-700 mb-2">Customer Email</label>
+                        <input type="email" id="customerEmail" name="customer_email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="customer@example.com" required>
+                    </div>
+                    
+                    <div>
+                        <label for="customerPhone" class="block text-sm font-medium text-gray-700 mb-2">Customer Phone (Optional)</label>
+                        <input type="tel" id="customerPhone" name="customer_phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="+1234567890">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Transaction Description -->
+            <div class="form-section rounded-xl p-4">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Description & Reference</h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Transaction description..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="externalReference" class="block text-sm font-medium text-gray-700 mb-2">External Reference (Optional)</label>
+                        <input type="text" id="externalReference" name="external_reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your internal reference">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" onclick="closeTransactionModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200">
+                    <span id="submitText">Create Transaction</span>
+                    <span id="submitSpinner" class="hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Creating...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Link Modal -->
+<div id="paymentLinkModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full">
+        <div class="payment-form p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Create Payment Link</h3>
+                <button onclick="closePaymentLinkModal()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <form id="paymentLinkForm" class="p-6 space-y-4">
+            {% csrf_token %}
+            <!-- Ensure CSRF token is present and valid -->
+            
+            <div>
+                <label for="linkAmount" class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                <input type="number" id="linkAmount" name="amount" step="0.01" min="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+            </div>
+            
+            <div>
+                <label for="linkCurrency" class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                <select id="linkCurrency" name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                    {% for currency in currencies %}
+                    <option value="{{ currency.id }}" {% if currency.code == 'USD' %}selected{% endif %}>{{ currency.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="linkDescription" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <input type="text" id="linkDescription" name="description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+            </div>
+            
+            <div>
+                <label for="linkExpiry" class="block text-sm font-medium text-gray-700 mb-2">Expiry Date (Optional)</label>
+                <input type="datetime-local" id="linkExpiry" name="expires_at" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" onclick="closePaymentLinkModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition-all duration-200">
+                    Create Link
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Transaction Detail Modal -->
+<div id="transactionDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="payment-form p-6 text-white rounded-t-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Transaction Details</h3>
+                <button onclick="closeTransactionDetailModal()" class="text-white hover:text-gray-200">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div id="transactionDetailContent" class="p-6">
+            <!-- Content will be loaded dynamically -->
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let currentTransactions = [];
+
+// Modal functions
+function openTransactionModal() {
+    document.getElementById('transactionModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeTransactionModal() {
+    document.getElementById('transactionModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('transactionForm').reset();
+}
+
+function openPaymentLinkModal() {
+    document.getElementById('paymentLinkModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePaymentLinkModal() {
+    document.getElementById('paymentLinkModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('paymentLinkForm').reset();
+}
+
+function closeTransactionDetailModal() {
+    document.getElementById('transactionDetailModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Add this helper function at the top of your script section
+function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+    return null;
+}
+
+function debugCsrfToken() {
+    const formToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const cookieToken = getCsrfToken();
+    
+    console.log('Form CSRF token:', formToken, 'Length:', formToken?.length);
+    console.log('Cookie CSRF token:', cookieToken, 'Length:', cookieToken?.length);
+    
+    return formToken || cookieToken;
+}
+
+// Use in your fetch requests
+const csrfToken = debugCsrfToken();
+
+// Updated transaction form submission
+document.getElementById('transactionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
+    
+    // Show loading state
+    submitText.classList.add('hidden');
+    submitSpinner.classList.remove('hidden');
+    
+    try {
+        const formData = new FormData(this);
+        const csrfToken = getCsrfToken() || formData.get('csrfmiddlewaretoken');
+        
+        const response = await fetch('/checkout/create/', {  // Updated URL to match your error
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Success
+            showAlert('Transaction created successfully!', 'success');
+            closeTransactionModal();
+            refreshTransactions();
+        } else {
+            // Error
+            showAlert(result.error || 'Failed to create transaction', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error occurred', 'error');
+    } finally {
+        // Reset loading state
+        submitText.classList.remove('hidden');
+        submitSpinner.classList.add('hidden');
+    }
+});
+
+// Payment link form submission
+document.getElementById('paymentLinkForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    try {
+        const formData = new FormData(this);
+        const csrfToken = formData.get('csrfmiddlewaretoken');
+        
+        const response = await fetch('/api/payment-links/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken  // Correct header name
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Payment link created successfully!', 'success');
+            closePaymentLinkModal();
+            // Show the payment link
+            showPaymentLinkResult(result.payment_url);
+        } else {
+            showAlert(result.error || 'Failed to create payment link', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error occurred', 'error');
+    }
+});
+
+// Transaction actions
+async function viewTransaction(transactionId) {
+    try {
+        const response = await fetch(`/api/transactions/${transactionId}/`);
+        const transaction = await response.json();
+        
+        if (response.ok) {
+            showTransactionDetail(transaction);
+        } else {
+            showAlert('Failed to load transaction details', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error occurred', 'error');
+    }
+}
+
+async function refundTransaction(transactionId) {
+    if (!confirm('Are you sure you want to refund this transaction?')) {
+        return;
+    }
+    
+    try {
+        // Get CSRF token from the page
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const response = await fetch(`/api/transactions/${transactionId}/refund/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,  // Correct header name
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Refund initiated successfully!', 'success');
+            refreshTransactions();
+        } else {
+            showAlert(result.error || 'Failed to initiate refund', 'error');
+        }
+    } catch (error) {
+        showAlert('Network error occurred', 'error');
+    }
+}
+
+// Utility functions
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    alertDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function showPaymentLinkResult(paymentUrl) {
+    const linkDiv = document.createElement('div');
+    linkDiv.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 rounded-lg shadow-xl z-50 max-w-md w-full mx-4';
+    linkDiv.innerHTML = `
+        <h3 class="text-lg font-bold mb-4">Payment Link Created</h3>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Payment URL:</label>
+            <div class="flex items-center space-x-2">
+                <input type="text" value="${paymentUrl}" class="flex-1 px-3 py-2 border rounded-lg bg-gray-50" readonly>
+                <button onclick="copyToClipboard('${paymentUrl}')" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-2">
+            <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Close</button>
+            <a href="${paymentUrl}" target="_blank" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Open Link</a>
+        </div>
+    `;
+    
+    document.body.appendChild(linkDiv);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showAlert('Copied to clipboard!', 'success');
+    });
+}
+
+function showTransactionDetail(transaction) {
+    const modal = document.getElementById('transactionDetailModal');
+    const content = document.getElementById('transactionDetailContent');
+    
+    content.innerHTML = `
+        <div class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Reference</label>
+                    <p class="mt-1 text-sm text-gray-900">${transaction.reference}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <p class="mt-1"><span class="status-badge status-${transaction.status}">${transaction.status}</span></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount</label>
+                    <p class="mt-1 text-sm text-gray-900">${transaction.currency} ${transaction.amount}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                    <p class="mt-1 text-sm text-gray-900">${transaction.payment_method}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Customer</label>
+                    <p class="mt-1 text-sm text-gray-900">${transaction.customer_email || 'N/A'}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Created</label>
+                    <p class="mt-1 text-sm text-gray-900">${new Date(transaction.created_at).toLocaleString()}</p>
+                </div>
+            </div>
+            
+            ${transaction.description ? `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <p class="mt-1 text-sm text-gray-900">${transaction.description}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function refreshTransactions() {
+    window.location.reload();
+}
+
+function filterTransactions() {
+    const status = document.getElementById('statusFilter').value;
+    const date = document.getElementById('dateFilter').value;
+    
+    const params = new URLSearchParams(window.location.search);
+    
+    if (status) {
+        params.set('status', status);
+    } else {
+        params.delete('status');
+    }
+    
+    if (date) {
+        params.set('date', date);
+    } else {
+        params.delete('date');
+    }
+    
+    window.location.search = params.toString();
+}
+
+// Close modals on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeTransactionModal();
+        closePaymentLinkModal();
+        closeTransactionDetailModal();
+    }
+});
+</script>
+{% endblock %}

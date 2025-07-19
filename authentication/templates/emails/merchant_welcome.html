@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ platform_name }} - Merchant Account Created</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .welcome-message {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .welcome-message h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+        }
+        .merchant-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #007bff;
+            font-weight: 500;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #ffc107;
+            color: #212529;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .next-steps {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .next-steps h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .next-steps ul {
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 10px 5px;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        .secondary-button {
+            background-color: #6c757d;
+        }
+        .secondary-button:hover {
+            background-color: #545b62;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .important-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .important-note .icon {
+            color: #856404;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">{{ platform_name }}</div>
+            <p style="margin: 0; color: #6c757d;">Your Fintech Platform</p>
+        </div>
+
+        <div class="welcome-message">
+            <h1>🎉 Welcome to {{ platform_name }}!</h1>
+            <p style="margin: 0; font-size: 16px;">Your merchant account has been created successfully</p>
+        </div>
+
+        <p>Dear {{ user_first_name }},</p>
+
+        <p>Congratulations! Your email verification was successful, and we've automatically created your merchant account. You're now ready to start accepting payments and managing your business with {{ platform_name }}.</p>
+
+        <div class="merchant-details">
+            <h3 style="margin-top: 0; color: #495057;">📋 Your Merchant Account Details</h3>
+            
+            <div class="detail-row">
+                <span class="detail-label">Merchant ID:</span>
+                <span class="detail-value">{{ merchant_id }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Business Name:</span>
+                <span class="detail-value">{{ business_name }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Business Email:</span>
+                <span class="detail-value">{{ business_email }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Business Phone:</span>
+                <span class="detail-value">{{ business_phone }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Category:</span>
+                <span class="detail-value">{{ category }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="status-badge">{{ status }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Created:</span>
+                <span class="detail-value">{{ created_at }}</span>
+            </div>
+        </div>
+
+        <div class="important-note">
+            <p><span class="icon">⚠️</span> <strong>Important:</strong> Your merchant account is currently in <strong>{{ status }}</strong> status. You'll need to complete the verification process before you can start processing payments.</p>
+        </div>
+
+        <div class="next-steps">
+            <h3>🚀 Next Steps</h3>
+            <p>To activate your merchant account and start processing payments, please:</p>
+            <ul>
+                <li><strong>Complete Business Information:</strong> Fill in your complete business details</li>
+                <li><strong>Upload Required Documents:</strong> Provide business registration, tax documents, and bank details</li>
+                <li><strong>Verify Bank Account:</strong> Link and verify your business bank account</li>
+                <li><strong>Set Up Payment Methods:</strong> Configure your preferred payment gateways</li>
+                <li><strong>Test Integration:</strong> Use our sandbox environment to test your integration</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ dashboard_url }}" class="cta-button">
+                🏠 Access Your Dashboard
+            </a>
+            <a href="{{ docs_url }}" class="cta-button secondary-button">
+                📚 View Documentation
+            </a>
+        </div>
+
+        <div class="next-steps">
+            <h3>💡 What You Can Do Now</h3>
+            <ul>
+                <li><strong>API Integration:</strong> Start integrating our payment APIs into your application</li>
+                <li><strong>Webhook Setup:</strong> Configure webhooks to receive real-time payment notifications</li>
+                <li><strong>Test Payments:</strong> Use our sandbox environment to test payment flows</li>
+                <li><strong>Explore Features:</strong> Check out our fraud detection, analytics, and reporting tools</li>
+            </ul>
+        </div>
+
+        <p>If you have any questions or need assistance, our support team is here to help:</p>
+        
+        <ul>
+            <li>📧 Email: <a href="mailto:{{ support_email }}">{{ support_email }}</a></li>
+            <li>📚 Documentation: <a href="{{ docs_url }}">{{ docs_url }}</a></li>
+            <li>🏠 Dashboard: <a href="{{ dashboard_url }}">{{ dashboard_url }}</a></li>
+        </ul>
+
+        <p>Thank you for choosing {{ platform_name }}. We're excited to help you grow your business!</p>
+
+        <p>Best regards,<br>
+        <strong>The {{ platform_name }} Team</strong></p>
+
+        <div class="footer">
+            <p>This email was sent to {{ business_email }} because you created a merchant account with {{ platform_name }}.</p>
+            <p>© 2025 {{ platform_name }}. All rights reserved.</p>
+            <p>If you didn't create this account, please contact us immediately at <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+        </div>
+    </div>
+</body>
+</html>

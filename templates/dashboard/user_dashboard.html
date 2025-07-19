@@ -1,0 +1,219 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Welcome, {{ user.first_name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Welcome Message -->
+    <div class="glass-card rounded-xl p-8 text-center">
+        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-user text-indigo-600 text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome to PexiLabs!</h2>
+        <p class="text-gray-600 mb-6">
+            Your gateway to global payment processing and financial integrations.
+        </p>
+        {% if can_create_merchant %}
+        <button class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+            <i class="fas fa-store mr-2"></i>
+            Create Merchant Account
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Account Information -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Profile Information -->
+        <div class="glass-card rounded-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Profile Information</h3>
+                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                    <i class="fas fa-edit mr-1"></i>Edit
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Full Name</label>
+                    <p class="text-sm text-gray-900">{{ user.get_full_name }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Email</label>
+                    <p class="text-sm text-gray-900">{{ user.email }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Phone</label>
+                    <p class="text-sm text-gray-900">{{ user.phone_number|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Country</label>
+                    <p class="text-sm text-gray-900">{{ user.country.name|default:"Not specified" }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Preferred Currency</label>
+                    <p class="text-sm text-gray-900">{{ user.preferred_currency.code|default:"Not specified" }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Account Status</label>
+                    <div class="flex items-center">
+                        {% if user.is_verified %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Verified
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-clock mr-1"></i>Pending Verification
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="glass-card rounded-xl p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                {% if can_create_merchant %}
+                <button class="w-full flex items-center p-4 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-store text-indigo-600"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <p class="text-sm font-medium text-gray-900">Create Merchant Account</p>
+                        <p class="text-xs text-gray-500">Start accepting payments for your business</p>
+                    </div>
+                    <i class="fas fa-arrow-right text-indigo-600 ml-auto"></i>
+                </button>
+                {% endif %}
+
+                <button class="w-full flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-key text-gray-600"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <p class="text-sm font-medium text-gray-900">API Access</p>
+                        <p class="text-xs text-gray-500">Generate API keys for development</p>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-600 ml-auto"></i>
+                </button>
+
+                <button class="w-full flex items-center p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-cog text-gray-600"></i>
+                    </div>
+                    <div class="ml-4 text-left">
+                        <p class="text-sm font-medium text-gray-900">Account Settings</p>
+                        <p class="text-xs text-gray-500">Manage your account preferences</p>
+                    </div>
+                    <i class="fas fa-arrow-right text-gray-600 ml-auto"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if not user.is_verified %}
+    <!-- Verification Reminder -->
+    <div class="glass-card rounded-xl p-6 bg-yellow-50 border border-yellow-200">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mr-4"></i>
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-yellow-800">Account Verification Required</h3>
+                <p class="text-sm text-yellow-700 mt-1">
+                    Please check your email and verify your account to access all features.
+                </p>
+            </div>
+            <button class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors text-sm">
+                Resend Email
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Getting Started -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Getting Started with PexiLabs</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-book text-blue-600"></i>
+                </div>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Read Documentation</h4>
+                <p class="text-xs text-gray-500 mb-3">
+                    Learn how to integrate our payment APIs
+                </p>
+                <a href="/api/docs/" class="text-blue-600 hover:text-blue-700 text-xs font-medium">
+                    View Docs <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <div class="text-center">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-store text-green-600"></i>
+                </div>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Create Business Account</h4>
+                <p class="text-xs text-gray-500 mb-3">
+                    Set up your merchant profile to start accepting payments
+                </p>
+                <button class="text-green-600 hover:text-green-700 text-xs font-medium">
+                    Get Started <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <div class="text-center">
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-headset text-purple-600"></i>
+                </div>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Get Support</h4>
+                <p class="text-xs text-gray-500 mb-3">
+                    Our team is here to help you get started
+                </p>
+                <a href="/contact/" class="text-purple-600 hover:text-purple-700 text-xs font-medium">
+                    Contact Us <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integration Showcase -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Available Integrations</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded flex items-center justify-center">
+                        <i class="fas fa-university text-blue-600 text-sm"></i>
+                    </div>
+                    <h4 class="ml-3 text-sm font-medium text-gray-900">UBA Bank</h4>
+                </div>
+                <p class="text-xs text-gray-500">
+                    Direct bank transfers and account management for Kenyan businesses
+                </p>
+            </div>
+
+            <div class="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-green-100 rounded flex items-center justify-center">
+                        <i class="fas fa-credit-card text-green-600 text-sm"></i>
+                    </div>
+                    <h4 class="ml-3 text-sm font-medium text-gray-900">CyberSource</h4>
+                </div>
+                <p class="text-xs text-gray-500">
+                    Global payment processing with fraud protection and tokenization
+                </p>
+            </div>
+
+            <div class="p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:shadow-md transition-all">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
+                        <i class="fas fa-network-wired text-purple-600 text-sm"></i>
+                    </div>
+                    <h4 class="ml-3 text-sm font-medium text-gray-900">Corefy</h4>
+                </div>
+                <p class="text-xs text-gray-500">
+                    Payment orchestration platform with multiple payment methods
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

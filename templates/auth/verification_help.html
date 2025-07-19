@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Navigation -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center text-white font-bold text-xl">
+                        <i class="fas fa-cube mr-2"></i>
+                        PexiLabs
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'auth:login_page' %}" class="text-white/80 hover:text-white transition-colors">
+                        Back to Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl w-full space-y-8 animate-fade-in">
+            <!-- Header -->
+            <div class="text-center">
+                <div class="mx-auto w-20 h-20 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center mb-6 shadow-2xl border border-white/30">
+                    <i class="fas fa-question-circle text-white text-3xl"></i>
+                </div>
+                <h2 class="text-4xl font-bold text-white mb-2">Email Verification Help</h2>
+                <p class="text-white/80 text-lg">Having trouble verifying your email? We're here to help!</p>
+            </div>
+
+            <!-- Help Content -->
+            <div class="gradient-card rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10">
+                <div class="space-y-8">
+                    <!-- FAQ Section -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-question mr-3 text-indigo-600"></i>
+                            Frequently Asked Questions
+                        </h3>
+                        
+                        <div class="space-y-6">
+                            <!-- FAQ Item 1 -->
+                            <div class="border border-gray-200 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <i class="fas fa-envelope mr-2 text-indigo-500"></i>
+                                    I didn't receive the verification email
+                                </h4>
+                                <div class="text-gray-600 space-y-2">
+                                    <p><strong>Check these locations:</strong></p>
+                                    <ul class="list-disc pl-6 space-y-1">
+                                        <li>Your spam/junk/promotions folder</li>
+                                        <li>All Mail or Trash folders</li>
+                                        <li>Social or Updates tabs (if using Gmail)</li>
+                                    </ul>
+                                    <p class="mt-3"><strong>Still can't find it?</strong> Try resending the code from the verification page.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ Item 2 -->
+                            <div class="border border-gray-200 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <i class="fas fa-clock mr-2 text-indigo-500"></i>
+                                    The verification code has expired
+                                </h4>
+                                <div class="text-gray-600">
+                                    <p>Verification codes expire after 15 minutes for security reasons. If your code has expired:</p>
+                                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                                        <li>Click "Resend Code" on the verification page</li>
+                                        <li>Check your email for the new code</li>
+                                        <li>Enter the new 6-digit code within 15 minutes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ Item 3 -->
+                            <div class="border border-gray-200 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <i class="fas fa-key mr-2 text-indigo-500"></i>
+                                    The verification code is not working
+                                </h4>
+                                <div class="text-gray-600">
+                                    <p>Make sure you're entering the code correctly:</p>
+                                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                                        <li>Enter all 6 digits without spaces or dashes</li>
+                                        <li>Check that you're using the most recent code</li>
+                                        <li>Make sure the code hasn't expired</li>
+                                        <li>Try copying and pasting the code from your email</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ Item 4 -->
+                            <div class="border border-gray-200 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                                    <i class="fas fa-at mr-2 text-indigo-500"></i>
+                                    I entered the wrong email address
+                                </h4>
+                                <div class="text-gray-600">
+                                    <p>If you registered with the wrong email address:</p>
+                                    <ul class="list-disc pl-6 mt-2 space-y-1">
+                                        <li>You'll need to register again with the correct email</li>
+                                        <li>Make sure to double-check your email before submitting</li>
+                                        <li>Contact support if you need help with account cleanup</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Troubleshooting Steps -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-tools mr-3 text-indigo-600"></i>
+                            Troubleshooting Steps
+                        </h3>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                            <div class="text-gray-700 space-y-4">
+                                <div class="flex items-start">
+                                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">1</span>
+                                    <div>
+                                        <p class="font-semibold">Check your email thoroughly</p>
+                                        <p class="text-sm text-gray-600">Look in spam, junk, promotions, and all other folders</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">2</span>
+                                    <div>
+                                        <p class="font-semibold">Wait a few minutes</p>
+                                        <p class="text-sm text-gray-600">Email delivery can sometimes take 2-5 minutes</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">3</span>
+                                    <div>
+                                        <p class="font-semibold">Resend the verification code</p>
+                                        <p class="text-sm text-gray-600">Click "Resend Code" on the verification page</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">4</span>
+                                    <div>
+                                        <p class="font-semibold">Check your email settings</p>
+                                        <p class="text-sm text-gray-600">Make sure emails from pexilabs.com are not blocked</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-start">
+                                    <span class="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">5</span>
+                                    <div>
+                                        <p class="font-semibold">Contact support</p>
+                                        <p class="text-sm text-gray-600">If nothing works, reach out to our support team</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Support -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-headset mr-3 text-indigo-600"></i>
+                            Still Need Help?
+                        </h3>
+                        
+                        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-6">
+                            <div class="text-center">
+                                <p class="text-gray-700 mb-4">Our support team is ready to help you get verified!</p>
+                                
+                                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                    <a href="mailto:support@pexilabs.com" class="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-envelope mr-2"></i>
+                                        Email Support
+                                    </a>
+                                    
+                                    <a href="/contact/" class="inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-indigo-600 font-medium rounded-lg border border-indigo-600 transition-colors">
+                                        <i class="fas fa-comments mr-2"></i>
+                                        Live Chat
+                                    </a>
+                                </div>
+                                
+                                <p class="text-sm text-gray-600 mt-4">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    Support hours: Monday - Friday, 9 AM - 6 PM UTC
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="text-center space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Quick Actions</h3>
+                        
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="{% url 'auth:register_page' %}" class="inline-flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Register New Account
+                            </a>
+                            
+                            <a href="{% url 'auth:login_page' %}" class="inline-flex items-center px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-colors">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Back to Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/10 backdrop-blur-md border-t border-white/20 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white/60">
+                <p>&copy; 2024 PexiLabs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

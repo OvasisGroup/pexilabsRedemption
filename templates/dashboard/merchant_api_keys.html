@@ -1,0 +1,459 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}API Keys Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">API Keys</h1>
+            <p class="text-gray-600 mt-1">Manage your API keys for integrating with the PexiLabs platform</p>
+        </div>
+        <button onclick="openCreateApiKeyModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <i class="fas fa-plus mr-2"></i>
+            Generate API Key
+        </button>
+    </div>
+
+    <!-- Partner Information -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Integration Details</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Partner Code</label>
+                <p class="text-gray-900 font-mono">{{ partner.code }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Status</label>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if partner.is_verified %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {% if partner.is_verified %}
+                        <i class="fas fa-check-circle mr-1"></i> Verified
+                    {% else %}
+                        <i class="fas fa-clock mr-1"></i> Pending Verification
+                    {% endif %}
+                </span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500">Daily API Limit</label>
+                <p class="text-gray-900">{{ partner.daily_api_limit|floatformat:0 }} requests</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Keys List -->
+    <div class="glass-card rounded-xl p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-medium text-gray-900">Your API Keys</h3>
+            <div class="text-sm text-gray-500">
+                <span id="api-keys-count">{{ api_keys.count }}</span> of 10 keys
+            </div>
+        </div>
+
+        <div id="api-keys-list">
+            {% if api_keys %}
+                <div class="space-y-4">
+                    {% for key in api_keys %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors" id="api-key-{{ key.id }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-4">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-gray-900">{{ key.name }}</h4>
+                                            <p class="text-xs text-gray-500 font-mono">{{ key.public_key }}</p>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                {% if key.key_type == 'production' %}bg-red-100 text-red-800
+                                                {% elif key.key_type == 'sandbox' %}bg-yellow-100 text-yellow-800
+                                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                                {{ key.get_key_type_display }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                {% if key.status == 'active' %}bg-green-100 text-green-800
+                                                {% elif key.status == 'revoked' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ key.get_status_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                                        <span><i class="fas fa-key mr-1"></i> Scopes: {{ key.scopes }}</span>
+                                        <span><i class="fas fa-chart-line mr-1"></i> {{ key.total_requests }} requests</span>
+                                        {% if key.last_used_at %}
+                                            <span><i class="fas fa-clock mr-1"></i> Last used: {{ key.last_used_at|timesince }} ago</span>
+                                        {% else %}
+                                            <span><i class="fas fa-clock mr-1"></i> Never used</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                {% if key.status == 'active' %}
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="regenerateApiKey('{{ key.id }}')" 
+                                                class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
+                                            <i class="fas fa-sync-alt mr-1"></i> Regenerate
+                                        </button>
+                                        <button onclick="revokeApiKey('{{ key.id }}')" 
+                                                class="text-red-600 hover:text-red-700 text-sm font-medium">
+                                            <i class="fas fa-trash mr-1"></i> Revoke
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-key text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No API Keys</h3>
+                    <p class="text-gray-500 mb-4">You haven't generated any API keys yet. Create your first key to start integrating with our platform.</p>
+                    <button onclick="openCreateApiKeyModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                        <i class="fas fa-plus mr-2"></i>
+                        Generate Your First API Key
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Usage Guidelines -->
+    <div class="glass-card rounded-xl p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">API Usage Guidelines</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-medium text-gray-900 mb-2">🔐 Security Best Practices</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• Never expose your secret key in client-side code</li>
+                    <li>• Store API keys securely in environment variables</li>
+                    <li>• Use HTTPS for all API requests</li>
+                    <li>• Rotate keys regularly for production use</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium text-gray-900 mb-2">📝 API Documentation</h4>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• <a href="#" class="text-indigo-600 hover:text-indigo-700">API Reference Documentation</a></li>
+                    <li>• <a href="#" class="text-indigo-600 hover:text-indigo-700">Integration Examples</a></li>
+                    <li>• <a href="#" class="text-indigo-600 hover:text-indigo-700">SDKs and Libraries</a></li>
+                    <li>• <a href="#" class="text-indigo-600 hover:text-indigo-700">Webhooks Guide</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create API Key Modal -->
+<div id="createApiKeyModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Generate New API Key</h3>
+                <button onclick="closeCreateApiKeyModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="createApiKeyForm">
+                <div class="mb-4">
+                    <label for="keyName" class="block text-sm font-medium text-gray-700 mb-2">Key Name</label>
+                    <input type="text" id="keyName" name="name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                           placeholder="e.g., Production API Key">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="keyType" class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
+                    <select id="keyType" name="key_type" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="sandbox">Sandbox (Testing)</option>
+                        <option value="production">Production (Live)</option>
+                        <option value="development">Development</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="keyScopes" class="block text-sm font-medium text-gray-700 mb-2">Scopes</label>
+                    <select id="keyScopes" name="scopes" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="read">Read Only</option>
+                        <option value="read,write" selected>Read & Write</option>
+                        <option value="read,write,admin">Full Access</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center space-x-3">
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <span id="createKeySpinner" class="hidden">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                        </span>
+                        Generate Key
+                    </button>
+                    <button type="button" onclick="closeCreateApiKeyModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- API Key Display Modal -->
+<div id="apiKeyDisplayModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">API Key Generated</h3>
+                <button onclick="closeApiKeyDisplayModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-4">
+                <div class="flex">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>
+                    <div class="text-sm text-yellow-700">
+                        <strong>Important:</strong> Save this API key now. You won't be able to see the secret again!
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Public Key</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="displayPublicKey" readonly
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm">
+                        <button onclick="copyToClipboard('displayPublicKey')" 
+                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="displaySecretKey" readonly
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm">
+                        <button onclick="copyToClipboard('displaySecretKey')" 
+                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Full API Key</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="displayFullKey" readonly
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 font-mono text-sm">
+                        <button onclick="copyToClipboard('displayFullKey')" 
+                                class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <button onclick="closeApiKeyDisplayModal()" 
+                        class="w-full px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                    I've Saved the Key
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions
+function openCreateApiKeyModal() {
+    document.getElementById('createApiKeyModal').classList.remove('hidden');
+}
+
+function closeCreateApiKeyModal() {
+    document.getElementById('createApiKeyModal').classList.add('hidden');
+    document.getElementById('createApiKeyForm').reset();
+}
+
+function openApiKeyDisplayModal(apiKeyData) {
+    document.getElementById('displayPublicKey').value = apiKeyData.public_key;
+    document.getElementById('displaySecretKey').value = apiKeyData.secret_key;
+    document.getElementById('displayFullKey').value = apiKeyData.full_key;
+    document.getElementById('apiKeyDisplayModal').classList.remove('hidden');
+}
+
+function closeApiKeyDisplayModal() {
+    document.getElementById('apiKeyDisplayModal').classList.add('hidden');
+    // Clear sensitive data
+    document.getElementById('displaySecretKey').value = '';
+    document.getElementById('displayFullKey').value = '';
+}
+
+// Create API Key
+document.getElementById('createApiKeyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const spinner = document.getElementById('createKeySpinner');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    spinner.classList.remove('hidden');
+    submitBtn.disabled = true;
+    
+    try {
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            key_type: formData.get('key_type'),
+            scopes: formData.get('scopes')
+        };
+        
+        const response = await fetch('{% url "dashboard:create_api_key_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            closeCreateApiKeyModal();
+            openApiKeyDisplayModal(result.api_key);
+            loadApiKeys(); // Refresh the list
+            showToast('API key generated successfully!', 'success');
+        } else {
+            showToast(result.error || 'Failed to generate API key', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while generating the API key', 'error');
+    } finally {
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+    }
+});
+
+// Revoke API Key
+async function revokeApiKey(keyId) {
+    if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/api/api-keys/${keyId}/revoke/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('API key revoked successfully', 'success');
+            loadApiKeys(); // Refresh the list
+        } else {
+            showToast(result.error || 'Failed to revoke API key', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while revoking the API key', 'error');
+    }
+}
+
+// Regenerate API Key
+async function regenerateApiKey(keyId) {
+    if (!confirm('Are you sure you want to regenerate this API key? The old secret will become invalid.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/api/api-keys/${keyId}/regenerate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            openApiKeyDisplayModal({
+                public_key: result.public_key,
+                secret_key: result.secret_key,
+                full_key: result.full_key
+            });
+            showToast('API key regenerated successfully', 'success');
+        } else {
+            showToast(result.error || 'Failed to regenerate API key', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while regenerating the API key', 'error');
+    }
+}
+
+// Load API Keys
+async function loadApiKeys() {
+    try {
+        const response = await fetch('{% url "dashboard:list_api_keys_api" %}');
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update the count
+            document.getElementById('api-keys-count').textContent = result.count;
+            
+            // You could update the UI here if needed
+            // For now, just reload the page to show updated data
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to load API keys:', error);
+    }
+}
+
+// Copy to clipboard
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value);
+    showToast('Copied to clipboard!', 'success');
+}
+
+// Utility functions
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showToast(message, type) {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-md text-white z-50 ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

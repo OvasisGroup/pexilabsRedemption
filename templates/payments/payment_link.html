@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Payment - {{ payment_link.title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .payment-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .payment-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen payment-bg">
+    <!-- Header -->
+    <nav class="bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center text-white font-bold text-xl">
+                        <i class="fas fa-cube mr-2"></i>
+                        PexiLabs
+                    </a>
+                </div>
+                <div class="text-white text-sm">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    Secure Payment
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8 animate-fade-in">
+            <!-- Payment Card -->
+            <div class="payment-card rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shopping-cart text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold">{{ payment_link.title }}</h2>
+                        <p class="text-blue-100 mt-1">{{ merchant.business_name }}</p>
+                    </div>
+                </div>
+                
+                <!-- Payment Details -->
+                <div class="p-6">
+                    <div class="text-center mb-6">
+                        <div class="text-3xl font-bold text-gray-900">
+                            {{ payment_link.currency.code }} {{ payment_link.amount }}
+                        </div>
+                        {% if payment_link.description %}
+                        <p class="text-gray-600 mt-2">{{ payment_link.description }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Expiry Warning -->
+                    {% if payment_link.expires_at %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-yellow-500 mr-2"></i>
+                            <span class="text-sm text-yellow-800">
+                                Expires on {{ payment_link.expires_at|date:"M d, Y H:i" }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Payment Form -->
+                    <form id="paymentForm" class="space-y-4">
+                        {% csrf_token %}
+                        
+                        <!-- Customer Email -->
+                        <div>
+                            <label for="customerEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                id="customerEmail" 
+                                name="customer_email"
+                                required
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="your.email@example.com"
+                            />
+                        </div>
+                        
+                        <!-- Customer Phone -->
+                        <div>
+                            <label for="customerPhone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number (Optional)
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="customerPhone" 
+                                name="customer_phone"
+                                class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="+1 (555) 123-4567"
+                            />
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Payment Method
+                            </label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="payment-method-option">
+                                    <input type="radio" name="payment_method" value="card" checked class="sr-only">
+                                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-500 transition-colors">
+                                        <div class="flex items-center justify-center">
+                                            <i class="fas fa-credit-card text-gray-600 mr-2"></i>
+                                            <span class="text-sm font-medium">Card</span>
+                                        </div>
+                                    </div>
+                                </label>
+                                
+                                <label class="payment-method-option">
+                                    <input type="radio" name="payment_method" value="bank_transfer" class="sr-only">
+                                    <div class="border-2 border-gray-200 rounded-lg p-3 cursor-pointer hover:border-blue-500 transition-colors">
+                                        <div class="flex items-center justify-center">
+                                            <i class="fas fa-university text-gray-600 mr-2"></i>
+                                            <span class="text-sm font-medium">Bank</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button 
+                            type="submit" 
+                            id="payButton"
+                            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                            <span id="payButtonText">
+                                <i class="fas fa-lock mr-2"></i>
+                                Pay {{ payment_link.currency.code }} {{ payment_link.amount }}
+                            </span>
+                            <span id="payButtonSpinner" class="hidden">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Processing...
+                            </span>
+                        </button>
+                    </form>
+                    
+                    <!-- Security Notice -->
+                    <div class="mt-6 text-center">
+                        <div class="flex items-center justify-center text-sm text-gray-500">
+                            <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+                            Secured by PexiLabs
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">
+                            Your payment information is encrypted and secure
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Merchant Info -->
+            <div class="text-center text-white/80">
+                <p class="text-sm">
+                    Payment to: <span class="font-semibold text-white">{{ merchant.business_name }}</span>
+                </p>
+                {% if merchant.business_email %}
+                <p class="text-xs mt-1">{{ merchant.business_email }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/10 backdrop-blur-md border-t border-white/20 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white/60 text-sm">
+                <p>&copy; 2024 PexiLabs. All rights reserved.</p>
+                <div class="mt-2 space-x-4">
+                    <a href="/privacy/" class="hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="/terms/" class="hover:text-white transition-colors">Terms of Service</a>
+                    <a href="/contact/" class="hover:text-white transition-colors">Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Payment method selection
+        document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remove selected styling from all options
+                document.querySelectorAll('.payment-method-option div').forEach(div => {
+                    div.classList.remove('border-blue-500', 'bg-blue-50');
+                    div.classList.add('border-gray-200');
+                });
+                
+                // Add selected styling to chosen option
+                const selectedDiv = this.parentElement.querySelector('div');
+                selectedDiv.classList.remove('border-gray-200');
+                selectedDiv.classList.add('border-blue-500', 'bg-blue-50');
+            });
+        });
+        
+        // Initialize first option as selected
+        document.querySelector('input[name="payment_method"]:checked').dispatchEvent(new Event('change'));
+        
+        // Form submission
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const payButton = document.getElementById('payButton');
+            const payButtonText = document.getElementById('payButtonText');
+            const payButtonSpinner = document.getElementById('payButtonSpinner');
+            
+            // Show loading state
+            payButton.disabled = true;
+            payButtonText.classList.add('hidden');
+            payButtonSpinner.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(this);
+                const response = await fetch('{{ request.path }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Success - redirect to success page or show success message
+                    showAlert('Payment processed successfully!', 'success');
+                    setTimeout(() => {
+                        if (result.redirect_url) {
+                            window.location.href = result.redirect_url;
+                        } else {
+                            // Show success state
+                            document.body.innerHTML = `
+                                <div class="min-h-screen payment-bg flex items-center justify-center p-4">
+                                    <div class="payment-card rounded-3xl shadow-2xl border border-white/30 p-8 text-center max-w-md w-full">
+                                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="fas fa-check text-white text-2xl"></i>
+                                        </div>
+                                        <h2 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+                                        <p class="text-gray-600 mb-4">Your payment has been processed successfully.</p>
+                                        <p class="text-sm text-gray-500">Transaction ID: ${result.transaction_id || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 2000);
+                } else {
+                    // Error
+                    showAlert(result.error || 'Payment failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error occurred', 'error');
+            } finally {
+                // Reset loading state
+                payButton.disabled = false;
+                payButtonText.classList.remove('hidden');
+                payButtonSpinner.classList.add('hidden');
+            }
+        });
+        
+        // Alert function
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            alertDiv.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

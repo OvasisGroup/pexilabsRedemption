@@ -1,0 +1,672 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Integration Guides{% endblock %}
+
+{% block extra_css %}
+<style>
+    .guide-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .guide-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .step-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.875rem;
+    }
+    
+    .code-block {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.5rem;
+        position: relative;
+    }
+    
+    .code-block pre {
+        margin: 0;
+        padding: 1rem;
+        overflow-x: auto;
+    }
+    
+    .copy-btn {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: #475569;
+        border: none;
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+    
+    .copy-btn:hover {
+        background: #64748b;
+    }
+    
+    .framework-tab {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .framework-tab.active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .framework-content {
+        display: none;
+    }
+    
+    .framework-content.active {
+        display: block;
+    }
+    
+    .integration-flow {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="integration-flow text-white rounded-xl p-8">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold mb-4">Integration Guides</h1>
+            <p class="text-blue-100 max-w-2xl mx-auto">
+                Step-by-step guides to integrate PexiLabs Payment API into your applications. 
+                Choose your platform and follow our detailed instructions.
+            </p>
+        </div>
+    </div>
+    
+    <!-- Quick Start Guide -->
+    <section class="guide-card rounded-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-rocket text-blue-600 mr-3"></i>
+            Quick Start Guide
+        </h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div class="flex items-start space-x-4">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Get Your API Keys</h3>
+                        <p class="text-gray-600 text-sm">
+                            Sign up for a PexiLabs account and get your API keys from the 
+                            <a href="{% url 'dashboard:merchant_api_keys' %}" class="text-blue-600 hover:text-blue-700">dashboard</a>.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Make Your First API Call</h3>
+                        <p class="text-gray-600 text-sm">
+                            Test the connection by creating a simple transaction using our API.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Handle the Response</h3>
+                        <p class="text-gray-600 text-sm">
+                            Process the payment URL and redirect your customers to complete the payment.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="step-number">4</div>
+                    <div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Set Up Webhooks</h3>
+                        <p class="text-gray-600 text-sm">
+                            Configure webhook endpoints to receive real-time payment notifications.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold text-gray-900 mb-4">Quick Test</h3>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                    <pre><code>curl -X POST {{ request.scheme }}://{{ request.get_host }}/api/v1/transactions/ \
+  -H "Authorization: Bearer pk_test_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": "10.00",
+    "currency": "USD",
+    "customer_email": "test@example.com",
+    "description": "Test payment"
+  }'</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Framework-Specific Guides -->
+    <section class="guide-card rounded-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-code text-blue-600 mr-3"></i>
+            Framework Integration Guides
+        </h2>
+        
+        <!-- Framework Tabs -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button class="framework-tab active" onclick="showFramework('react', this)">
+                <i class="fab fa-react mr-2"></i>React
+            </button>
+            <button class="framework-tab" onclick="showFramework('vue', this)">
+                <i class="fab fa-vuejs mr-2"></i>Vue.js
+            </button>
+            <button class="framework-tab" onclick="showFramework('angular', this)">
+                <i class="fab fa-angular mr-2"></i>Angular
+            </button>
+            <button class="framework-tab" onclick="showFramework('laravel', this)">
+                <i class="fab fa-laravel mr-2"></i>Laravel
+            </button>
+            <button class="framework-tab" onclick="showFramework('django', this)">
+                <i class="fab fa-python mr-2"></i>Django
+            </button>
+            <button class="framework-tab" onclick="showFramework('nodejs', this)">
+                <i class="fab fa-node-js mr-2"></i>Node.js
+            </button>
+        </div>
+        
+        <!-- React Integration -->
+        <div id="react" class="framework-content active">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">React Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs React SDK</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>npm install @pexilabs/react-sdk</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Set Up the Payment Component</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>import React from 'react';
+import { PexiLabsProvider, PaymentForm } from '@pexilabs/react-sdk';
+
+function App() {
+  return (
+    &lt;PexiLabsProvider apiKey="pk_test_your_key_here"&gt;
+      &lt;PaymentForm
+        amount="100.00"
+        currency="USD"
+        onSuccess={(transaction) =&gt; {
+          console.log('Payment successful:', transaction);
+        }}
+        onError={(error) =&gt; {
+          console.error('Payment failed:', error);
+        }}
+      /&gt;
+    &lt;/PexiLabsProvider&gt;
+  );
+}</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">3. Handle Payment Results</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>const handlePaymentSuccess = (transaction) =&gt; {
+  // Update your UI
+  setPaymentStatus('success');
+  
+  // Send transaction ID to your backend
+  fetch('/api/payment-success', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+      transactionId: transaction.id,
+      reference: transaction.reference 
+    })
+  });
+};</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vue.js Integration -->
+        <div id="vue" class="framework-content">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Vue.js Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs Vue SDK</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>npm install @pexilabs/vue-sdk</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Create Payment Component</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>&lt;template&gt;
+  &lt;div&gt;
+    &lt;PexiLabsPayment
+      :amount="amount"
+      :currency="currency"
+      :api-key="apiKey"
+      @success="handleSuccess"
+      @error="handleError"
+    /&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import { PexiLabsPayment } from '@pexilabs/vue-sdk';
+
+export default {
+  components: {
+    PexiLabsPayment
+  },
+  data() {
+    return {
+      apiKey: 'pk_test_your_key_here',
+      amount: '100.00',
+      currency: 'USD'
+    };
+  },
+  methods: {
+    handleSuccess(transaction) {
+      console.log('Payment successful:', transaction);
+    },
+    handleError(error) {
+      console.error('Payment failed:', error);
+    }
+  }
+};
+&lt;/script&gt;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Laravel Integration -->
+        <div id="laravel" class="framework-content">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Laravel Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs Laravel Package</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>composer require pexilabs/laravel-sdk</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Configure Your Environment</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code># Add to your .env file
+PEXILABS_API_KEY=pk_test_your_key_here
+PEXILABS_WEBHOOK_SECRET=whsec_your_webhook_secret</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">3. Create a Payment Controller</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>&lt;?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use PexiLabs\Laravel\PexiLabs;
+
+class PaymentController extends Controller
+{
+    public function createPayment(Request $request)
+    {
+        $pexilabs = new PexiLabs(config('services.pexilabs.key'));
+        
+        try {
+            $transaction = $pexilabs-&gt;transactions()-&gt;create([
+                'amount' =&gt; $request-&gt;amount,
+                'currency' =&gt; $request-&gt;currency,
+                'customer_email' =&gt; $request-&gt;email,
+                'description' =&gt; $request-&gt;description,
+                'return_url' =&gt; route('payment.success'),
+                'cancel_url' =&gt; route('payment.cancel'),
+            ]);
+            
+            return redirect($transaction-&gt;payment_url);
+        } catch (\Exception $e) {
+            return back()-&gt;withErrors(['payment' =&gt; $e-&gt;getMessage()]);
+        }
+    }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Django Integration -->
+        <div id="django" class="framework-content">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Django Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs Python SDK</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>pip install pexilabs-python</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Configure Settings</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code># settings.py
+PEXILABS_API_KEY = 'pk_test_your_key_here'
+PEXILABS_WEBHOOK_SECRET = 'whsec_your_webhook_secret'</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">3. Create Payment View</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>from django.shortcuts import render, redirect
+from django.conf import settings
+import pexilabs
+
+def create_payment(request):
+    if request.method == 'POST':
+        client = pexilabs.Client(settings.PEXILABS_API_KEY)
+        
+        try:
+            transaction = client.transactions.create(
+                amount=request.POST['amount'],
+                currency=request.POST['currency'],
+                customer_email=request.POST['email'],
+                description=request.POST['description'],
+                return_url=request.build_absolute_uri('/payment/success/'),
+                cancel_url=request.build_absolute_uri('/payment/cancel/'),
+            )
+            
+            return redirect(transaction.payment_url)
+        except pexilabs.PexiLabsError as e:
+            return render(request, 'payment_form.html', {
+                'error': str(e)
+            })
+    
+    return render(request, 'payment_form.html')</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Node.js Integration -->
+        <div id="nodejs" class="framework-content">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Node.js Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs Node.js SDK</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>npm install pexilabs</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Initialize the Client</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>const PexiLabs = require('pexilabs');
+const pexilabs = new PexiLabs('pk_test_your_key_here');</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">3. Create Payment Endpoint</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>app.post('/create-payment', async (req, res) =&gt; {
+  try {
+    const transaction = await pexilabs.transactions.create({
+      amount: req.body.amount,
+      currency: req.body.currency,
+      customer_email: req.body.email,
+      description: req.body.description,
+      return_url: `${req.protocol}://${req.get('host')}/success`,
+      cancel_url: `${req.protocol}://${req.get('host')}/cancel`,
+    });
+    
+    res.json({
+      payment_url: transaction.payment_url,
+      transaction_id: transaction.id
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Angular Integration -->
+        <div id="angular" class="framework-content">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Angular Integration</h3>
+            <div class="space-y-6">
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">1. Install the PexiLabs Angular SDK</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>npm install @pexilabs/angular-sdk</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">2. Import the Module</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>import { PexiLabsModule } from '@pexilabs/angular-sdk';
+
+@NgModule({
+  imports: [
+    PexiLabsModule.forRoot({
+      apiKey: 'pk_test_your_key_here'
+    })
+  ],
+})
+export class AppModule { }</code></pre>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium text-gray-900 mb-3">3. Use the Payment Service</h4>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyToClipboard(this.nextElementSibling.textContent)">Copy</button>
+                        <pre><code>import { Component } from '@angular/core';
+import { PexiLabsService } from '@pexilabs/angular-sdk';
+
+@Component({
+  selector: 'app-payment',
+  template: `
+    &lt;button (click)="createPayment()"&gt;Pay Now&lt;/button&gt;
+  `
+})
+export class PaymentComponent {
+  constructor(private pexilabs: PexiLabsService) {}
+
+  createPayment() {
+    this.pexilabs.createTransaction({
+      amount: '100.00',
+      currency: 'USD',
+      customer_email: 'customer@example.com',
+      description: 'Test payment'
+    }).subscribe({
+      next: (transaction) =&gt; {
+        window.location.href = transaction.payment_url;
+      },
+      error: (error) =&gt; {
+        console.error('Payment failed:', error);
+      }
+    });
+  }
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Common Integration Patterns -->
+    <section class="guide-card rounded-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-puzzle-piece text-blue-600 mr-3"></i>
+            Common Integration Patterns
+        </h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Server-Side Integration</h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Create transactions from your backend</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Handle webhooks for status updates</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Secure API key management</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Best for high-security requirements</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Client-Side Integration</h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Use public API keys only</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Redirect to hosted payment pages</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Faster implementation</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                        <span>Ideal for simple use cases</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Resources -->
+    <section class="guide-card rounded-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-book text-blue-600 mr-3"></i>
+            Additional Resources
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <a href="{% url 'docs:api_documentation' %}" class="border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div class="text-center">
+                    <i class="fas fa-book-open text-blue-600 text-2xl mb-3"></i>
+                    <h3 class="font-semibold text-gray-900 mb-2">API Reference</h3>
+                    <p class="text-sm text-gray-600">Complete API documentation with examples</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'docs:sdk_documentation' %}" class="border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div class="text-center">
+                    <i class="fas fa-cube text-green-600 text-2xl mb-3"></i>
+                    <h3 class="font-semibold text-gray-900 mb-2">SDK Documentation</h3>
+                    <p class="text-sm text-gray-600">Language-specific SDK guides and examples</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'docs:webhook_testing' %}" class="border rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div class="text-center">
+                    <i class="fas fa-flask text-purple-600 text-2xl mb-3"></i>
+                    <h3 class="font-semibold text-gray-900 mb-2">Webhook Testing</h3>
+                    <p class="text-sm text-gray-600">Tools to test and debug webhook integrations</p>
+                </div>
+            </a>
+        </div>
+    </section>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const tooltip = document.createElement('div');
+        tooltip.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        tooltip.textContent = 'Copied to clipboard!';
+        document.body.appendChild(tooltip);
+        
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+    });
+}
+
+function showFramework(framework, button) {
+    // Hide all framework content
+    document.querySelectorAll('.framework-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.framework-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected framework content
+    document.getElementById(framework).classList.add('active');
+    button.classList.add('active');
+}
+</script>
+{% endblock %}

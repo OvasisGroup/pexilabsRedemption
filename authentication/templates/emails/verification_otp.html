@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - PexiLabs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .otp-code {
+            background-color: #2563eb;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 8px;
+        }
+        .warning {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">PexiLabs</div>
+            <h2>Email Verification Required</h2>
+        </div>
+        
+        <p>Hello {{ user.first_name }},</p>
+        
+        <p>Thank you for registering with PexiLabs! To complete your account setup, please verify your email address using the verification code below:</p>
+        
+        <div class="otp-code">{{ otp_code }}</div>
+        
+        <p>Please enter this 6-digit code in the verification form to activate your account.</p>
+        
+        <div class="warning">
+            <strong>Important:</strong> This verification code will expire in {{ validity_minutes }} minutes for security reasons. If you didn't request this verification, please ignore this email.
+        </div>
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+        
+        <p>Welcome to PexiLabs!</p>
+        
+        <div class="footer">
+            <p>This email was sent from PexiLabs. Please do not reply to this email.</p>
+            <p>&copy; {{ current_year }} PexiLabs. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

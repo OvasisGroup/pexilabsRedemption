@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        /* Custom gradient backgrounds */
+        .gradient-bg {
+            background: #2A2A86;
+        }
+        
+        .gradient-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Smooth animations */
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Custom form styles */
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Password strength indicator */
+        .password-strength {
+            height: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .strength-weak { background: #ef4444; width: 25%; }
+        .strength-fair { background: #f59e0b; width: 50%; }
+        .strength-good { background: #10b981; width: 75%; }
+        .strength-strong { background: #059669; width: 100%; }
+        
+        /* Loading spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Navigation -->
+   
+
+    <!-- Main Content -->
+    <div class="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-2xl w-full space-y-8 animate-fade-in">
+            <!-- Header -->
+            <div class="text-center">
+                <img src="https://www.pexipay.com/_next/image?url=%2Fimages%2Fpexi_logo.png&w=256&q=75" alt="PexiPay Logo" class="mx-auto h-12 w-auto mb-4">
+                <h2 class="text-4xl font-bold text-white mb-2">Create Your Account</h2>
+                <p class="text-white/80 text-lg">Join PexiLabs and start processing payments globally</p>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="gradient-card rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10">
+                <!-- Alert Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="mb-6 p-4 rounded-xl {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-700{% else %}bg-blue-50 border border-blue-200 text-blue-700{% endif %} animate-fade-in">
+                            <div class="flex items-center">
+                                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-3"></i>
+                                {{ message }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" id="registerForm" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Personal Information Section -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-user mr-2 text-indigo-600"></i>
+                            Personal Information
+                        </h3>
+                        
+                        <!-- Name Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    First Name *
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-user text-gray-400"></i>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        id="first_name" 
+                                        name="first_name"
+                                        required
+                                        class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        placeholder="Enter your first name"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Last Name *
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-user text-gray-400"></i>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        id="last_name" 
+                                        name="last_name"
+                                        required
+                                        class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        placeholder="Enter your last name"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email Field -->
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email Address *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="email" 
+                                    id="email" 
+                                    name="email"
+                                    required
+                                    class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Enter your email address"
+                                />
+                            </div>
+                        </div>
+                        
+                        <!-- Phone Field -->
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-phone text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="tel" 
+                                    id="phone" 
+                                    name="phone"
+                                    class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Enter your phone number"
+                                />
+                            </div>
+                        </div>
+                        
+                        <!-- Country and Currency -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="country" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Country
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-globe text-gray-400"></i>
+                                    </div>
+                                    <select 
+                                        id="country" 
+                                        name="country"
+                                        class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select your country</option>
+                                        {% for country in countries %}
+                                            <option value="{{ country.id }}">{{ country.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Preferred Currency
+                                </label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-dollar-sign text-gray-400"></i>
+                                    </div>
+                                    <select 
+                                        id="currency" 
+                                        name="currency"
+                                        class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    >
+                                        <option value="">Select currency</option>
+                                        {% for currency in currencies %}
+                                            <option value="{{ currency.id }}">{{ currency.code }} - {{ currency.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Section -->
+                    <div class="space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                            <i class="fas fa-lock mr-2 text-indigo-600"></i>
+                            Security
+                        </h3>
+                        
+                        <!-- Password Field -->
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                                Password *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    id="password" 
+                                    name="password"
+                                    required
+                                    minlength="8"
+                                    class="form-input block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Create a strong password"
+                                />
+                                <button 
+                                    type="button" 
+                                    onclick="togglePassword('password')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                >
+                                    <i id="password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                                </button>
+                            </div>
+                            <!-- Password Strength Indicator -->
+                            <div class="mt-2">
+                                <div class="flex justify-between text-xs text-gray-600 mb-1">
+                                    <span>Password Strength</span>
+                                    <span id="password-strength-text">Weak</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-1">
+                                    <div id="password-strength-bar" class="password-strength strength-weak rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Confirm Password Field -->
+                        <div>
+                            <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2">
+                                Confirm Password *
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="password" 
+                                    id="confirm_password" 
+                                    name="confirm_password"
+                                    required
+                                    class="form-input block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Confirm your password"
+                                />
+                                <button 
+                                    type="button" 
+                                    onclick="togglePassword('confirm_password')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                >
+                                    <i id="confirm_password-toggle" class="fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer"></i>
+                                </button>
+                            </div>
+                            <div id="password-match" class="mt-1 text-sm"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Business Information Section (Optional) -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                                <i class="fas fa-building mr-2 text-indigo-600"></i>
+                                Business Information
+                            </h3>
+                            <span class="text-sm text-gray-500">(Optional)</span>
+                        </div>
+                        
+                        <!-- Business Name -->
+                        <div>
+                            <label for="business_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Business Name
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-building text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="business_name" 
+                                    name="business_name"
+                                    class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                    placeholder="Enter your business name"
+                                />
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Providing a business name will create a merchant account for payment processing
+                            </p>
+                        </div>
+                        
+                        <!-- Merchant Category -->
+                        <div id="merchant-category-section" style="display: none;">
+                            <label for="merchant_category" class="block text-sm font-medium text-gray-700 mb-2">
+                                Business Category
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-tags text-gray-400"></i>
+                                </div>
+                                <select 
+                                    id="merchant_category" 
+                                    name="merchant_category"
+                                    class="form-input block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                >
+                                    <option value="">Select business category</option>
+                                    {% for category in merchant_categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Terms and Conditions -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input 
+                                id="terms" 
+                                name="terms" 
+                                type="checkbox" 
+                                required
+                                class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2"
+                            />
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="terms" class="text-gray-700">
+                                I agree to the 
+                                <a href="/terms/" class="text-indigo-600 hover:text-indigo-500 font-medium">Terms of Service</a> 
+                                and 
+                                <a href="/privacy/" class="text-indigo-600 hover:text-indigo-500 font-medium">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div>
+                        <button 
+                            type="submit" 
+                            id="submit-btn"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-white font-medium rounded-xl bg-[#ED1C24] hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                        >
+                            <span id="submit-text" class="flex items-center">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Create Account
+                            </span>
+                            <div id="submit-spinner" class="hidden flex items-center">
+                                <i class="fas fa-spinner spinner mr-2"></i>
+                                Creating Account...
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <!-- Login Link -->
+                    <div class="text-center">
+                        <p class="text-gray-600">
+                            Already have an account? 
+                            <a href="{% url 'auth:login_page' %}" class="text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
+                                Sign in here
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white/10 backdrop-blur-md border-t border-white/20 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white/60">
+                <p>&copy; 2024 PexiLabs. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Toggle password visibility
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const toggle = document.getElementById(fieldId + '-toggle');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggle.className = 'fas fa-eye-slash text-gray-400 hover:text-gray-600 cursor-pointer';
+            } else {
+                field.type = 'password';
+                toggle.className = 'fas fa-eye text-gray-400 hover:text-gray-600 cursor-pointer';
+            }
+        }
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            return strength;
+        }
+        
+        // Update password strength indicator
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strength = checkPasswordStrength(password);
+            const strengthBar = document.getElementById('password-strength-bar');
+            const strengthText = document.getElementById('password-strength-text');
+            
+            strengthBar.className = 'password-strength rounded-full';
+            
+            if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+                strengthText.textContent = 'Weak';
+                strengthText.className = 'text-red-600';
+            } else if (strength === 3) {
+                strengthBar.classList.add('strength-fair');
+                strengthText.textContent = 'Fair';
+                strengthText.className = 'text-yellow-600';
+            } else if (strength === 4) {
+                strengthBar.classList.add('strength-good');
+                strengthText.textContent = 'Good';
+                strengthText.className = 'text-green-600';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                strengthText.textContent = 'Strong';
+                strengthText.className = 'text-green-700';
+            }
+        });
+        
+        // Password confirmation checker
+        document.getElementById('confirm_password').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const matchIndicator = document.getElementById('password-match');
+            
+            if (confirmPassword === '') {
+                matchIndicator.textContent = '';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                matchIndicator.innerHTML = '<i class="fas fa-check text-green-600 mr-1"></i><span class="text-green-600">Passwords match</span>';
+            } else {
+                matchIndicator.innerHTML = '<i class="fas fa-times text-red-600 mr-1"></i><span class="text-red-600">Passwords do not match</span>';
+            }
+        });
+        
+        // Show/hide merchant category based on business name
+        document.getElementById('business_name').addEventListener('input', function() {
+            const categorySection = document.getElementById('merchant-category-section');
+            if (this.value.trim()) {
+                categorySection.style.display = 'block';
+                document.getElementById('merchant_category').required = true;
+            } else {
+                categorySection.style.display = 'none';
+                document.getElementById('merchant_category').required = false;
+            }
+        });
+        
+        // Form submission handler
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const submitSpinner = document.getElementById('submit-spinner');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            submitSpinner.classList.remove('hidden');
+            
+            // The form will submit normally, loading state will be visible until page redirect
+        });
+    </script>
+</body>
+</html>

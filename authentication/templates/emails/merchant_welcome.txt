@@ -1,0 +1,68 @@
+🎉 WELCOME TO {{ platform_name|upper }}!
+====================================
+
+Dear {{ user_first_name }},
+
+Congratulations! Your email verification was successful, and we've automatically created your merchant account. You're now ready to start accepting payments and managing your business with {{ platform_name }}.
+
+📋 YOUR MERCHANT ACCOUNT DETAILS
+================================
+
+Merchant ID: {{ merchant_id }}
+Business Name: {{ business_name }}
+Business Email: {{ business_email }}
+Business Phone: {{ business_phone }}
+Category: {{ category }}
+Status: {{ status }}
+Created: {{ created_at }}
+
+⚠️  IMPORTANT NOTICE
+===================
+
+Your merchant account is currently in {{ status }} status. You'll need to complete the verification process before you can start processing payments.
+
+🚀 NEXT STEPS
+=============
+
+To activate your merchant account and start processing payments, please:
+
+1. Complete Business Information: Fill in your complete business details
+2. Upload Required Documents: Provide business registration, tax documents, and bank details
+3. Verify Bank Account: Link and verify your business bank account
+4. Set Up Payment Methods: Configure your preferred payment gateways
+5. Test Integration: Use our sandbox environment to test your integration
+
+💡 WHAT YOU CAN DO NOW
+=====================
+
+• API Integration: Start integrating our payment APIs into your application
+• Webhook Setup: Configure webhooks to receive real-time payment notifications
+• Test Payments: Use our sandbox environment to test payment flows
+• Explore Features: Check out our fraud detection, analytics, and reporting tools
+
+🔗 QUICK LINKS
+==============
+
+Dashboard: {{ dashboard_url }}
+Documentation: {{ docs_url }}
+
+📞 NEED HELP?
+=============
+
+If you have any questions or need assistance, our support team is here to help:
+
+Email: {{ support_email }}
+Documentation: {{ docs_url }}
+Dashboard: {{ dashboard_url }}
+
+Thank you for choosing {{ platform_name }}. We're excited to help you grow your business!
+
+Best regards,
+The {{ platform_name }} Team
+
+---
+This email was sent to {{ business_email }} because you created a merchant account with {{ platform_name }}.
+
+© 2025 {{ platform_name }}. All rights reserved.
+
+If you didn't create this account, please contact us immediately at {{ support_email }}

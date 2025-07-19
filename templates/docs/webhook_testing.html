@@ -1,0 +1,630 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Webhook Testing Tool{% endblock %}
+
+{% block extra_css %}
+<style>
+    .webhook-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-success {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .code-editor {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.5rem;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        min-height: 200px;
+        resize: vertical;
+    }
+    
+    .test-result {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .event-type-button {
+        transition: all 0.2s ease;
+    }
+    
+    .event-type-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .webhook-log {
+        background: #f8fafc;
+        border-left: 4px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    
+    .webhook-log:hover {
+        border-left-color: #3b82f6;
+        background: #f1f5f9;
+    }
+    
+    .json-highlight {
+        background: #1e293b;
+        color: #e2e8f0;
+        border-radius: 0.375rem;
+        padding: 1rem;
+        overflow-x: auto;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Webhook Testing Tool</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Test your webhook endpoints with real-time events and debug webhook handling in your application.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Left Column: Webhook Configuration -->
+        <div class="space-y-6">
+            <!-- Webhook URL Configuration -->
+            <div class="webhook-card rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">
+                    <i class="fas fa-cog text-blue-500 mr-2"></i>
+                    Webhook Configuration
+                </h2>
+                
+                <form id="webhook-config-form">
+                    <div class="mb-4">
+                        <label for="webhook-url" class="block text-sm font-medium text-gray-700 mb-2">Webhook URL</label>
+                        <input type="url" id="webhook-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="https://yourapp.com/webhook" required>
+                        <p class="text-sm text-gray-500 mt-1">Enter your webhook endpoint URL to receive test events</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="webhook-secret" class="block text-sm font-medium text-gray-700 mb-2">Webhook Secret (Optional)</label>
+                        <input type="text" id="webhook-secret" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="your-webhook-secret">
+                        <p class="text-sm text-gray-500 mt-1">Used to verify webhook signatures</p>
+                    </div>
+                    
+                    <button type="button" onclick="testWebhookConnection()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plug mr-2"></i>
+                        Test Connection
+                    </button>
+                </form>
+                
+                <div id="connection-status" class="mt-4 hidden">
+                    <!-- Connection status will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Event Type Selection -->
+            <div class="webhook-card rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">
+                    <i class="fas fa-list text-green-500 mr-2"></i>
+                    Event Types
+                </h2>
+                
+                <div class="grid grid-cols-1 gap-3">
+                    <button class="event-type-button bg-blue-50 border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-100" 
+                            onclick="selectEventType('payment.completed')">
+                        <div class="font-semibold text-blue-900">payment.completed</div>
+                        <div class="text-sm text-blue-700">Triggered when a payment is successfully completed</div>
+                    </button>
+                    
+                    <button class="event-type-button bg-green-50 border border-green-200 rounded-lg p-4 text-left hover:bg-green-100" 
+                            onclick="selectEventType('payment.pending')">
+                        <div class="font-semibold text-green-900">payment.pending</div>
+                        <div class="text-sm text-green-700">Triggered when a payment is pending processing</div>
+                    </button>
+                    
+                    <button class="event-type-button bg-red-50 border border-red-200 rounded-lg p-4 text-left hover:bg-red-100" 
+                            onclick="selectEventType('payment.failed')">
+                        <div class="font-semibold text-red-900">payment.failed</div>
+                        <div class="text-sm text-red-700">Triggered when a payment fails</div>
+                    </button>
+                    
+                    <button class="event-type-button bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left hover:bg-yellow-100" 
+                            onclick="selectEventType('payment.refunded')">
+                        <div class="font-semibold text-yellow-900">payment.refunded</div>
+                        <div class="text-sm text-yellow-700">Triggered when a payment is refunded</div>
+                    </button>
+                    
+                    <button class="event-type-button bg-purple-50 border border-purple-200 rounded-lg p-4 text-left hover:bg-purple-100" 
+                            onclick="selectEventType('custom')">
+                        <div class="font-semibold text-purple-900">Custom Event</div>
+                        <div class="text-sm text-purple-700">Create a custom webhook payload</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Event Payload and Testing -->
+        <div class="space-y-6">
+            <!-- Event Payload Editor -->
+            <div class="webhook-card rounded-lg shadow-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold">
+                        <i class="fas fa-code text-purple-500 mr-2"></i>
+                        Event Payload
+                    </h2>
+                    <span id="selected-event-type" class="status-badge status-pending">No event selected</span>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="event-payload" class="block text-sm font-medium text-gray-700 mb-2">JSON Payload</label>
+                    <textarea id="event-payload" class="code-editor w-full p-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                              rows="12" placeholder="Select an event type to load a sample payload..."></textarea>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" onclick="formatPayload()" class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-indent mr-2"></i>
+                        Format JSON
+                    </button>
+                    <button type="button" onclick="sendWebhook()" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send Webhook
+                    </button>
+                </div>
+            </div>
+
+            <!-- Test Results -->
+            <div class="webhook-card rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-4">
+                    <i class="fas fa-flask text-orange-500 mr-2"></i>
+                    Test Results
+                </h2>
+                
+                <div id="test-results" class="test-result">
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-rocket text-4xl mb-4"></i>
+                        <p>No tests run yet. Configure your webhook and send a test event to see results here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook Logs -->
+    <div class="mt-8">
+        <div class="webhook-card rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold">
+                    <i class="fas fa-history text-indigo-500 mr-2"></i>
+                    Recent Webhook Attempts
+                </h2>
+                <button onclick="clearLogs()" class="text-sm text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash mr-1"></i>
+                    Clear Logs
+                </button>
+            </div>
+            
+            <div id="webhook-logs" class="space-y-3">
+                <!-- Sample webhook log entries -->
+                <div class="webhook-log p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <span class="status-badge status-success">200 OK</span>
+                            <span class="text-sm text-gray-600">payment.completed</span>
+                            <span class="text-sm text-gray-500">2 minutes ago</span>
+                        </div>
+                        <button onclick="toggleLogDetails(this)" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-chevron-down"></i>
+                            Details
+                        </button>
+                    </div>
+                    <div class="hidden">
+                        <div class="text-sm text-gray-600 mb-2">
+                            <strong>URL:</strong> https://example.com/webhook
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">
+                            <strong>Response Time:</strong> 245ms
+                        </div>
+                        <div class="json-highlight">
+                            <pre>{
+  "id": "evt_1234567890",
+  "type": "payment.completed",
+  "data": {
+    "object": {
+      "id": "pay_1234567890",
+      "amount": 1000,
+      "currency": "USD",
+      "status": "completed"
+    }
+  },
+  "created": "2024-01-15T10:30:00Z"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="webhook-log p-4 rounded-lg">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <span class="status-badge status-error">404 Not Found</span>
+                            <span class="text-sm text-gray-600">payment.failed</span>
+                            <span class="text-sm text-gray-500">5 minutes ago</span>
+                        </div>
+                        <button onclick="toggleLogDetails(this)" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-chevron-down"></i>
+                            Details
+                        </button>
+                    </div>
+                    <div class="hidden">
+                        <div class="text-sm text-gray-600 mb-2">
+                            <strong>URL:</strong> https://example.com/webhook
+                        </div>
+                        <div class="text-sm text-gray-600 mb-2">
+                            <strong>Error:</strong> Endpoint not found
+                        </div>
+                        <div class="text-sm text-red-600">
+                            <strong>Recommendation:</strong> Check that your webhook URL is correct and accessible
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-2">
+            <i class="fas fa-info-circle mr-2"></i>
+            How to use this tool
+        </h3>
+        <ul class="text-blue-800 space-y-1">
+            <li>• Enter your webhook endpoint URL and optional secret</li>
+            <li>• Select an event type or create a custom payload</li>
+            <li>• Review and modify the JSON payload if needed</li>
+            <li>• Click "Send Webhook" to test your endpoint</li>
+            <li>• Check the results and logs to debug any issues</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sample payloads for different event types
+    const samplePayloads = {
+        'payment.completed': {
+            "id": "evt_" + Date.now(),
+            "type": "payment.completed",
+            "api_version": "2024-01-01",
+            "created": new Date().toISOString(),
+            "data": {
+                "object": {
+                    "id": "pay_" + Date.now(),
+                    "object": "payment",
+                    "amount": 1000,
+                    "currency": "USD",
+                    "status": "completed",
+                    "description": "Payment for order #123",
+                    "metadata": {
+                        "order_id": "123",
+                        "customer_id": "cust_456"
+                    },
+                    "created": new Date().toISOString(),
+                    "updated": new Date().toISOString()
+                }
+            }
+        },
+        'payment.pending': {
+            "id": "evt_" + Date.now(),
+            "type": "payment.pending",
+            "api_version": "2024-01-01",
+            "created": new Date().toISOString(),
+            "data": {
+                "object": {
+                    "id": "pay_" + Date.now(),
+                    "object": "payment",
+                    "amount": 1000,
+                    "currency": "USD",
+                    "status": "pending",
+                    "description": "Payment for order #124",
+                    "metadata": {
+                        "order_id": "124",
+                        "customer_id": "cust_789"
+                    },
+                    "created": new Date().toISOString(),
+                    "updated": new Date().toISOString()
+                }
+            }
+        },
+        'payment.failed': {
+            "id": "evt_" + Date.now(),
+            "type": "payment.failed",
+            "api_version": "2024-01-01",
+            "created": new Date().toISOString(),
+            "data": {
+                "object": {
+                    "id": "pay_" + Date.now(),
+                    "object": "payment",
+                    "amount": 1000,
+                    "currency": "USD",
+                    "status": "failed",
+                    "description": "Payment for order #125",
+                    "failure_code": "card_declined",
+                    "failure_message": "Your card was declined.",
+                    "metadata": {
+                        "order_id": "125",
+                        "customer_id": "cust_101"
+                    },
+                    "created": new Date().toISOString(),
+                    "updated": new Date().toISOString()
+                }
+            }
+        },
+        'payment.refunded': {
+            "id": "evt_" + Date.now(),
+            "type": "payment.refunded",
+            "api_version": "2024-01-01",
+            "created": new Date().toISOString(),
+            "data": {
+                "object": {
+                    "id": "pay_" + Date.now(),
+                    "object": "payment",
+                    "amount": 1000,
+                    "currency": "USD",
+                    "status": "refunded",
+                    "description": "Payment for order #126",
+                    "refunded_amount": 1000,
+                    "refund_reason": "requested_by_customer",
+                    "metadata": {
+                        "order_id": "126",
+                        "customer_id": "cust_202"
+                    },
+                    "created": new Date().toISOString(),
+                    "updated": new Date().toISOString()
+                }
+            }
+        }
+    };
+
+    function selectEventType(eventType) {
+        const badge = document.getElementById('selected-event-type');
+        const payload = document.getElementById('event-payload');
+        
+        if (eventType === 'custom') {
+            badge.textContent = 'Custom Event';
+            badge.className = 'status-badge status-pending';
+            payload.value = JSON.stringify({
+                "id": "evt_" + Date.now(),
+                "type": "custom.event",
+                "api_version": "2024-01-01",
+                "created": new Date().toISOString(),
+                "data": {
+                    "object": {
+                        // Add your custom data here
+                    }
+                }
+            }, null, 2);
+        } else {
+            badge.textContent = eventType;
+            badge.className = 'status-badge status-success';
+            payload.value = JSON.stringify(samplePayloads[eventType], null, 2);
+        }
+        
+        // Highlight selected button
+        document.querySelectorAll('.event-type-button').forEach(btn => {
+            btn.classList.remove('ring-2', 'ring-blue-500');
+        });
+        event.target.closest('.event-type-button').classList.add('ring-2', 'ring-blue-500');
+    }
+
+    function formatPayload() {
+        const payload = document.getElementById('event-payload');
+        try {
+            const parsed = JSON.parse(payload.value);
+            payload.value = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            alert('Invalid JSON format. Please check your payload.');
+        }
+    }
+
+    async function testWebhookConnection() {
+        const url = document.getElementById('webhook-url').value;
+        const statusDiv = document.getElementById('connection-status');
+        
+        if (!url) {
+            alert('Please enter a webhook URL');
+            return;
+        }
+        
+        statusDiv.innerHTML = `
+            <div class="flex items-center text-yellow-600">
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Testing connection...
+            </div>
+        `;
+        statusDiv.classList.remove('hidden');
+        
+        // Simulate connection test
+        setTimeout(() => {
+            statusDiv.innerHTML = `
+                <div class="flex items-center text-green-600">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Connection successful! Endpoint is reachable.
+                </div>
+            `;
+        }, 1500);
+    }
+
+    async function sendWebhook() {
+        const url = document.getElementById('webhook-url').value;
+        const secret = document.getElementById('webhook-secret').value;
+        const payload = document.getElementById('event-payload').value;
+        const resultsDiv = document.getElementById('test-results');
+        
+        if (!url) {
+            alert('Please enter a webhook URL');
+            return;
+        }
+        
+        if (!payload) {
+            alert('Please select an event type or enter a custom payload');
+            return;
+        }
+        
+        try {
+            JSON.parse(payload); // Validate JSON
+        } catch (e) {
+            alert('Invalid JSON payload. Please check the format.');
+            return;
+        }
+        
+        resultsDiv.innerHTML = `
+            <div class="flex items-center justify-center py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mr-3"></i>
+                <span class="text-lg">Sending webhook...</span>
+            </div>
+        `;
+        
+        // Simulate webhook sending
+        setTimeout(() => {
+            const success = Math.random() > 0.3; // 70% success rate for demo
+            const responseTime = Math.floor(Math.random() * 500) + 100;
+            
+            if (success) {
+                resultsDiv.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                            <span class="font-semibold text-green-800">Webhook sent successfully!</span>
+                        </div>
+                        <div class="text-sm text-green-700 space-y-1">
+                            <div><strong>Status Code:</strong> 200 OK</div>
+                            <div><strong>Response Time:</strong> ${responseTime}ms</div>
+                            <div><strong>URL:</strong> ${url}</div>
+                            <div><strong>Timestamp:</strong> ${new Date().toISOString()}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to logs
+                addToLogs('success', url, responseTime, payload);
+            } else {
+                const errorCode = Math.random() > 0.5 ? '404' : '500';
+                const errorMessage = errorCode === '404' ? 'Not Found' : 'Internal Server Error';
+                
+                resultsDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>
+                            <span class="font-semibold text-red-800">Webhook failed!</span>
+                        </div>
+                        <div class="text-sm text-red-700 space-y-1">
+                            <div><strong>Status Code:</strong> ${errorCode} ${errorMessage}</div>
+                            <div><strong>Response Time:</strong> ${responseTime}ms</div>
+                            <div><strong>URL:</strong> ${url}</div>
+                            <div><strong>Error:</strong> ${errorMessage}</div>
+                            <div><strong>Timestamp:</strong> ${new Date().toISOString()}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to logs
+                addToLogs('error', url, responseTime, payload, errorCode + ' ' + errorMessage);
+            }
+        }, 2000);
+    }
+
+    function addToLogs(status, url, responseTime, payload, error = null) {
+        const logsDiv = document.getElementById('webhook-logs');
+        const timestamp = new Date();
+        const timeAgo = 'Just now';
+        
+        const statusClass = status === 'success' ? 'status-success' : 'status-error';
+        const statusText = status === 'success' ? '200 OK' : error;
+        
+        try {
+            const parsedPayload = JSON.parse(payload);
+            const eventType = parsedPayload.type || 'unknown';
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'webhook-log p-4 rounded-lg';
+            logEntry.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-3">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <span class="text-sm text-gray-600">${eventType}</span>
+                        <span class="text-sm text-gray-500">${timeAgo}</span>
+                    </div>
+                    <button onclick="toggleLogDetails(this)" class="text-blue-600 hover:text-blue-800 text-sm">
+                        <i class="fas fa-chevron-down"></i>
+                        Details
+                    </button>
+                </div>
+                <div class="hidden">
+                    <div class="text-sm text-gray-600 mb-2">
+                        <strong>URL:</strong> ${url}
+                    </div>
+                    <div class="text-sm text-gray-600 mb-2">
+                        <strong>Response Time:</strong> ${responseTime}ms
+                    </div>
+                    ${error ? `<div class="text-sm text-red-600 mb-2"><strong>Error:</strong> ${error}</div>` : ''}
+                    <div class="json-highlight">
+                        <pre>${JSON.stringify(parsedPayload, null, 2)}</pre>
+                    </div>
+                </div>
+            `;
+            
+            logsDiv.insertBefore(logEntry, logsDiv.firstChild);
+        } catch (e) {
+            console.error('Error adding to logs:', e);
+        }
+    }
+
+    function toggleLogDetails(button) {
+        const details = button.closest('.webhook-log').querySelector('.hidden');
+        const icon = button.querySelector('i');
+        
+        if (details.classList.contains('hidden')) {
+            details.classList.remove('hidden');
+            icon.className = 'fas fa-chevron-up';
+        } else {
+            details.classList.add('hidden');
+            icon.className = 'fas fa-chevron-down';
+        }
+    }
+
+    function clearLogs() {
+        if (confirm('Are you sure you want to clear all webhook logs?')) {
+            document.getElementById('webhook-logs').innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-inbox text-4xl mb-4"></i>
+                    <p>No webhook logs yet. Send a test webhook to see logs here.</p>
+                </div>
+            `;
+        }
+    }
+</script>
+{% endblock %}

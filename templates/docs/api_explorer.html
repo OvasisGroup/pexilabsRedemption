@@ -1,0 +1,786 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}API Explorer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .api-explorer {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        height: calc(100vh - 200px);
+    }
+    
+    .endpoints-sidebar {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+    }
+    
+    .endpoint-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .endpoint-item:hover {
+        background: #f3f4f6;
+    }
+    
+    .endpoint-item.active {
+        background: #eff6ff;
+        border-right: 3px solid #3b82f6;
+    }
+    
+    .method-badge {
+        display: inline-block;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 0.5rem;
+    }
+    
+    .method-get { background: #10b981; color: white; }
+    .method-post { background: #3b82f6; color: white; }
+    .method-put { background: #f59e0b; color: white; }
+    .method-delete { background: #ef4444; color: white; }
+    
+    .explorer-main {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .request-panel, .response-panel {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .panel-header {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem;
+        font-weight: 600;
+    }
+    
+    .param-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .json-editor {
+        width: 100%;
+        height: 200px;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        font-size: 0.875rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        padding: 0.75rem;
+        background: #1e293b;
+        color: #e2e8f0;
+        resize: vertical;
+    }
+    
+    .response-viewer {
+        background: #1e293b;
+        color: #e2e8f0;
+        font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+        font-size: 0.875rem;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .status-code {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .status-200 { background: #dcfce7; color: #166534; }
+    .status-400 { background: #fef3c7; color: #92400e; }
+    .status-401 { background: #fee2e2; color: #991b1b; }
+    .status-404 { background: #fee2e2; color: #991b1b; }
+    .status-500 { background: #fee2e2; color: #991b1b; }
+    
+    .auth-section {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .tab-buttons {
+        display: flex;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+    }
+    
+    .tab-button {
+        padding: 0.75rem 1rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .tab-button.active {
+        background: white;
+        border-bottom-color: #3b82f6;
+        color: #3b82f6;
+    }
+    
+    .tab-content {
+        display: none;
+        padding: 1rem;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">API Explorer</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            Interactive API testing tool to explore and test PexiLabs API endpoints in real-time.
+        </p>
+    </div>
+
+    <!-- API Key Configuration -->
+    <div class="auth-section">
+        <div class="flex items-center mb-3">
+            <i class="fas fa-key text-amber-600 mr-2"></i>
+            <h3 class="font-semibold text-amber-800">API Authentication</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-amber-700 mb-1">API Key</label>
+                <input type="password" id="api-key" class="param-input" placeholder="Enter your API key">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-amber-700 mb-1">Environment</label>
+                <select id="environment" class="param-input">
+                    <option value="sandbox">Sandbox</option>
+                    <option value="production">Production</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Explorer Interface -->
+    <div class="api-explorer">
+        <!-- Endpoints Sidebar -->
+        <div class="endpoints-sidebar">
+            <div class="panel-header">
+                <i class="fas fa-list mr-2"></i>
+                API Endpoints
+            </div>
+            <div class="p-2">
+                <input type="text" id="endpoint-search" class="param-input mb-3" placeholder="Search endpoints...">
+            </div>
+            
+            <!-- Payments Section -->
+            <div class="px-4 py-2 bg-gray-50 text-sm font-semibold text-gray-700">Payments</div>
+            <div class="endpoint-item active" data-endpoint="payments-create">
+                <span class="method-badge method-post">POST</span>
+                <div class="text-sm font-medium">/api/payments</div>
+                <div class="text-xs text-gray-500">Create payment</div>
+            </div>
+            <div class="endpoint-item" data-endpoint="payments-get">
+                <span class="method-badge method-get">GET</span>
+                <div class="text-sm font-medium">/api/payments/{id}</div>
+                <div class="text-xs text-gray-500">Get payment</div>
+            </div>
+            <div class="endpoint-item" data-endpoint="payments-list">
+                <span class="method-badge method-get">GET</span>
+                <div class="text-sm font-medium">/api/payments</div>
+                <div class="text-xs text-gray-500">List payments</div>
+            </div>
+            <div class="endpoint-item" data-endpoint="payments-refund">
+                <span class="method-badge method-post">POST</span>
+                <div class="text-sm font-medium">/api/payments/{id}/refund</div>
+                <div class="text-xs text-gray-500">Refund payment</div>
+            </div>
+            
+            <!-- Payment Links Section -->
+            <div class="px-4 py-2 bg-gray-50 text-sm font-semibold text-gray-700 mt-4">Payment Links</div>
+            <div class="endpoint-item" data-endpoint="links-create">
+                <span class="method-badge method-post">POST</span>
+                <div class="text-sm font-medium">/api/payment-links</div>
+                <div class="text-xs text-gray-500">Create payment link</div>
+            </div>
+            <div class="endpoint-item" data-endpoint="links-get">
+                <span class="method-badge method-get">GET</span>
+                <div class="text-sm font-medium">/api/payment-links/{id}</div>
+                <div class="text-xs text-gray-500">Get payment link</div>
+            </div>
+            
+            <!-- Transactions Section -->
+            <div class="px-4 py-2 bg-gray-50 text-sm font-semibold text-gray-700 mt-4">Transactions</div>
+            <div class="endpoint-item" data-endpoint="transactions-list">
+                <span class="method-badge method-get">GET</span>
+                <div class="text-sm font-medium">/api/transactions</div>
+                <div class="text-xs text-gray-500">List transactions</div>
+            </div>
+            <div class="endpoint-item" data-endpoint="transactions-get">
+                <span class="method-badge method-get">GET</span>
+                <div class="text-sm font-medium">/api/transactions/{id}</div>
+                <div class="text-xs text-gray-500">Get transaction</div>
+            </div>
+        </div>
+
+        <!-- Main Explorer Panel -->
+        <div class="explorer-main">
+            <!-- Request Panel -->
+            <div class="request-panel">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-tab="params">Parameters</button>
+                    <button class="tab-button" data-tab="headers">Headers</button>
+                    <button class="tab-button" data-tab="body">Request Body</button>
+                </div>
+                
+                <!-- Endpoint Info -->
+                <div class="p-4 bg-blue-50 border-b">
+                    <div class="flex items-center mb-2">
+                        <span id="current-method" class="method-badge method-post">POST</span>
+                        <span id="current-endpoint" class="font-mono text-sm">/api/payments</span>
+                    </div>
+                    <p id="current-description" class="text-sm text-gray-600">Create a new payment transaction</p>
+                </div>
+                
+                <!-- Parameters Tab -->
+                <div id="tab-params" class="tab-content active">
+                    <div class="space-y-4">
+                        <div id="path-params" class="hidden">
+                            <h4 class="font-semibold mb-2">Path Parameters</h4>
+                            <div id="path-params-container" class="space-y-2"></div>
+                        </div>
+                        
+                        <div id="query-params" class="hidden">
+                            <h4 class="font-semibold mb-2">Query Parameters</h4>
+                            <div id="query-params-container" class="space-y-2"></div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500" id="no-params">
+                            This endpoint doesn't require additional parameters.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Headers Tab -->
+                <div id="tab-headers" class="tab-content">
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Content-Type</label>
+                            <input type="text" class="param-input" value="application/json" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Authorization</label>
+                            <input type="text" class="param-input" value="Bearer [API Key]" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Custom Header</label>
+                            <input type="text" id="custom-header-name" class="param-input mb-2" placeholder="Header name">
+                            <input type="text" id="custom-header-value" class="param-input" placeholder="Header value">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Request Body Tab -->
+                <div id="tab-body" class="tab-content">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Request Body (JSON)</label>
+                        <textarea id="request-body" class="json-editor" placeholder="Enter JSON request body..."></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="formatRequestBody()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                            Format JSON
+                        </button>
+                        <button onclick="loadSampleBody()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Load Sample
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Send Request Button -->
+                <div class="p-4 bg-gray-50 border-t">
+                    <button onclick="sendRequest()" class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Send Request
+                    </button>
+                </div>
+            </div>
+
+            <!-- Response Panel -->
+            <div class="response-panel border-t">
+                <div class="panel-header flex items-center justify-between">
+                    <span><i class="fas fa-terminal mr-2"></i>Response</span>
+                    <div id="response-status" class="hidden">
+                        <span id="status-code" class="status-code">200</span>
+                        <span id="response-time" class="text-sm text-gray-500 ml-2">245ms</span>
+                    </div>
+                </div>
+                
+                <div id="response-container" class="p-4">
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-play-circle text-4xl mb-4"></i>
+                        <p>Click "Send Request" to see the API response here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // API endpoint configurations
+    const endpoints = {
+        'payments-create': {
+            method: 'POST',
+            path: '/api/payments',
+            description: 'Create a new payment transaction',
+            sampleBody: {
+                amount: 1000,
+                currency: 'USD',
+                description: 'Payment for order #123',
+                return_url: 'https://yourapp.com/success',
+                cancel_url: 'https://yourapp.com/cancel',
+                metadata: {
+                    order_id: '123',
+                    customer_id: 'cust_456'
+                }
+            }
+        },
+        'payments-get': {
+            method: 'GET',
+            path: '/api/payments/{id}',
+            description: 'Retrieve a specific payment by ID',
+            pathParams: [
+                { name: 'id', description: 'Payment ID', required: true }
+            ]
+        },
+        'payments-list': {
+            method: 'GET',
+            path: '/api/payments',
+            description: 'List all payments with optional filtering',
+            queryParams: [
+                { name: 'limit', description: 'Number of results per page', required: false },
+                { name: 'status', description: 'Filter by payment status', required: false },
+                { name: 'created_after', description: 'Filter by creation date', required: false }
+            ]
+        },
+        'payments-refund': {
+            method: 'POST',
+            path: '/api/payments/{id}/refund',
+            description: 'Refund a payment partially or fully',
+            pathParams: [
+                { name: 'id', description: 'Payment ID', required: true }
+            ],
+            sampleBody: {
+                amount: 500,
+                reason: 'requested_by_customer',
+                metadata: {
+                    refund_reason: 'Customer requested refund'
+                }
+            }
+        },
+        'links-create': {
+            method: 'POST',
+            path: '/api/payment-links',
+            description: 'Create a payment link for sharing',
+            sampleBody: {
+                amount: 2000,
+                currency: 'USD',
+                description: 'Payment link for subscription',
+                expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+                metadata: {
+                    product_id: 'prod_123'
+                }
+            }
+        },
+        'links-get': {
+            method: 'GET',
+            path: '/api/payment-links/{id}',
+            description: 'Retrieve a payment link by ID',
+            pathParams: [
+                { name: 'id', description: 'Payment Link ID', required: true }
+            ]
+        },
+        'transactions-list': {
+            method: 'GET',
+            path: '/api/transactions',
+            description: 'List all transactions',
+            queryParams: [
+                { name: 'limit', description: 'Number of results per page', required: false },
+                { name: 'type', description: 'Filter by transaction type', required: false }
+            ]
+        },
+        'transactions-get': {
+            method: 'GET',
+            path: '/api/transactions/{id}',
+            description: 'Retrieve a specific transaction',
+            pathParams: [
+                { name: 'id', description: 'Transaction ID', required: true }
+            ]
+        }
+    };
+
+    let currentEndpoint = 'payments-create';
+
+    // Initialize the explorer
+    document.addEventListener('DOMContentLoaded', function() {
+        loadEndpoint(currentEndpoint);
+        
+        // Add event listeners
+        document.querySelectorAll('.endpoint-item').forEach(item => {
+            item.addEventListener('click', function() {
+                selectEndpoint(this.dataset.endpoint);
+            });
+        });
+        
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+        
+        // Search functionality
+        document.getElementById('endpoint-search').addEventListener('input', function() {
+            filterEndpoints(this.value);
+        });
+    });
+
+    function selectEndpoint(endpointId) {
+        currentEndpoint = endpointId;
+        
+        // Update active state
+        document.querySelectorAll('.endpoint-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[data-endpoint="${endpointId}"]`).classList.add('active');
+        
+        loadEndpoint(endpointId);
+    }
+
+    function loadEndpoint(endpointId) {
+        const endpoint = endpoints[endpointId];
+        if (!endpoint) return;
+        
+        // Update endpoint info
+        document.getElementById('current-method').textContent = endpoint.method;
+        document.getElementById('current-method').className = `method-badge method-${endpoint.method.toLowerCase()}`;
+        document.getElementById('current-endpoint').textContent = endpoint.path;
+        document.getElementById('current-description').textContent = endpoint.description;
+        
+        // Clear previous parameters
+        document.getElementById('path-params').classList.add('hidden');
+        document.getElementById('query-params').classList.add('hidden');
+        document.getElementById('no-params').classList.remove('hidden');
+        
+        // Load path parameters
+        if (endpoint.pathParams) {
+            loadPathParams(endpoint.pathParams);
+        }
+        
+        // Load query parameters
+        if (endpoint.queryParams) {
+            loadQueryParams(endpoint.queryParams);
+        }
+        
+        // Load sample body
+        if (endpoint.sampleBody) {
+            document.getElementById('request-body').value = JSON.stringify(endpoint.sampleBody, null, 2);
+        } else {
+            document.getElementById('request-body').value = '';
+        }
+        
+        // Clear response
+        document.getElementById('response-status').classList.add('hidden');
+        document.getElementById('response-container').innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-play-circle text-4xl mb-4"></i>
+                <p>Click "Send Request" to see the API response here.</p>
+            </div>
+        `;
+    }
+
+    function loadPathParams(params) {
+        if (params.length === 0) return;
+        
+        document.getElementById('no-params').classList.add('hidden');
+        document.getElementById('path-params').classList.remove('hidden');
+        
+        const container = document.getElementById('path-params-container');
+        container.innerHTML = '';
+        
+        params.forEach(param => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label class="block text-sm font-medium mb-1">
+                    ${param.name} ${param.required ? '<span class="text-red-500">*</span>' : ''}
+                </label>
+                <input type="text" class="param-input" data-param="${param.name}" placeholder="${param.description}">
+                <p class="text-xs text-gray-500 mt-1">${param.description}</p>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function loadQueryParams(params) {
+        if (params.length === 0) return;
+        
+        document.getElementById('no-params').classList.add('hidden');
+        document.getElementById('query-params').classList.remove('hidden');
+        
+        const container = document.getElementById('query-params-container');
+        container.innerHTML = '';
+        
+        params.forEach(param => {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label class="block text-sm font-medium mb-1">
+                    ${param.name} ${param.required ? '<span class="text-red-500">*</span>' : ''}
+                </label>
+                <input type="text" class="param-input" data-param="${param.name}" placeholder="${param.description}">
+                <p class="text-xs text-gray-500 mt-1">${param.description}</p>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    function formatRequestBody() {
+        const textarea = document.getElementById('request-body');
+        try {
+            const parsed = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            alert('Invalid JSON format');
+        }
+    }
+
+    function loadSampleBody() {
+        const endpoint = endpoints[currentEndpoint];
+        if (endpoint.sampleBody) {
+            document.getElementById('request-body').value = JSON.stringify(endpoint.sampleBody, null, 2);
+        }
+    }
+
+    function filterEndpoints(query) {
+        const items = document.querySelectorAll('.endpoint-item');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (text.includes(query.toLowerCase())) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    async function sendRequest() {
+        const apiKey = document.getElementById('api-key').value;
+        const environment = document.getElementById('environment').value;
+        
+        if (!apiKey) {
+            alert('Please enter your API key');
+            return;
+        }
+        
+        const endpoint = endpoints[currentEndpoint];
+        const baseUrl = environment === 'production' ? 'https://api.pexilabs.com' : 'https://sandbox-api.pexilabs.com';
+        
+        // Build URL with path parameters
+        let url = baseUrl + endpoint.path;
+        const pathParams = document.querySelectorAll('#path-params-container [data-param]');
+        pathParams.forEach(input => {
+            const paramName = input.dataset.param;
+            const paramValue = input.value;
+            url = url.replace(`{${paramName}}`, paramValue);
+        });
+        
+        // Add query parameters
+        const queryParams = new URLSearchParams();
+        const queryInputs = document.querySelectorAll('#query-params-container [data-param]');
+        queryInputs.forEach(input => {
+            if (input.value) {
+                queryParams.append(input.dataset.param, input.value);
+            }
+        });
+        
+        if (queryParams.toString()) {
+            url += '?' + queryParams.toString();
+        }
+        
+        // Prepare headers
+        const headers = {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+        };
+        
+        // Add custom headers
+        const customHeaderName = document.getElementById('custom-header-name').value;
+        const customHeaderValue = document.getElementById('custom-header-value').value;
+        if (customHeaderName && customHeaderValue) {
+            headers[customHeaderName] = customHeaderValue;
+        }
+        
+        // Prepare request options
+        const requestOptions = {
+            method: endpoint.method,
+            headers: headers
+        };
+        
+        // Add body for POST/PUT requests
+        if (['POST', 'PUT', 'PATCH'].includes(endpoint.method)) {
+            const body = document.getElementById('request-body').value;
+            if (body) {
+                try {
+                    JSON.parse(body); // Validate JSON
+                    requestOptions.body = body;
+                } catch (e) {
+                    alert('Invalid JSON in request body');
+                    return;
+                }
+            }
+        }
+        
+        // Show loading state
+        const responseContainer = document.getElementById('response-container');
+        responseContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
+                <p>Sending request...</p>
+            </div>
+        `;
+        
+        try {
+            const startTime = Date.now();
+            
+            // Simulate API call (replace with actual fetch in production)
+            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+            
+            const responseTime = Date.now() - startTime;
+            
+            // Generate mock response based on endpoint
+            const mockResponse = generateMockResponse(endpoint);
+            
+            // Show response
+            showResponse(mockResponse.status, mockResponse.data, responseTime);
+            
+        } catch (error) {
+            showResponse(500, { error: 'Network error', message: error.message }, 0);
+        }
+    }
+
+    function generateMockResponse(endpoint) {
+        const responses = {
+            'payments-create': {
+                status: 201,
+                data: {
+                    id: 'pay_' + Date.now(),
+                    object: 'payment',
+                    amount: 1000,
+                    currency: 'USD',
+                    status: 'pending',
+                    description: 'Payment for order #123',
+                    checkout_url: 'https://checkout.pexilabs.com/pay_123',
+                    created: new Date().toISOString()
+                }
+            },
+            'payments-get': {
+                status: 200,
+                data: {
+                    id: 'pay_123456789',
+                    object: 'payment',
+                    amount: 1000,
+                    currency: 'USD',
+                    status: 'completed',
+                    description: 'Payment for order #123',
+                    created: new Date().toISOString()
+                }
+            },
+            'payments-list': {
+                status: 200,
+                data: {
+                    object: 'list',
+                    data: [
+                        {
+                            id: 'pay_123',
+                            amount: 1000,
+                            currency: 'USD',
+                            status: 'completed'
+                        },
+                        {
+                            id: 'pay_124',
+                            amount: 2000,
+                            currency: 'USD',
+                            status: 'pending'
+                        }
+                    ],
+                    has_more: false,
+                    total_count: 2
+                }
+            }
+        };
+        
+        return responses[currentEndpoint] || {
+            status: 200,
+            data: { message: 'Success', timestamp: new Date().toISOString() }
+        };
+    }
+
+    function showResponse(statusCode, data, responseTime) {
+        const statusElement = document.getElementById('status-code');
+        const timeElement = document.getElementById('response-time');
+        const containerElement = document.getElementById('response-container');
+        
+        // Update status
+        statusElement.textContent = statusCode;
+        statusElement.className = `status-code status-${Math.floor(statusCode / 100) * 100}`;
+        timeElement.textContent = `${responseTime}ms`;
+        document.getElementById('response-status').classList.remove('hidden');
+        
+        // Update response body
+        containerElement.innerHTML = `
+            <div class="response-viewer">${JSON.stringify(data, null, 2)}</div>
+        `;
+    }
+</script>
+{% endblock %}
