@@ -36,19 +36,8 @@ SECRET_KEY = 'django-insecure-_8-^e_9e42f-yh!ca7g71jbr%q-5q)#908waj-ue#()pn)i)gs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
-# HTTPS settings
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
 
-#Static files
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-
-# Media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
 
 # Application definition
 
@@ -123,9 +112,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'pexilabs',
         'USER': 'postgres',
-        'PASSWORD': 'pexi@123',
-        'HOST': '16.16.182.189',
-        'PORT': '5432',
+        'PASSWORD': 'omondi13',
+        'HOST': 'localhost',
+        'PORT': '5433',
     }
 }
 
@@ -168,7 +157,7 @@ SPECTACULAR_SETTINGS = {
     },
     'SERVERS': [
         {
-            'url': 'http://16.16.182.189:8000',
+            'url': 'http://127.0.0.1:8000',
             'description': 'Development Server',
         },
         {
@@ -288,7 +277,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    "*",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -297,28 +285,14 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 
 
 # Email Configuration
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'ayaraerick@gmail.com'
-# EMAIL_HOST_PASSWORD = 'wzcj uebn hykn sjwa'  # Gmail App Password (not regular password)
-# DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
-
-# Email Configuration (Zoho Mail)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.zoho.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'info@pexipay.com'
-EMAIL_HOST_PASSWORD = 'EMAbNtLjkuy2'
-DEFAULT_FROM_EMAIL = 'info@pexipay.com'
-SERVER_EMAIL = 'info@pexipay.com'
-EMAIL_TIMEOUT = 60
-EMAIL_DEBUG = True
+EMAIL_HOST_USER = 'ayaraerick@gmail.com'
+EMAIL_HOST_PASSWORD = 'wzcj uebn hykn sjwa'  # Gmail App Password (not regular password)
+DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
 
-# Additional settings
-X_FRAME_OPTIONS = 'DENY'
 
 # Session Configuration
 SESSION_COOKIE_AGE = 1209600  # 2 weeks
@@ -434,12 +408,6 @@ ENABLE_COREFY_INTEGRATION = os.getenv('COREFY_INTEGRATION', 'True').lower() == '
 INTEGRATION_HEALTH_CHECK_INTERVAL = int(os.getenv('INTEGRATION_HEALTH_CHECK_INTERVAL', '300'))  # seconds
 INTEGRATION_LOG_REQUESTS = os.getenv('INTEGRATION_LOG_REQUESTS', 'True').lower() == 'true'
 INTEGRATION_LOG_RESPONSES = os.getenv('INTEGRATION_LOG_RESPONSES', 'True').lower() == 'true'
-
-# Authentication URLs
-# LOGIN_URL = '/'
-# LOGOUT_URL = '/auth/logout/'
-# LOGIN_REDIRECT_URL = '/dashboard/'
-# LOGOUT_REDIRECT_URL = '/'
 
 # Authentication URLs
 LOGIN_URL = '/'

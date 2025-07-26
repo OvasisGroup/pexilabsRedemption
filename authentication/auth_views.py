@@ -254,7 +254,8 @@ def logout_page(request):
     if request.method == 'POST' or request.method == 'GET':
         logout(request)
         messages.success(request, "You have been successfully logged out.")
-        return redirect('auth:login_page')
+        return redirect('landing:home')
+
 
 @csrf_protect
 @require_http_methods(["GET", "POST"])

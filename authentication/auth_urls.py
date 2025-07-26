@@ -6,7 +6,7 @@ app_name = 'auth'
 urlpatterns = [
     # Web-based authentication pages
     path('register/', auth_views.register_page, name='register_page'),
-    path('', auth_views.login_page, name='login_page'),
+    path('login/', auth_views.login_page, name='login_page'),
     path('logout/', auth_views.logout_page, name='logout_page'),
     
     # OTP verification
