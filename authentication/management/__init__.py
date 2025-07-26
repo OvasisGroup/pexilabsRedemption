@@ -2,7 +2,7 @@
 
 from authentication.models import PreferredCurrency
 from django.db import transaction
-
+from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
     help = 'Populate all world currencies in the PreferredCurrency model'
