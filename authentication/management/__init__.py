@@ -1,5 +1,4 @@
-# This file makes the management directory a Python package
-
+from django.core.management.base import BaseCommand
 from authentication.models import PreferredCurrency
 from django.db import transaction
 

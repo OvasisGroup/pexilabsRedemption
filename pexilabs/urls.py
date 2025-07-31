@@ -35,6 +35,7 @@ urlpatterns = [
     
     # Payment processing
     path('', include('payments.urls')),
+    path('payments/', include('payments.urls', namespace='payments')),  # Add this line
     
     # Django Admin (default)
     path('admin/', admin.site.urls),

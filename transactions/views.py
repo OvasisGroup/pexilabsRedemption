@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
+from django.shortcuts import render, get_object_or_404
 
 from .models import (
     PaymentGateway,
@@ -519,3 +520,50 @@ def transaction_status_choices(request):
         for choice in TransactionStatus.choices
     ]
     return Response(choices)
+
+
+# Template Views for Transactions
+
+def transaction_list_view(request):
+    """Render a list of transactions for template consumption"""
+    user = request.user
+    queryset = Transaction.objects.select_related(
+        'merchant', 'customer', 'currency', 'gateway'
+    ).prefetch_related('events', 'webhooks')
+
+    if hasattr(user, 'merchant_profile'):
+        queryset = queryset.filter(merchant=user.merchant_profile)
+    elif not user.is_staff:
+        queryset = queryset.filter(customer=user)
+
+    transactions = queryset.order_by('-created_at')[:50]  # Limit for template
+    return render(request, 'transactions/transaction_list.html', {'transactions': transactions})
+
+
+def transaction_detail_view(request, pk):
+    """Render transaction detail for template consumption"""
+    user = request.user
+    transaction = get_object_or_404(Transaction, pk=pk)
+
+    # Permission check
+    if hasattr(user, 'merchant_profile'):
+        if transaction.merchant != user.merchant_profile:
+            return render(request, 'transactions/permission_denied.html')
+    elif not user.is_staff and transaction.customer != user:
+        return render(request, 'transactions/permission_denied.html')
+
+    return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
+
+
+def payment_link_list_view(request):
+    """Render a list of payment links for template consumption"""
+    user = request.user
+    queryset = PaymentLink.objects.select_related('merchant', 'currency')
+
+    if hasattr(user, 'merchant_profile'):
+        queryset = queryset.filter(merchant=user.merchant_profile)
+    elif not user.is_staff:
+        queryset = queryset.none()
+
+    payment_links = queryset.order_by('-created_at')[:50]
+    return render(request, 'transactions/payment_link_list.html', {'payment_links': payment_links})

@@ -39,8 +39,8 @@ class PreferredCurrency(models.Model):
     """Model for currencies"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=3, unique=True)  # ISO currency code
-    symbol = models.CharField(max_length=10)
+    code = models.CharField(max_length=100, unique=True)  # ISO currency code
+    symbol = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=False)
     updated_at = models.DateTimeField(auto_now=True)

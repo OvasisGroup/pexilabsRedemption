@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     # 'integrations',  # Temporarily disabled due to cryptography import
     'payments',  # Payment processing app
     'checkout',  # Checkout page app
-    'website',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -284,15 +284,29 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 
 
-# Email Configuration
+# # Email Configuration
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'ayaraerick@gmail.com'
+# EMAIL_HOST_PASSWORD = 'wzcj uebn hykn sjwa'  # Gmail App Password (not regular password)
+# DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
+
+# Email Configuration (Zoho Mail)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.zoho.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ayaraerick@gmail.com'
-EMAIL_HOST_PASSWORD = 'wzcj uebn hykn sjwa'  # Gmail App Password (not regular password)
-DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
+EMAIL_HOST_USER = 'info@pexipay.com'
+EMAIL_HOST_PASSWORD = 'EMAbNtLjkuy2'
+DEFAULT_FROM_EMAIL = 'info@pexipay.com'
+SERVER_EMAIL = 'info@pexipay.com'
+EMAIL_TIMEOUT = 60
+EMAIL_DEBUG = True 
 
+# Additional settings
+X_FRAME_OPTIONS = 'DENY'
 
 # Session Configuration
 SESSION_COOKIE_AGE = 1209600  # 2 weeks

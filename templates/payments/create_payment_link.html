@@ -1,0 +1,46 @@
+{% comment %} {% extends "base.html" %} {% endcomment %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="max-w-lg mx-auto mt-10 bg-white p-8 rounded-xl shadow">
+    <h2 class="text-2xl font-bold mb-6">Create Payment Link</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Title</label>
+            {{ form.title|add_class:"form-input w-full" }}
+            {{ form.title.errors }}
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Amount</label>
+            {{ form.amount|add_class:"form-input w-full" }}
+            {{ form.amount.errors }}
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Currency</label>
+            <select name="currency" class="form-input w-full">
+                {% for currency in currencies %}
+                    <option value="{{ currency.id }}">{{ currency.code }} - {{ currency.name }}</option>
+                {% endfor %}
+            </select>
+            {{ form.currency.errors }}
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Description</label>
+            {{ form.description|add_class:"form-input w-full" }}
+            {{ form.description.errors }}
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Expiry Date (optional)</label>
+            {{ form.expires_at|add_class:"form-input w-full" }}
+            {{ form.expires_at.errors }}
+        </div>
+        <div class="mb-4">
+            <label class="block font-medium mb-1">Max Uses (optional)</label>
+            {{ form.max_uses|add_class:"form-input w-full" }}
+            {{ form.max_uses.errors }}
+        </div>
+        <button type="submit" class="btn-primary w-full py-3 rounded font-bold">Create Link</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,28 +1,22 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-
+from django.urls import path
 from . import views
 
-# URL patterns for transactions app
 urlpatterns = [
-    # Payment Gateway URLs
-    path('gateways/', views.PaymentGatewayListCreateView.as_view(), name='gateway-list-create'),
-    path('gateways/<uuid:pk>/', views.PaymentGatewayDetailView.as_view(), name='gateway-detail'),
-    
-    # Transaction URLs
-    path('transactions/', views.TransactionListCreateView.as_view(), name='transaction-list-create'),
-    path('transactions/<uuid:pk>/', views.TransactionDetailView.as_view(), name='transaction-detail'),
-    path('transactions/<uuid:transaction_id>/refund/', views.create_refund, name='transaction-refund'),
-    
-    # Payment Link URLs
-    path('payment-links/', views.PaymentLinkListCreateView.as_view(), name='paymentlink-list-create'),
-    path('payment-links/<uuid:pk>/', views.PaymentLinkDetailView.as_view(), name='paymentlink-detail'),
-    
-    # Statistics and Analytics
-    path('stats/', views.transaction_stats, name='transaction-stats'),
-    
-    # Choice endpoints for API documentation
-    path('choices/payment-methods/', views.payment_method_choices, name='payment-method-choices'),
-    path('choices/transaction-types/', views.transaction_type_choices, name='transaction-type-choices'),
-    path('choices/transaction-statuses/', views.transaction_status_choices, name='transaction-status-choices'),
+    # API endpoints
+    path('api/payment-gateways/', views.PaymentGatewayListCreateView.as_view(), name='api-payment-gateway-list'),
+    path('api/payment-gateways/<int:pk>/', views.PaymentGatewayDetailView.as_view(), name='api-payment-gateway-detail'),
+    path('api/transactions/', views.TransactionListCreateView.as_view(), name='api-transaction-list'),
+    path('api/transactions/<int:pk>/', views.TransactionDetailView.as_view(), name='api-transaction-detail'),
+    path('api/transactions/<int:transaction_id>/refund/', views.create_refund, name='api-transaction-refund'),
+    path('api/payment-links/', views.PaymentLinkListCreateView.as_view(), name='api-payment-link-list'),
+    path('api/payment-links/<int:pk>/', views.PaymentLinkDetailView.as_view(), name='api-payment-link-detail'),
+    path('api/transaction-stats/', views.transaction_stats, name='api-transaction-stats'),
+    path('api/payment-method-choices/', views.payment_method_choices, name='api-payment-method-choices'),
+    path('api/transaction-type-choices/', views.transaction_type_choices, name='api-transaction-type-choices'),
+    path('api/transaction-status-choices/', views.transaction_status_choices, name='api-transaction-status-choices'),
+
+    # Template endpoints
+    path('transactions/', views.transaction_list_view, name='transaction-list'),
+    path('transactions/<int:pk>/', views.transaction_detail_view, name='transaction-detail'),
+    path('payment-links/', views.payment_link_list_view, name='payment-link-list'),
 ]

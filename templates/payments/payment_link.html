@@ -243,14 +243,14 @@
                 const formData = new FormData(this);
                 const response = await fetch('{{ request.path }}', {
                     method: 'POST',
-                    body: formData,
                     headers: {
                         'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
+                    },
+                    body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (response.ok) {
                     // Success - redirect to success page or show success message
                     showAlert('Payment processed successfully!', 'success');
