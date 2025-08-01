@@ -20,8 +20,7 @@ __pycache__/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-media/
-staticfiles/
+media/*
 
 # Django migrations (optional - uncomment if you want to ignore)
 # */migrations/*.py
