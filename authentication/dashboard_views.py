@@ -172,7 +172,7 @@ def admin_dashboard(request):
         'user_growth_percentage': round((new_users_week / max(total_users - new_users_week, 1)) * 100, 1),
     }
     
-    return render(request, 'dashboard/admin.html', context)
+    return render(request, 'dashboard/admin_dashboard.html', context)
 
 @login_required
 def staff_dashboard(request):

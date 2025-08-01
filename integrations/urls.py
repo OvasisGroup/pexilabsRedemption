@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'integrations'
+
 urlpatterns = [
     # Integration management
     path('', views.IntegrationListView.as_view(), name='integration-list'),
@@ -48,10 +50,24 @@ urlpatterns = [
     # Statistics and monitoring
     path('stats/', views.integration_stats, name='integration-stats'),
     path('health/', views.integration_health, name='integration-health'),
+    
+    # Enhanced Integration Management
+    path('providers/', views.integration_providers_list, name='integration-providers-list'),
+    path('providers/<uuid:integration_id>/', views.integration_provider_detail, name='integration-provider-detail'),
+    path('configure/<uuid:integration_id>/', views.configure_merchant_integration, name='configure-merchant-integration'),
+    path('statistics/', views.integration_statistics, name='integration-statistics'),
+    
+    # Utility endpoints
     path('type-choices/', views.integration_type_choices, name='integration-type-choices'),
     path('status-choices/', views.integration_status_choices, name='integration-status-choices'),
     
-    # API calls and webhooks log
+    # API calls and webhooks
     path('api-calls/', views.IntegrationAPICallListView.as_view(), name='api-calls-list'),
     path('webhooks/', views.IntegrationWebhookListView.as_view(), name='webhooks-list'),
+    
+    # Settings and configuration
+    path('settings/', views.integration_settings_view, name='integration-settings'),
+    path('api/configure/', views.configure_integration_api, name='configure-integration-api'),
+    path('api/toggle/<uuid:integration_id>/', views.toggle_integration_api, name='toggle-integration-api'),
+    path('api/remove/<uuid:integration_id>/', views.remove_integration_api, name='remove-integration-api'),
 ]

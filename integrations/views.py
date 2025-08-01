@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, filters, permissions, status
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Count, Sum, Avg
 from django.utils import timezone
@@ -15,6 +16,7 @@ from .models import (
     Integration,
     MerchantIntegration,
     BankIntegration,
+    IntegrationProvider,
     IntegrationAPICall,
     IntegrationWebhook,
     IntegrationStatus,
@@ -1815,3 +1817,531 @@ def corefy_test_connection(request):
 
 # Alias for backward compatibility (if something is trying to import MerchantIntegrationCreateView)
 MerchantIntegrationCreateView = MerchantIntegrationListView
+
+
+# Dashboard Settings Views
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+
+
+@login_required
+def integration_settings_view(request):
+    """Integration settings page for merchants"""
+    # Check if user has merchant account
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        messages.error(request, "Access denied. Merchant account required.")
+        return redirect('dashboard:dashboard_redirect')
+    
+    merchant = request.user.merchant_account
+    
+    # Get available integrations
+    available_integrations = Integration.objects.filter(
+        Q(is_global=True) | Q(status=IntegrationStatus.ACTIVE)
+    ).order_by('integration_type', 'provider_name')
+    
+    # Get merchant's current integrations
+    merchant_integrations = MerchantIntegration.objects.filter(
+        merchant=merchant
+    ).select_related('integration').order_by('-updated_at')
+    
+    # Get integration statistics
+    integration_stats = {
+        'total_available': available_integrations.count(),
+        'total_configured': merchant_integrations.count(),
+        'active_integrations': merchant_integrations.filter(is_enabled=True).count(),
+        'by_type': available_integrations.values('integration_type').annotate(
+            count=Count('id')
+        ).order_by('integration_type')
+    }
+    
+    context = {
+        'page_title': 'Integration Settings',
+        'available_integrations': available_integrations,
+        'merchant_integrations': merchant_integrations,
+        'integration_stats': integration_stats,
+        'integration_types': IntegrationType.choices,
+        'integration_statuses': IntegrationStatus.choices,
+        'merchant': merchant,
+    }
+    
+    return render(request, 'integrations/settings.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def configure_integration_api(request):
+    """API endpoint to configure a new integration for merchant"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        integration_id = data.get('integration_id')
+        configuration = data.get('configuration', {})
+        credentials = data.get('credentials', {})
+        
+        if not integration_id:
+            return JsonResponse({'error': 'Integration ID is required'}, status=400)
+        
+        # Get the integration
+        try:
+            integration = Integration.objects.get(id=integration_id)
+        except Integration.DoesNotExist:
+            return JsonResponse({'error': 'Integration not found'}, status=404)
+        
+        merchant = request.user.merchant_account
+        
+        # Create or update merchant integration
+        merchant_integration, created = MerchantIntegration.objects.get_or_create(
+            merchant=merchant,
+            integration=integration,
+            defaults={
+                'configuration': configuration,
+                'is_enabled': False,
+                'status': IntegrationStatus.DRAFT
+            }
+        )
+        
+        if not created:
+            # Update existing integration
+            merchant_integration.configuration.update(configuration)
+            merchant_integration.save()
+        
+        # Encrypt and store credentials if provided
+        if credentials:
+            merchant_integration.encrypt_credentials(credentials)
+            merchant_integration.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Integration {integration.name} configured successfully',
+            'integration_id': str(merchant_integration.id),
+            'created': created
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        logger.error(f"Error configuring integration: {str(e)}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_integration_api(request, integration_id):
+    """API endpoint to enable/disable an integration"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    try:
+        merchant = request.user.merchant_account
+        merchant_integration = MerchantIntegration.objects.get(
+            id=integration_id,
+            merchant=merchant
+        )
+        
+        # Toggle enabled status
+        merchant_integration.is_enabled = not merchant_integration.is_enabled
+        merchant_integration.status = IntegrationStatus.ACTIVE if merchant_integration.is_enabled else IntegrationStatus.INACTIVE
+        merchant_integration.save()
+        
+        return JsonResponse({
+            'success': True,
+            'enabled': merchant_integration.is_enabled,
+            'status': merchant_integration.status,
+            'message': f'Integration {"enabled" if merchant_integration.is_enabled else "disabled"} successfully'
+        })
+        
+    except MerchantIntegration.DoesNotExist:
+        return JsonResponse({'error': 'Integration not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Corefy webhook processing error: {str(e)}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+# Enhanced Integration Management Views
+
+@extend_schema(
+    summary="List integration providers",
+    description="Get list of available integration providers with their configurations",
+    responses={200: OpenApiResponse(description="List of integration providers")}
+)
+@api_view(['GET'])
+@authentication_classes([APIKeyOrTokenAuthentication])
+@permission_classes([APIKeyPermission])
+def integration_providers_list(request):
+    """List all available integration providers"""
+    try:
+        # Get integrations with their provider configurations
+        integrations = Integration.objects.filter(
+            status=IntegrationStatus.ACTIVE,
+            is_global=True
+        ).select_related('provider_config').order_by('provider_name', 'name')
+        
+        providers_data = []
+        for integration in integrations:
+            provider_data = {
+                'id': str(integration.id),
+                'name': integration.name,
+                'code': integration.code,
+                'provider_name': integration.provider_name,
+                'integration_type': integration.integration_type,
+                'description': integration.description,
+                'supports_webhooks': integration.supports_webhooks,
+                'supports_bulk_operations': integration.supports_bulk_operations,
+                'supports_real_time': integration.supports_real_time,
+                'is_sandbox': integration.is_sandbox,
+                'version': integration.version,
+                'authentication_type': integration.authentication_type,
+            }
+            
+            # Add provider-specific configuration if available
+            if hasattr(integration, 'provider_config'):
+                provider_config = integration.provider_config
+                provider_data.update({
+                    'supported_operations': provider_config.supported_operations,
+                    'endpoints': provider_config.endpoints,
+                    'fee_structure': provider_config.fee_structure,
+                    'limits': provider_config.limits,
+                    'webhook_config': provider_config.webhook_config,
+                })
+            
+            providers_data.append(provider_data)
+        
+        return Response({
+            'success': True,
+            'count': len(providers_data),
+            'data': providers_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Integration providers list error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Get integration provider details",
+    description="Get detailed information about a specific integration provider",
+    responses={200: OpenApiResponse(description="Integration provider details")}
+)
+@api_view(['GET'])
+@authentication_classes([APIKeyOrTokenAuthentication])
+@permission_classes([APIKeyPermission])
+def integration_provider_detail(request, integration_id):
+    """Get detailed information about a specific integration provider"""
+    try:
+        integration = Integration.objects.select_related('provider_config').get(
+            id=integration_id,
+            status=IntegrationStatus.ACTIVE,
+            is_global=True
+        )
+        
+        provider_data = {
+            'id': str(integration.id),
+            'name': integration.name,
+            'code': integration.code,
+            'provider_name': integration.provider_name,
+            'integration_type': integration.integration_type,
+            'description': integration.description,
+            'provider_website': integration.provider_website,
+            'provider_documentation': integration.provider_documentation,
+            'base_url': integration.base_url,
+            'is_sandbox': integration.is_sandbox,
+            'version': integration.version,
+            'authentication_type': integration.authentication_type,
+            'supports_webhooks': integration.supports_webhooks,
+            'supports_bulk_operations': integration.supports_bulk_operations,
+            'supports_real_time': integration.supports_real_time,
+            'rate_limits': {
+                'per_minute': integration.rate_limit_per_minute,
+                'per_hour': integration.rate_limit_per_hour,
+                'per_day': integration.rate_limit_per_day,
+            },
+            'health_status': {
+                'is_healthy': integration.is_healthy,
+                'last_health_check': integration.last_health_check,
+                'health_error_message': integration.health_error_message,
+            },
+            'created_at': integration.created_at,
+            'updated_at': integration.updated_at,
+        }
+        
+        # Add provider-specific configuration if available
+        if hasattr(integration, 'provider_config'):
+            provider_config = integration.provider_config
+            provider_data.update({
+                'provider_configuration': {
+                    'supported_operations': provider_config.supported_operations,
+                    'endpoints': provider_config.endpoints,
+                    'fee_structure': provider_config.fee_structure,
+                    'limits': provider_config.limits,
+                    'webhook_config': provider_config.webhook_config,
+                    'sandbox_config': provider_config.sandbox_config,
+                    'production_config': provider_config.production_config,
+                }
+            })
+        
+        # Add bank-specific details if it's a bank integration
+        if hasattr(integration, 'bank_details'):
+            bank_details = integration.bank_details
+            provider_data['bank_details'] = {
+                'bank_name': bank_details.bank_name,
+                'bank_code': bank_details.bank_code,
+                'country_code': bank_details.country_code,
+                'swift_code': bank_details.swift_code,
+                'supported_services': {
+                    'account_inquiry': bank_details.supports_account_inquiry,
+                    'balance_inquiry': bank_details.supports_balance_inquiry,
+                    'transaction_history': bank_details.supports_transaction_history,
+                    'fund_transfer': bank_details.supports_fund_transfer,
+                    'bill_payment': bank_details.supports_bill_payment,
+                    'standing_orders': bank_details.supports_standing_orders,
+                    'direct_debit': bank_details.supports_direct_debit,
+                },
+                'transaction_limits': {
+                    'min_transfer_amount': str(bank_details.min_transfer_amount),
+                    'max_transfer_amount': str(bank_details.max_transfer_amount),
+                    'daily_transfer_limit': str(bank_details.daily_transfer_limit) if bank_details.daily_transfer_limit else None,
+                },
+                'operating_hours': {
+                    'start': bank_details.operating_hours_start,
+                    'end': bank_details.operating_hours_end,
+                    'operates_weekends': bank_details.operates_weekends,
+                    'operates_holidays': bank_details.operates_holidays,
+                },
+                'settlement_time': bank_details.settlement_time,
+            }
+        
+        return Response({
+            'success': True,
+            'data': provider_data
+        })
+        
+    except Integration.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Integration provider not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Integration provider detail error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Configure merchant integration",
+    description="Configure a specific integration for a merchant with provider-specific settings",
+    responses={201: OpenApiResponse(description="Integration configured successfully")}
+)
+@api_view(['POST'])
+@authentication_classes([APIKeyOrTokenAuthentication])
+@permission_classes([APIKeyPermission])
+def configure_merchant_integration(request, integration_id):
+    """Configure a specific integration for a merchant"""
+    try:
+        # Get the integration
+        integration = Integration.objects.get(
+            id=integration_id,
+            status=IntegrationStatus.ACTIVE,
+            is_global=True
+        )
+        
+        # Get merchant
+        merchant = None
+        if hasattr(request.user, '_api_key'):
+            # For API key users, you might need to implement merchant resolution
+            # This depends on your business logic
+            merchant = None  # Implement based on your needs
+        elif hasattr(request.user, 'merchant_account'):
+            merchant = request.user.merchant_account
+        
+        if not merchant:
+            return Response({
+                'success': False,
+                'message': 'Merchant not found or not authorized'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get configuration data from request
+        configuration = request.data.get('configuration', {})
+        credentials = request.data.get('credentials', {})
+        
+        # Create or update merchant integration
+        merchant_integration, created = MerchantIntegration.objects.get_or_create(
+            merchant=merchant,
+            integration=integration,
+            defaults={
+                'configuration': configuration,
+                'status': IntegrationStatus.DRAFT,
+                'is_enabled': False,
+            }
+        )
+        
+        if not created:
+            # Update existing configuration
+            merchant_integration.configuration.update(configuration)
+            merchant_integration.save()
+        
+        # Encrypt and store credentials if provided
+        if credentials:
+            merchant_integration.encrypt_credentials(credentials)
+        
+        return Response({
+            'success': True,
+            'message': 'Integration configured successfully',
+            'data': {
+                'id': str(merchant_integration.id),
+                'integration_name': integration.name,
+                'provider_name': integration.provider_name,
+                'status': merchant_integration.status,
+                'is_enabled': merchant_integration.is_enabled,
+                'created': created,
+            }
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+        
+    except Integration.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Integration not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Configure merchant integration error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Get integration statistics",
+    description="Get usage statistics for merchant integrations",
+    responses={200: OpenApiResponse(description="Integration statistics")}
+)
+@api_view(['GET'])
+@authentication_classes([APIKeyOrTokenAuthentication])
+@permission_classes([APIKeyPermission])
+def integration_statistics(request):
+    """Get integration usage statistics"""
+    try:
+        # Get merchant
+        merchant = None
+        if hasattr(request.user, '_api_key'):
+            # For API key users, implement merchant resolution
+            merchant = None  # Implement based on your needs
+        elif hasattr(request.user, 'merchant_account'):
+            merchant = request.user.merchant_account
+        
+        if not merchant:
+            return Response({
+                'success': False,
+                'message': 'Merchant not found or not authorized'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get time range from query parameters
+        days = int(request.GET.get('days', 30))
+        start_date = timezone.now() - timedelta(days=days)
+        
+        # Get merchant integrations
+        merchant_integrations = MerchantIntegration.objects.filter(
+            merchant=merchant
+        ).select_related('integration')
+        
+        # Calculate statistics
+        total_integrations = merchant_integrations.count()
+        active_integrations = merchant_integrations.filter(is_enabled=True).count()
+        
+        # Get API call statistics
+        api_calls = IntegrationAPICall.objects.filter(
+            merchant_integration__merchant=merchant,
+            created_at__gte=start_date
+        )
+        
+        total_api_calls = api_calls.count()
+        successful_calls = api_calls.filter(is_successful=True).count()
+        failed_calls = api_calls.filter(is_successful=False).count()
+        
+        # Calculate success rate
+        success_rate = (successful_calls / total_api_calls * 100) if total_api_calls > 0 else 0
+        
+        # Get integration-wise statistics
+        integration_stats = []
+        for mi in merchant_integrations:
+            integration_calls = api_calls.filter(merchant_integration=mi)
+            integration_stats.append({
+                'integration_name': mi.integration.name,
+                'provider_name': mi.integration.provider_name,
+                'integration_type': mi.integration.integration_type,
+                'is_enabled': mi.is_enabled,
+                'total_requests': mi.total_requests,
+                'successful_requests': mi.successful_requests,
+                'failed_requests': mi.failed_requests,
+                'success_rate': mi.get_success_rate(),
+                'last_used_at': mi.last_used_at,
+                'recent_calls': integration_calls.count(),
+            })
+        
+        return Response({
+            'success': True,
+            'data': {
+                'summary': {
+                    'total_integrations': total_integrations,
+                    'active_integrations': active_integrations,
+                    'total_api_calls': total_api_calls,
+                    'successful_calls': successful_calls,
+                    'failed_calls': failed_calls,
+                    'success_rate': round(success_rate, 2),
+                    'period_days': days,
+                },
+                'integrations': integration_stats,
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Integration statistics error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Error toggling integration: {str(e)}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def remove_integration_api(request, integration_id):
+    """API endpoint to remove an integration"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    try:
+        merchant = request.user.merchant_account
+        merchant_integration = MerchantIntegration.objects.get(
+            id=integration_id,
+            merchant=merchant
+        )
+        
+        integration_name = merchant_integration.integration.name
+        merchant_integration.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Integration {integration_name} removed successfully'
+        })
+        
+    except MerchantIntegration.DoesNotExist:
+        return JsonResponse({'error': 'Integration not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error removing integration: {str(e)}")
+        return JsonResponse({'error': 'Internal server error'}, status=500)

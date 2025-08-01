@@ -56,11 +56,11 @@ INSTALLED_APPS = [
     'import_export',
     # 'rest_framework_simplejwt',
     # 'corsheaders',
-    # 'drf_spectacular',  # Temporarily commented out
-    # 'django_filters',
+    'drf_spectacular',  # Re-enabled for API documentation
+    'django_filters',
     'authentication',
     'transactions',  # Re-enabled
-    # 'integrations',  # Temporarily disabled due to cryptography import
+    'integrations',  # Re-enabled for integration settings
     'payments',  # Payment processing app
     'checkout',  # Checkout page app
     'widget_tweaks',
@@ -129,7 +129,7 @@ AUTHENTICATION_BACKENDS = [
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': None,  # Disable schema generation since drf_spectacular is not available
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],

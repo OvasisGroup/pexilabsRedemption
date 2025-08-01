@@ -313,9 +313,9 @@
         <div class="glass-card rounded-xl p-6">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-medium text-gray-900">Payment Integrations</h3>
-                <button class="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-                    <i class="fas fa-plus mr-1"></i>Add Integration
-                </button>
+                <a href="{% url 'integrations:integration-settings' %}" class="text-indigo-600 hover:text-indigo-700 text-sm font-medium transition-colors">
+                    <i class="fas fa-cogs mr-1"></i>Integration Settings
+                </a>
             </div>
             <div class="space-y-3">
                 {% for integration in merchant_integrations %}
@@ -340,9 +340,9 @@
                 <div class="text-center py-8">
                     <i class="fas fa-plug text-gray-300 text-3xl mb-3"></i>
                     <p class="text-gray-500 mb-4">No integrations configured yet</p>
-                    <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <a href="{% url 'integrations:integration-settings' %}" class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
                         <i class="fas fa-plus mr-2"></i>Add Your First Integration
-                    </button>
+                    </a>
                 </div>
                 {% endfor %}
             </div>
