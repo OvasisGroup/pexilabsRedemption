@@ -35,12 +35,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_8-^e_9e42f-yh!ca7g71jbr%q-5q)#908waj-ue#()pn)i)gs'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-_8-^e_9e42f-yh!ca7g71jbr%q-5q)#908waj-ue#()pn)i)gs')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'testserver,localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -269,16 +269,11 @@ SIMPLE_JWT = {
 
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080').split(',')
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'True').lower() == 'true'
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', str(DEBUG)).lower() == 'true'  # Only allow all origins in development
 
 
 # # Email Configuration
@@ -291,25 +286,25 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 # DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
 
 # Email Configuration (Zoho Mail)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.zoho.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'info@pexipay.com'
-EMAIL_HOST_PASSWORD = 'EMAbNtLjkuy2'
-DEFAULT_FROM_EMAIL = 'info@pexipay.com'
-SERVER_EMAIL = 'info@pexipay.com'
-EMAIL_TIMEOUT = 60
-EMAIL_DEBUG = True 
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.zoho.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'info@pexipay.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'EMAbNtLjkuy2')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'info@pexipay.com')
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', 'info@pexipay.com')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '60'))
+EMAIL_DEBUG = os.getenv('EMAIL_DEBUG', 'True').lower() == 'true' 
 
 # Additional settings
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
 
 # Session Configuration
-SESSION_COOKIE_AGE = 1209600  # 2 weeks
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '1209600'))  # 2 weeks
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+SESSION_COOKIE_HTTPONLY = os.getenv('SESSION_COOKIE_HTTPONLY', 'True').lower() == 'true'
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
 
 
 # Password Validation
@@ -335,33 +330,33 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'en-us')
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = os.getenv('TIME_ZONE', 'UTC')
 
-USE_I18N = True
+USE_I18N = os.getenv('USE_I18N', 'True').lower() == 'true'
 
-USE_TZ = True
+USE_TZ = os.getenv('USE_TZ', 'True').lower() == 'true'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = os.getenv('STATIC_URL', 'static/')
+STATIC_ROOT = BASE_DIR / os.getenv('STATIC_ROOT', 'staticfiles')
 
 # Media files (user uploads)
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = os.getenv('MEDIA_URL', 'media/')
+MEDIA_ROOT = BASE_DIR / os.getenv('MEDIA_ROOT', 'media')
 
 # File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+FILE_UPLOAD_PERMISSIONS = int(os.getenv('FILE_UPLOAD_PERMISSIONS', '0o644'), 8)
 
 # Security settings for file uploads
-SECURE_FILE_UPLOADS = True
-ALLOWED_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']
+SECURE_FILE_UPLOADS = os.getenv('SECURE_FILE_UPLOADS', 'True').lower() == 'true'
+ALLOWED_FILE_EXTENSIONS = os.getenv('ALLOWED_FILE_EXTENSIONS', '.pdf,.jpg,.jpeg,.png,.doc,.docx').split(',')
 
 
 # Default primary key field type
@@ -371,7 +366,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Encryption settings for sensitive data
 # Generate encryption key for development (use environment variable in production)
-ENCRYPTION_KEY = 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='  # This is base64 encoded
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=')  # This is base64 encoded
 
 # =============================================================================
 # INTEGRATION SETTINGS
@@ -421,7 +416,7 @@ INTEGRATION_LOG_REQUESTS = os.getenv('INTEGRATION_LOG_REQUESTS', 'True').lower()
 INTEGRATION_LOG_RESPONSES = os.getenv('INTEGRATION_LOG_RESPONSES', 'True').lower() == 'true'
 
 # Authentication URLs
-LOGIN_URL = '/'
-LOGOUT_URL = '/auth/logout/'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = os.getenv('LOGIN_URL', '/')
+LOGOUT_URL = os.getenv('LOGOUT_URL', '/auth/logout/')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/dashboard/')
+LOGOUT_REDIRECT_URL = os.getenv('LOGOUT_REDIRECT_URL', '/')

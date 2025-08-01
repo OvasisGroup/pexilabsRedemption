@@ -42,7 +42,7 @@ class PreferredCurrency(models.Model):
     code = models.CharField(max_length=100, unique=True)  # ISO currency code
     symbol = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=False)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
