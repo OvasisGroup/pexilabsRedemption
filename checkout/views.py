@@ -4,10 +4,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 import json
 import uuid
+from decimal import Decimal
 
 from .models import CheckoutPage, PaymentMethodConfig, CheckoutSession
+from authentication.api_auth import APIKeyAuthentication
+from authentication.models import AppKey, Merchant
+from integrations.uba_usage import UBAUsageService
 
 
 def manage_checkout_pages(request):
@@ -143,47 +148,144 @@ def create_checkout_page(request):
 
 
 @csrf_exempt
-def process_payment(request):
-    """Process payment for a checkout session"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-    
+@require_http_methods(["POST"])
+def make_payment_api(request):
+    """
+    API endpoint for merchants to initiate payments.
+    Requires API key authentication.
+    """
     try:
-        data = json.loads(request.body)
-        session_id = data.get('session_id')
+        # Authenticate using API key
+        auth = APIKeyAuthentication()
+        auth_result = auth.authenticate(request)
         
-        if not session_id:
-            return JsonResponse({'error': 'Session ID is required'}, status=400)
-            
-        session = get_object_or_404(CheckoutSession, session_id=session_id)
+        if not auth_result:
+            return JsonResponse({
+                'error': 'Authentication required',
+                'message': 'Please provide a valid API key in Authorization header or X-API-Key header'
+            }, status=401)
         
-        # Check if session has expired
-        if session.expires_at < timezone.now():
-            return JsonResponse({'error': 'Checkout session has expired'}, status=400)
+        user, app_key = auth_result
         
-        # Check if session is already completed
-        if session.status == 'completed':
-            return JsonResponse({'error': 'Payment has already been processed'}, status=400)
+        # Validate API key has required permissions
+        if not app_key.has_scope('write'):
+            return JsonResponse({
+                'error': 'Insufficient permissions',
+                'message': 'API key requires write scope for payment operations'
+            }, status=403)
         
-        # Simulate payment processing
-        session.status = 'completed'
-        session.payment_method_used = data.get('payment_method', 'card')
-        session.payment_data = {
-            'transaction_id': str(uuid.uuid4()),
-            'payment_method': data.get('payment_method', 'card'),
-            'processed_at': timezone.now().isoformat(),
+        # Parse request data
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'error': 'Invalid JSON',
+                'message': 'Request body must be valid JSON'
+            }, status=400)
+        
+        # Validate required fields
+        required_fields = ['amount', 'currency', 'customer_email', 'description']
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return JsonResponse({
+                'error': 'Missing required fields',
+                'message': f'The following fields are required: {", ".join(missing_fields)}'
+            }, status=400)
+        
+        # Validate amount
+        try:
+            amount = Decimal(str(data['amount']))
+            if amount <= 0:
+                raise ValueError("Amount must be positive")
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'error': 'Invalid amount',
+                'message': 'Amount must be a positive number'
+            }, status=400)
+        
+        # Create payment session
+        payment_session = {
+            'session_id': str(uuid.uuid4()),
+            'amount': float(amount),
+            'currency': data['currency'],
+            'customer_email': data['customer_email'],
+            'description': data['description'],
+            'callback_url': data.get('callback_url', ''),
+            'cancel_url': data.get('cancel_url', ''),
+            'merchant_id': str(app_key.partner.id),
+            'api_key_id': str(app_key.id),
+            'created_at': timezone.now().isoformat()
         }
-        session.save()
+        
+        # Store session data (you might want to use a proper session store or database)
+        # For now, we'll pass it as query parameters to the processing page
+        
+        # Generate processing URL with session data
+        process_url = request.build_absolute_uri(reverse('checkout:process_payment_page'))
+        process_url += f"?session_id={payment_session['session_id']}"
+        process_url += f"&amount={payment_session['amount']}"
+        process_url += f"&currency={payment_session['currency']}"
+        process_url += f"&customer_email={payment_session['customer_email']}"
+        process_url += f"&description={payment_session['description']}"
+        process_url += f"&callback_url={payment_session['callback_url']}"
+        process_url += f"&cancel_url={payment_session['cancel_url']}"
+        
+        # Log API usage
+        app_key.record_usage()
         
         return JsonResponse({
             'success': True,
-            'transaction_id': session.payment_data['transaction_id'],
-            'redirect_url': session.checkout_page.success_url or '/payment/success/',
-            'message': 'Payment processed successfully'
-        })
+            'session_id': payment_session['session_id'],
+            'payment_url': process_url,
+            'message': 'Payment session created successfully'
+        }, status=201)
         
     except Exception as e:
-        return JsonResponse({'error': f'Payment processing failed: {str(e)}'}, status=500)
+        return JsonResponse({
+            'error': 'Internal server error',
+            'message': str(e)
+        }, status=500)
+
+
+def process_payment_page(request):
+    """
+    Payment processing page that shows the payment form.
+    """
+    # Get session data from query parameters
+    session_id = request.GET.get('session_id')
+    amount = request.GET.get('amount')
+    currency = request.GET.get('currency')
+    customer_email = request.GET.get('customer_email')
+    description = request.GET.get('description')
+    callback_url = request.GET.get('callback_url', '')
+    cancel_url = request.GET.get('cancel_url', '')
+    
+    if not all([session_id, amount, currency, customer_email, description]):
+        return render(request, 'checkout/payment_error.html', {
+            'error': 'Invalid payment session',
+            'message': 'Missing required payment information'
+        })
+    
+    try:
+        amount = float(amount)
+    except (ValueError, TypeError):
+        return render(request, 'checkout/payment_error.html', {
+            'error': 'Invalid amount',
+            'message': 'Payment amount is not valid'
+        })
+    
+    context = {
+        'session_id': session_id,
+        'amount': amount,
+        'currency': currency,
+        'customer_email': customer_email,
+        'description': description,
+        'callback_url': callback_url,
+        'cancel_url': cancel_url,
+    }
+    
+    return render(request, 'checkout/process_payment.html', context)
 
 
 def get_checkout_page_info(request, slug):
@@ -284,5 +386,50 @@ def create_checkout_session(request):
             'expires_at': session.expires_at.isoformat()
         })
         
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def process_payment(request):
+    """Process payment for a checkout session"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return JsonResponse({'error': 'Session ID is required'}, status=400)
+            
+        session = get_object_or_404(CheckoutSession, session_id=session_id)
+        
+        # Check if session has expired
+        if session.expires_at < timezone.now():
+            return JsonResponse({'error': 'Checkout session has expired'}, status=400)
+        
+        # Check if session is already completed
+        if session.status == 'completed':
+            return JsonResponse({'error': 'Payment has already been processed'}, status=400)
+        
+        # Simulate payment processing
+        session.status = 'completed'
+        session.payment_method_used = data.get('payment_method', 'card')
+        session.payment_data = {
+            'transaction_id': str(uuid.uuid4()),
+            'payment_method': data.get('payment_method', 'card'),
+            'processed_at': timezone.now().isoformat(),
+        }
+        session.save()
+        
+        return JsonResponse({
+            'success': True,
+            'transaction_id': session.payment_data['transaction_id'],
+            'message': 'Payment processed successfully'
+        })
+        
+    except CheckoutSession.DoesNotExist:
+        return JsonResponse({'error': 'Invalid session ID'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

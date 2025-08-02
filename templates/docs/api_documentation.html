@@ -158,6 +158,9 @@
                     <a href="#testing" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
                         <i class="fas fa-vial mr-2"></i>Testing
                     </a>
+                    <a href="#test-integration" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-play-circle mr-2"></i>Test Integration
+                    </a>
                     <a href="#support" class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900">
                         <i class="fas fa-life-ring mr-2"></i>Support
                     </a>
@@ -782,6 +785,149 @@ function createTransaction() {
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Test Integration Section -->
+                <section id="test-integration" class="bg-white rounded-xl shadow-sm border p-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6">Test Integration</h2>
+                    
+                    <div class="prose max-w-none">
+                        <p class="text-gray-600 mb-6">
+                            Test your API integration with a live checkout session. This section provides you with a ready-to-use cURL command that you can execute to create a test checkout session.
+                        </p>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Test with cURL</h3>
+                        
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-gray-800">Sample cURL Command</h4>
+                                <div class="flex space-x-2">
+                                    {% if user.is_authenticated and user.merchant_account %}
+                                        {% if user.merchant_account.api_keys.exists %}
+                                            <button onclick="generateCompleteApiKey('{{ user.merchant_account.api_keys.first.id }}')"
+                                                    class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors">
+                                                <i class="fas fa-key mr-1"></i> Generate Complete Key
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                    <button onclick="copyToClipboard('curl-command-docs')" 
+                                            class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+                                        <i class="fas fa-copy mr-1"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="code-block">
+                                <pre id="curl-command-docs"><code>curl -X POST https://api.pexilabs.com/api/checkout/session/ \
+  -H "Authorization: Bearer {% if user.is_authenticated and user.merchant_account and user.merchant_account.api_keys.exists %}{{ user.merchant_account.api_keys.first.public_key }}:YOUR_SECRET_KEY{% else %}YOUR_API_KEY_HERE{% endif %}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 1000,
+    "currency": "USD",
+    "description": "Test payment",
+    "customer_email": "test@example.com",
+    "success_url": "https://yoursite.com/success",
+    "cancel_url": "https://yoursite.com/cancel"
+  }'</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-blue-800 mb-2">Important Notes</h4>
+                                    {% if user.is_authenticated and user.merchant_account %}
+                                        {% if user.merchant_account.api_keys.exists %}
+                                            <p class="text-blue-700 text-sm mb-2">
+                                                Your public API key (<code>{{ user.merchant_account.api_keys.first.public_key }}</code>) is pre-populated above. 
+                                                Click "Generate Complete Key" to get both public and secret keys and automatically update the cURL command.
+                                            </p>
+                                            <p class="text-blue-700 text-sm">
+                                                The secret key is only shown once for security reasons. Make sure to copy and store it securely.
+                                            </p>
+                                        {% else %}
+                                            <p class="text-blue-700 text-sm">
+                                                You don't have any API keys yet. Please <a href="{% url 'dashboard:merchant_api_keys' %}" class="underline">create an API key</a> first to test the integration.
+                                            </p>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-blue-700 text-sm">
+                                            Please <a href="{% url 'auth:login_page' %}" class="underline">log in</a> to see your personalized API keys and test the integration.
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Expected Response</h3>
+                        <div class="code-block mb-6">
+                            <pre><code>{
+  "success": true,
+  "checkout_url": "https://checkout.pexilabs.com/session/cs_1234567890",
+  "session_id": "cs_1234567890",
+  "expires_at": "2024-01-01T12:00:00Z"
+}</code></pre>
+                        </div>
+                        
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Integration Steps</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 font-semibold text-sm">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Get Your API Keys</h4>
+                                    <p class="text-gray-600 text-sm">Generate your API keys from the <a href="{% url 'dashboard:merchant_api_keys' %}" class="text-blue-600 hover:text-blue-700">API Keys page</a> in your dashboard.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 font-semibold text-sm">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Test the API Call</h4>
+                                    <p class="text-gray-600 text-sm">Use the cURL command above to create a test checkout session and verify the response.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 font-semibold text-sm">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Integrate into Your App</h4>
+                                    <p class="text-gray-600 text-sm">Use the same API endpoint in your application to create checkout sessions programmatically.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                    <span class="text-indigo-600 font-semibold text-sm">4</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900">Handle Webhooks</h4>
+                                    <p class="text-gray-600 text-sm">Set up webhook endpoints to receive real-time payment notifications and update your system accordingly.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-amber-500 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-semibold text-amber-800 mb-2">Security Reminder</h4>
+                                    <ul class="text-amber-700 text-sm space-y-1">
+                                        <li>• Never expose your secret API key in client-side code</li>
+                                        <li>• Always use HTTPS for API calls in production</li>
+                                        <li>• Store API keys securely using environment variables</li>
+                                        <li>• Regenerate API keys if they are compromised</li>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

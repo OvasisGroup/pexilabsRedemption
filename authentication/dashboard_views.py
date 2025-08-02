@@ -307,6 +307,18 @@ def merchant_dashboard(request):
         is_dismissed=False
     ).order_by('-created_at')[:10]
     
+    # Get API keys for the merchant (for Test Integration section)
+    api_keys = []
+    if API_KEYS_AVAILABLE:
+        try:
+            partner, created = get_or_create_merchant_partner(merchant)
+            api_keys = AppKey.objects.filter(
+                partner=partner,
+                status=AppKeyStatus.ACTIVE
+            ).order_by('-created_at')
+        except Exception:
+            api_keys = []
+
     context = {
         'page_title': f'{merchant.business_name} - Merchant Dashboard',
         'merchant': merchant,
@@ -324,6 +336,7 @@ def merchant_dashboard(request):
         'is_info_complete': is_info_complete,
         'missing_info': missing_info,
         'notifications': unread_notifications,
+        'api_keys': api_keys,
     }
     
     return render(request, 'dashboard/merchant_dashboard.html', context)
@@ -1629,6 +1642,68 @@ def test_integration_api(request):
                         if result.get('resource') and result['resource'].get('data'):
                             # PayDock API successful response
                             checkout_data = result['resource']['data']
+                            
+                            # Create Transaction record if transactions app is available
+                            transaction_id = None
+                            if TRANSACTIONS_AVAILABLE:
+                                try:
+                                    from transactions.models import (
+                                        Transaction, TransactionType, PaymentMethod, 
+                                        TransactionStatus, PaymentGateway
+                                    )
+                                    from authentication.models import PreferredCurrency
+                                    import uuid
+                                    
+                                    # Get or create UBA payment gateway
+                                    gateway, _ = PaymentGateway.objects.get_or_create(
+                                        code='uba_kenya',
+                                        defaults={
+                                            'name': 'UBA Kenya Pay',
+                                            'api_endpoint': 'https://api-sandbox.paydock.com/v1',
+                                            'is_sandbox': True,
+                                            'supported_currencies': 'USD,KES,EUR,GBP',
+                                            'supported_payment_methods': 'bank_transfer,card'
+                                        }
+                                    )
+                                    
+                                    # Get currency (default to USD if not found)
+                                    try:
+                                        currency = PreferredCurrency.objects.get(code='USD')
+                                    except PreferredCurrency.DoesNotExist:
+                                        # Create USD currency if it doesn't exist
+                                        currency = PreferredCurrency.objects.create(
+                                            code='USD',
+                                            name='US Dollar',
+                                            symbol='$'
+                                        )
+                                    
+                                    # Create transaction record
+                                    transaction = Transaction.objects.create(
+                                        merchant=merchant,
+                                        reference=checkout_data.get('reference', f'UBA-TEST-{uuid.uuid4().hex[:8].upper()}'),
+                                        external_reference=checkout_data.get('_id'),
+                                        transaction_type=TransactionType.PAYMENT,
+                                        payment_method=PaymentMethod.BANK_TRANSFER,
+                                        gateway=gateway,
+                                        currency=currency,
+                                        amount=checkout_data.get('amount', 100.00),
+                                        net_amount=checkout_data.get('amount', 100.00),
+                                        customer_email=test_payload['customer_email'],
+                                        description=test_payload['description'],
+                                        status=TransactionStatus.PENDING,
+                                        metadata={
+                                            'test_payment': True,
+                                            'integration_type': 'uba_bank',
+                                            'paydock_checkout_id': checkout_data.get('_id'),
+                                            'paydock_token': checkout_data.get('token')
+                                        }
+                                    )
+                                    transaction_id = str(transaction.id)
+                                    
+                                except Exception as e:
+                                    # Log error but don't fail the response
+                                    print(f"Error creating transaction record: {str(e)}")
+                            
                             return JsonResponse({
                                 'status': 'success',
                                 'message': 'UBA checkout test completed successfully',
@@ -1639,18 +1714,78 @@ def test_integration_api(request):
                                     'reference': checkout_data.get('reference'),
                                     'amount': checkout_data.get('amount'),
                                     'currency': checkout_data.get('currency'),
-                                    'status': checkout_data.get('status', 'active')
+                                    'status': checkout_data.get('status', 'active'),
+                                    'transaction_id': transaction_id
                                 }
                             })
                         elif result.get('success'):
-                            # Mock response structure
+                            # Mock response structure - also create transaction record
+                            transaction_id = None
+                            if TRANSACTIONS_AVAILABLE:
+                                try:
+                                    from transactions.models import (
+                                        Transaction, TransactionType, PaymentMethod, 
+                                        TransactionStatus, PaymentGateway
+                                    )
+                                    from authentication.models import PreferredCurrency
+                                    import uuid
+                                    
+                                    # Get or create UBA payment gateway
+                                    gateway, _ = PaymentGateway.objects.get_or_create(
+                                        code='uba_kenya',
+                                        defaults={
+                                            'name': 'UBA Kenya Pay',
+                                            'api_endpoint': 'https://api-sandbox.paydock.com/v1',
+                                            'is_sandbox': True,
+                                            'supported_currencies': 'USD,KES,EUR,GBP',
+                                            'supported_payment_methods': 'bank_transfer,card'
+                                        }
+                                    )
+                                    
+                                    # Get currency (default to USD if not found)
+                                    try:
+                                        currency = PreferredCurrency.objects.get(code='USD')
+                                    except PreferredCurrency.DoesNotExist:
+                                        currency = PreferredCurrency.objects.create(
+                                            code='USD',
+                                            name='US Dollar',
+                                            symbol='$'
+                                        )
+                                    
+                                    # Create transaction record for mock payment
+                                    transaction = Transaction.objects.create(
+                                        merchant=merchant,
+                                        reference=result.get('reference', f'UBA-MOCK-{uuid.uuid4().hex[:8].upper()}'),
+                                        external_reference=f"mock_{uuid.uuid4().hex[:12]}",
+                                        transaction_type=TransactionType.PAYMENT,
+                                        payment_method=PaymentMethod.BANK_TRANSFER,
+                                        gateway=gateway,
+                                        currency=currency,
+                                        amount=test_payload['amount'],
+                                        net_amount=test_payload['amount'],
+                                        customer_email=test_payload['customer_email'],
+                                        description=test_payload['description'],
+                                        status=TransactionStatus.COMPLETED,  # Mock payments are immediately completed
+                                        metadata={
+                                            'test_payment': True,
+                                            'mock_payment': True,
+                                            'integration_type': 'uba_bank'
+                                        }
+                                    )
+                                    transaction.mark_as_completed()
+                                    transaction_id = str(transaction.id)
+                                    
+                                except Exception as e:
+                                    print(f"Error creating mock transaction record: {str(e)}")
+                            
                             return JsonResponse({
                                 'status': 'success',
                                 'message': 'UBA checkout test completed successfully (mock)',
                                 'data': {
                                     'payment_url': result.get('payment_url'),
                                     'reference': result.get('reference'),
-                                    'status': 'test_passed'
+                                    'status': 'test_passed',
+                                    'transaction_id': transaction_id
                                 }
                             })
                         else:
@@ -1725,6 +1860,83 @@ def test_integration_api(request):
             'success': False,
             'error': f'Unexpected error: {str(e)}'
         }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def uba_payment_webhook(request):
+    """Handle UBA/PayDock payment webhooks to update transaction status"""
+    try:
+        # Parse webhook payload
+        payload = json.loads(request.body)
+        
+        # Extract payment information
+        event_type = payload.get('type')
+        checkout_data = payload.get('data', {})
+        checkout_id = checkout_data.get('_id')
+        status = checkout_data.get('status')
+        
+        if not checkout_id:
+            return JsonResponse({'error': 'Missing checkout ID'}, status=400)
+        
+        # Update transaction if transactions app is available
+        if TRANSACTIONS_AVAILABLE:
+            try:
+                from transactions.models import Transaction, TransactionStatus
+                
+                # Find transaction by external reference (PayDock checkout ID)
+                transaction = Transaction.objects.get(external_reference=checkout_id)
+                
+                # Update transaction status based on webhook event
+                if event_type == 'transaction_success' or status == 'complete':
+                    transaction.status = TransactionStatus.COMPLETED
+                    transaction.mark_as_completed()
+                elif event_type == 'transaction_failure' or status == 'failed':
+                    transaction.status = TransactionStatus.FAILED
+                    transaction.mark_as_failed(
+                        reason=checkout_data.get('failure_reason', 'Payment failed'),
+                        code=checkout_data.get('failure_code', 'PAYMENT_FAILED')
+                    )
+                elif status == 'cancelled':
+                    transaction.status = TransactionStatus.CANCELLED
+                    transaction.save()
+                
+                # Update metadata with webhook information
+                transaction.metadata.update({
+                    'webhook_received': True,
+                    'webhook_event_type': event_type,
+                    'webhook_status': status,
+                    'webhook_timestamp': timezone.now().isoformat()
+                })
+                transaction.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Transaction {transaction.reference} updated successfully',
+                    'transaction_id': str(transaction.id),
+                    'new_status': transaction.status
+                })
+                
+            except Transaction.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Transaction with checkout ID {checkout_id} not found'
+                }, status=404)
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error updating transaction: {str(e)}'
+                }, status=500)
+        else:
+            return JsonResponse({
+                'success': True,
+                'message': 'Webhook received but transactions app not available'
+            })
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON payload'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @login_required

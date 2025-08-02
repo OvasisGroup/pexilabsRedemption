@@ -1,22 +1,26 @@
 from django.urls import path
-import docs_views
+from django.http import HttpResponse
 
 app_name = 'docs'
 
+# Temporary placeholder view
+def placeholder_view(request):
+    return HttpResponse("Documentation coming soon!")
+
 urlpatterns = [
     # Main API Documentation
-    path('api/', docs_views.api_documentation, name='api_documentation'),
+    path('api/', placeholder_view, name='api_documentation'),
     
     # Integration Guides
-    path('integration/', docs_views.integration_guides, name='integration_guides'),
+    path('integration/', placeholder_view, name='integration_guides'),
     
     # SDK Documentation
-    path('sdks/', docs_views.sdk_documentation, name='sdk_documentation'),
+    path('sdks/', placeholder_view, name='sdk_documentation'),
     
     # Webhook Testing
-    path('webhooks/', docs_views.webhook_testing, name='webhook_testing'),
-    path('webhooks/test-endpoint/', docs_views.webhook_endpoint_test, name='webhook_endpoint_test'),
+    path('webhooks/', placeholder_view, name='webhook_testing'),
+    path('webhooks/test-endpoint/', placeholder_view, name='webhook_endpoint_test'),
     
     # API Explorer
-    path('explorer/', docs_views.api_explorer, name='api_explorer'),
+    path('explorer/', placeholder_view, name='api_explorer'),
 ]

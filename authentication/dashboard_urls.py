@@ -62,9 +62,12 @@ urlpatterns = [
     # Bank Details API endpoints
     path('api/bank-details/', dashboard_views.update_bank_details_api, name='update_bank_details_api'),
     
-    # Notification API endpoints
+    # Notifications API endpoints
     path('api/notifications/', dashboard_views.get_notifications_api, name='get_notifications_api'),
     path('api/notifications/<uuid:notification_id>/read/', dashboard_views.mark_notification_read_api, name='mark_notification_read_api'),
     path('api/notifications/<uuid:notification_id>/dismiss/', dashboard_views.dismiss_notification_api, name='dismiss_notification_api'),
     path('api/notifications/mark-all-read/', dashboard_views.mark_all_notifications_read_api, name='mark_all_notifications_read_api'),
+    
+    # Webhook endpoints
+    path('webhooks/uba-payment/', dashboard_views.uba_payment_webhook, name='uba_payment_webhook'),
 ]
