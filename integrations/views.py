@@ -1860,6 +1860,39 @@ def integration_settings_view(request):
         ).order_by('integration_type')
     }
     
+    # Add validation status for integrations
+    from django.conf import settings
+    import os
+    
+    validation_status = {
+        'uba_bank': {
+            'configured': bool(os.getenv('UBA_BASE_URL') and os.getenv('UBA_ACCESS_TOKEN')),
+            'feature_enabled': getattr(settings, 'ENABLE_UBA_INTEGRATION', False),
+            'api_key_set': bool(os.getenv('UBA_ACCESS_TOKEN')),
+            'base_url_set': bool(os.getenv('UBA_BASE_URL')),
+            'sandbox_mode': getattr(settings, 'UBA_SANDBOX', True),
+        },
+        'cybersource': {
+            'configured': bool(os.getenv('CYBERSOURCE_MERCHANT_ID') and os.getenv('CYBERSOURCE_API_KEY')),
+            'feature_enabled': getattr(settings, 'ENABLE_CYBERSOURCE_INTEGRATION', False),
+            'merchant_id_set': bool(os.getenv('CYBERSOURCE_MERCHANT_ID')),
+            'api_key_set': bool(os.getenv('CYBERSOURCE_API_KEY')),
+            'sandbox_mode': getattr(settings, 'CYBERSOURCE_SANDBOX', True),
+        },
+        'corefy': {
+            'configured': bool(os.getenv('COREFY_API_KEY') and os.getenv('COREFY_SECRET_KEY')),
+            'feature_enabled': getattr(settings, 'ENABLE_COREFY_INTEGRATION', False),
+            'api_key_set': bool(os.getenv('COREFY_API_KEY')),
+            'secret_key_set': bool(os.getenv('COREFY_SECRET_KEY')),
+            'sandbox_mode': getattr(settings, 'COREFY_SANDBOX', True),
+        },
+        'global_settings': {
+            'health_check_enabled': bool(os.getenv('INTEGRATION_HEALTH_CHECK_INTERVAL')),
+            'request_logging': getattr(settings, 'INTEGRATION_LOG_REQUESTS', False),
+            'response_logging': getattr(settings, 'INTEGRATION_LOG_RESPONSES', False),
+        }
+    }
+    
     context = {
         'page_title': 'Integration Settings',
         'available_integrations': available_integrations,
@@ -1868,6 +1901,7 @@ def integration_settings_view(request):
         'integration_types': IntegrationType.choices,
         'integration_statuses': IntegrationStatus.choices,
         'merchant': merchant,
+        'validation_status': validation_status,
     }
     
     return render(request, 'integrations/settings.html', context)
@@ -1916,7 +1950,17 @@ def configure_integration_api(request):
         
         # Encrypt and store credentials if provided
         if credentials:
-            merchant_integration.encrypt_credentials(credentials)
+            # Handle UBA-specific credentials
+            if integration.code == 'uba_kenya_pay':
+                uba_credentials = {
+                    'access_token': credentials.get('access_token'),
+                    'configuration_id': credentials.get('configuration_id'),
+                    'customization_id': credentials.get('customization_id')
+                }
+                merchant_integration.encrypt_credentials(uba_credentials)
+            else:
+                # Handle generic credentials
+                merchant_integration.encrypt_credentials(credentials)
             merchant_integration.save()
         
         return JsonResponse({

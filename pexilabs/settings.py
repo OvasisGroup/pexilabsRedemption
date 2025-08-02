@@ -408,7 +408,7 @@ COREFY_SANDBOX_MODE = os.getenv('COREFY_SANDBOX_MODE', 'True').lower() == 'true'
 # Integration Feature Flags
 ENABLE_UBA_INTEGRATION = os.getenv('ENABLE_UBA_INTEGRATION', 'True').lower() == 'true'
 ENABLE_CYBERSOURCE_INTEGRATION = os.getenv('ENABLE_CYBERSOURCE_INTEGRATION', 'True').lower() == 'true'
-ENABLE_COREFY_INTEGRATION = os.getenv('COREFY_INTEGRATION', 'True').lower() == 'true'
+ENABLE_COREFY_INTEGRATION = os.getenv('ENABLE_COREFY_INTEGRATION', 'True').lower() == 'true'
 
 # Global Integration Settings
 INTEGRATION_HEALTH_CHECK_INTERVAL = int(os.getenv('INTEGRATION_HEALTH_CHECK_INTERVAL', '300'))  # seconds

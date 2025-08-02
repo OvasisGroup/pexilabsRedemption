@@ -69,6 +69,148 @@
             </div>
         </div>
 
+        <!-- Global Validation Status -->
+        <div class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Integration Configuration Status</h2>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">Last validated:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ "now"|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- UBA Bank Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">UBA Kenya Pay</h3>
+                            <div class="p-2 rounded-lg bg-blue-100">
+                                <i class="fas fa-university text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.configured|yesno:'check,times' }} text-{{ validation_status.uba_bank.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.feature_enabled|yesno:'check,times' }} text-{{ validation_status.uba_bank.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.uba_bank.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CyberSource Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">CyberSource</h3>
+                            <div class="p-2 rounded-lg bg-green-100">
+                                <i class="fas fa-credit-card text-green-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.configured|yesno:'check,times' }} text-{{ validation_status.cybersource.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.feature_enabled|yesno:'check,times' }} text-{{ validation_status.cybersource.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.cybersource.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Corefy Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">Corefy Platform</h3>
+                            <div class="p-2 rounded-lg bg-purple-100">
+                                <i class="fas fa-layer-group text-purple-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.configured|yesno:'check,times' }} text-{{ validation_status.corefy.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.feature_enabled|yesno:'check,times' }} text-{{ validation_status.corefy.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.corefy.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Global Settings Status -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-3">Global Integration Settings</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Health Check:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.health_check_enabled|yesno:'check,times' }} text-{{ validation_status.global_settings.health_check_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.health_check_enabled|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Request Logging:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.request_logging|yesno:'check,times' }} text-{{ validation_status.global_settings.request_logging|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.request_logging|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Response Logging:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.response_logging|yesno:'check,times' }} text-{{ validation_status.global_settings.response_logging|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.response_logging|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabs -->
         <div class="mb-8 animate-fade-in">
             <div class="bg-white rounded-2xl shadow-lg p-2 border border-gray-100">
@@ -152,6 +294,63 @@
                                     N/A
                                 {% endif %}
                             </p>
+                            
+                            <!-- Validation Status -->
+                            {% if merchant_integration.integration.code == 'uba_kenya_pay' and validation_status.uba_bank %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.configured|yesno:'check,times' }} text-{{ validation_status.uba_bank.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.feature_enabled|yesno:'check,times' }} text-{{ validation_status.uba_bank.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.uba_bank.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.uba_bank.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% elif merchant_integration.integration.code == 'cybersource_payment_gateway' and validation_status.cybersource %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.configured|yesno:'check,times' }} text-{{ validation_status.cybersource.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.feature_enabled|yesno:'check,times' }} text-{{ validation_status.cybersource.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.cybersource.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.cybersource.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% elif merchant_integration.integration.code == 'corefy_payment_platform' and validation_status.corefy %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.configured|yesno:'check,times' }} text-{{ validation_status.corefy.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.feature_enabled|yesno:'check,times' }} text-{{ validation_status.corefy.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.corefy.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.corefy.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </div>
                         
                         <div class="flex space-x-2">
@@ -297,14 +496,35 @@
                         <input type="text" id="integrationName" class="w-full border border-gray-300 rounded-lg px-3 py-2" readonly>
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
-                        <input type="password" id="apiKey" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API key">
+                    <!-- UBA-specific fields -->
+                    <div id="uba-fields" class="hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
+                            <input type="password" id="accessToken" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your UBA access token">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Configuration ID</label>
+                            <input type="text" id="configurationId" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter configuration ID">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Customization ID</label>
+                            <input type="text" id="customizationId" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter customization ID">
+                        </div>
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">API Secret</label>
-                        <input type="password" id="apiSecret" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API secret">
+                    <!-- Generic fields for other integrations -->
+                    <div id="generic-fields">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                            <input type="password" id="apiKey" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API key">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Secret</label>
+                            <input type="password" id="apiSecret" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API secret">
+                        </div>
                     </div>
                     
                     <div class="mb-6">
@@ -403,12 +623,37 @@
             function showModal(integrationId, integrationName) {
                 currentIntegrationId = integrationId;
                 document.getElementById('integrationName').value = integrationName;
+                
+                // Show/hide fields based on integration type
+                const ubaFields = document.getElementById('uba-fields');
+                const genericFields = document.getElementById('generic-fields');
+                
+                if (integrationName.toLowerCase().includes('uba')) {
+                    ubaFields.classList.remove('hidden');
+                    genericFields.classList.add('hidden');
+                } else {
+                    ubaFields.classList.add('hidden');
+                    genericFields.classList.remove('hidden');
+                }
+                
                 configModal.classList.remove('hidden');
             }
             
             function hideModal() {
                 configModal.classList.add('hidden');
                 configForm.reset();
+                
+                // Reset field visibility
+                document.getElementById('uba-fields').classList.add('hidden');
+                document.getElementById('generic-fields').classList.remove('hidden');
+                
+                // Clear all field values
+                document.getElementById('accessToken').value = '';
+                document.getElementById('configurationId').value = '';
+                document.getElementById('customizationId').value = '';
+                document.getElementById('apiKey').value = '';
+                document.getElementById('apiSecret').value = '';
+                
                 currentIntegrationId = null;
             }
             
@@ -437,16 +682,35 @@
             configForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
-                const formData = {
-                    integration_id: currentIntegrationId,
-                    credentials: {
-                        api_key: document.getElementById('apiKey').value,
-                        api_secret: document.getElementById('apiSecret').value
-                    },
-                    configuration: {
-                        environment: document.getElementById('environment').value
-                    }
-                };
+                const integrationName = document.getElementById('integrationName').value;
+                let formData;
+                
+                if (integrationName.toLowerCase().includes('uba')) {
+                    // UBA-specific configuration
+                    formData = {
+                        integration_id: currentIntegrationId,
+                        credentials: {
+                            access_token: document.getElementById('accessToken').value,
+                            configuration_id: document.getElementById('configurationId').value,
+                            customization_id: document.getElementById('customizationId').value
+                        },
+                        configuration: {
+                            environment: document.getElementById('environment').value
+                        }
+                    };
+                } else {
+                    // Generic integration configuration
+                    formData = {
+                        integration_id: currentIntegrationId,
+                        credentials: {
+                            api_key: document.getElementById('apiKey').value,
+                            api_secret: document.getElementById('apiSecret').value
+                        },
+                        configuration: {
+                            environment: document.getElementById('environment').value
+                        }
+                    };
+                }
                 
                 fetch('{% url "integrations:configure-integration-api" %}', {
                     method: 'POST',
