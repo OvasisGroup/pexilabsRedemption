@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/payment-method-choices/', views.payment_method_choices, name='api-payment-method-choices'),
     path('api/transaction-type-choices/', views.transaction_type_choices, name='api-transaction-type-choices'),
     path('api/transaction-status-choices/', views.transaction_status_choices, name='api-transaction-status-choices'),
+    path('api/update-transaction-status/', views.update_transaction_status, name='api-update-transaction-status'),
 
     # Template endpoints
     path('transactions/', views.transaction_list_view, name='transaction-list'),
