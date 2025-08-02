@@ -54,8 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'import_export',
-    # 'rest_framework_simplejwt',
-    # 'corsheaders',
+    'corsheaders',  # CORS headers for API access
     'drf_spectacular',  # Re-enabled for API documentation
     'django_filters',
     'authentication',
@@ -63,6 +62,7 @@ INSTALLED_APPS = [
     'integrations',  # Re-enabled for integration settings
     'payments',  # Payment processing app
     'checkout',  # Checkout page app
+    'shop',  # Shop app for products and cart
     'widget_tweaks',
 ]
 

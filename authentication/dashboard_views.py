@@ -2084,6 +2084,7 @@ def create_payment_intent_api(request):
                                 print(f"  - currency: {currency_obj} (ID: {currency_obj.id})")
                                 print(f"  - amount: {test_payload['amount']}")
                                 
+                                from decimal import Decimal
                                 transaction = Transaction.objects.create(
                                     reference=result.get('reference', f"PUBLIC-{timezone.now().strftime('%Y%m%d%H%M%S')}"),
                                     external_reference=checkout_id,
@@ -2092,7 +2093,7 @@ def create_payment_intent_api(request):
                                     payment_method=PaymentMethod.BANK_TRANSFER,
                                     gateway=gateway,
                                     currency=currency_obj,
-                                    amount=test_payload['amount'],
+                                    amount=Decimal(str(test_payload['amount'])),  # Convert to Decimal
                                     customer_email=test_payload['customer_email'],
                                     description=test_payload['description'],
                                     status=TransactionStatus.PENDING,

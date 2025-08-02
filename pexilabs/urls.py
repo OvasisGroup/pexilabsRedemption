@@ -37,6 +37,9 @@ urlpatterns = [
     path('', include('payments.urls')),
     path('payments/', include('payments.urls', namespace='payments')),  # Add this line
     
+    # Shop functionality
+    path('shop/', include('shop.urls')),
+    
     # Django Admin (default)
     path('admin/', admin.site.urls),
     

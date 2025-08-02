@@ -1,294 +1,288 @@
-"""
-API Key Authentication for Django REST Framework
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+import json
+import uuid
 
-This module provides authentication classes for API key-based authentication
-specifically designed for merchant integrations.
-"""
-
-import logging
-from rest_framework import authentication, exceptions
-from rest_framework.request import Request
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-
-from authentication.models import AppKey, AppKeyStatus, AppKeyUsageLog
-from authentication.backends import APIKeyBackend
-
-logger = logging.getLogger(__name__)
-User = get_user_model()
+from .models import CheckoutPage, PaymentMethodConfig, CheckoutSession
 
 
-class APIKeyAuthentication(authentication.BaseAuthentication):
-    """
-    API Key authentication for merchants.
+def manage_checkout_pages(request):
+    """Merchant interface for managing checkout pages"""
+    if not request.user.is_authenticated:
+        return redirect('login')
     
-    Clients should authenticate by passing the API key in the HTTP Authorization header,
-    prepended with the string "Bearer ".  For example:
+    # Check if user has merchant account
+    if not hasattr(request.user, 'merchant_account'):
+        return JsonResponse({'error': 'No merchant account found'}, status=403)
     
-        Authorization: Bearer pk_partner_abc123:sk_live_xyz789
+    checkout_pages = CheckoutPage.objects.filter(
+        merchant=request.user.merchant_account
+    ).order_by('-created_at')
     
-    Alternatively, the API key can be passed in a custom header:
+    context = {
+        'checkout_pages': checkout_pages,
+        'merchant': request.user.merchant_account
+    }
     
-        X-API-Key: pk_partner_abc123:sk_live_xyz789
-    """
+    return render(request, 'checkout/manage_checkout_pages.html', context)
+
+
+def get_currencies(request):
+    """Get available currencies for checkout pages"""
+    currencies = [
+        {'code': 'USD', 'name': 'US Dollar', 'symbol': '$'},
+        {'code': 'EUR', 'name': 'Euro', 'symbol': '€'},
+        {'code': 'GBP', 'name': 'British Pound', 'symbol': '£'},
+        {'code': 'JPY', 'name': 'Japanese Yen', 'symbol': '¥'},
+        {'code': 'CAD', 'name': 'Canadian Dollar', 'symbol': 'C$'},
+        {'code': 'AUD', 'name': 'Australian Dollar', 'symbol': 'A$'},
+        {'code': 'CHF', 'name': 'Swiss Franc', 'symbol': 'CHF'},
+        {'code': 'CNY', 'name': 'Chinese Yuan', 'symbol': '¥'},
+        {'code': 'SEK', 'name': 'Swedish Krona', 'symbol': 'kr'},
+        {'code': 'NZD', 'name': 'New Zealand Dollar', 'symbol': 'NZ$'},
+    ]
     
-    keyword = 'Bearer'
-    header_name = 'X-API-Key'
-    
-    def authenticate(self, request: Request):
-        """
-        Authenticate the request using API key.
+    return JsonResponse({
+        'currencies': currencies,
+        'default': 'USD'
+    })
+
+
+def checkout_page_view(request, slug):
+    """Render the customer-facing checkout page"""
+    try:
+        checkout_page = get_object_or_404(CheckoutPage, slug=slug, is_active=True)
         
-        Returns:
-            tuple: (user, app_key) if authentication successful
-            None: if authentication not attempted
-            
-        Raises:
-            AuthenticationFailed: if authentication fails
-        """
-        api_key = self.get_api_key(request)
-        if not api_key:
-            return None
+        # Get enabled payment methods for this checkout page
+        payment_methods = PaymentMethodConfig.objects.filter(
+            checkout_page=checkout_page,
+            is_enabled=True
+        ).order_by('display_order')
         
-        return self.authenticate_credentials(api_key, request)
-    
-    def get_api_key(self, request: Request) -> str:
-        """
-        Extract API key from request headers.
-        
-        Args:
-            request: The DRF request object
-            
-        Returns:
-            str: The API key if found, None otherwise
-        """
-        # Try Authorization header first
-        auth_header = authentication.get_authorization_header(request).split()
-        
-        if auth_header and auth_header[0].lower() == self.keyword.lower().encode():
-            if len(auth_header) == 1:
-                msg = _('Invalid token header. No credentials provided.')
-                raise exceptions.AuthenticationFailed(msg)
-            elif len(auth_header) > 2:
-                msg = _('Invalid token header. Token string should not contain spaces.')
-                raise exceptions.AuthenticationFailed(msg)
-            
-            try:
-                api_key = auth_header[1].decode('utf-8')
-            except UnicodeError:
-                msg = _('Invalid token header. Token string should not contain invalid characters.')
-                raise exceptions.AuthenticationFailed(msg)
-            
-            return api_key
-        
-        # Try custom header as fallback
-        api_key = request.META.get(f'HTTP_{self.header_name.upper().replace("-", "_")}')
-        if api_key:
-            return api_key
-        
-        return None
-    
-    def authenticate_credentials(self, api_key: str, request: Request):
-        """
-        Authenticate the API key and return user and app_key.
-        
-        Args:
-            api_key: The API key string
-            request: The DRF request object
-            
-        Returns:
-            tuple: (user, app_key) if successful
-            
-        Raises:
-            AuthenticationFailed: if authentication fails
-        """
-        if ':' not in api_key:
-            raise exceptions.AuthenticationFailed(_('Invalid API key format.'))
-        
-        try:
-            public_key, secret_key = api_key.split(':', 1)
-        except ValueError:
-            raise exceptions.AuthenticationFailed(_('Invalid API key format.'))
-        
-        try:
-            app_key = AppKey.objects.select_related('partner').get(
-                public_key=public_key,
-                status=AppKeyStatus.ACTIVE
+        # Create a checkout session if needed
+        session_id = request.GET.get('session_id')
+        if not session_id:
+            session = CheckoutSession.objects.create(
+                checkout_page=checkout_page,
+                session_id=str(uuid.uuid4()),
+                amount=checkout_page.amount,
+                currency=checkout_page.currency,
+                expires_at=timezone.now() + timezone.timedelta(hours=24)
             )
-        except AppKey.DoesNotExist:
-            raise exceptions.AuthenticationFailed(_('Invalid API key.'))
+            session_id = session.session_id
+        else:
+            session = get_object_or_404(CheckoutSession, session_id=session_id)
         
-        # Verify the secret key
-        if not app_key.verify_secret(secret_key):
-            logger.warning(f"Invalid secret for API key: {public_key} from IP: {self._get_client_ip(request)}")
-            raise exceptions.AuthenticationFailed(_('Invalid API key.'))
+        context = {
+            'checkout_page': checkout_page,
+            'session': session,
+            'payment_methods': payment_methods,
+            'session_id': session_id,
+        }
         
-        # Check if key is active and not expired
-        if not app_key.is_active():
-            logger.warning(f"Inactive/expired API key: {public_key} from IP: {self._get_client_ip(request)}")
-            raise exceptions.AuthenticationFailed(_('API key is inactive or expired.'))
+        return render(request, 'checkout/checkout_page.html', context)
         
-        # Check IP restrictions
-        client_ip = self._get_client_ip(request)
-        if not app_key.is_ip_allowed(client_ip):
-            logger.warning(f"IP not allowed for API key: {public_key} from IP: {client_ip}")
-            raise exceptions.AuthenticationFailed(_('API key not allowed from this IP address.'))
-        
-        # Check partner status
-        if not app_key.partner.is_active:
-            logger.warning(f"Inactive partner for API key: {public_key}")
-            raise exceptions.AuthenticationFailed(_('Partner account is inactive.'))
-        
-        # Record usage
-        app_key.record_usage()
-        
-        # Log the API call for analytics
-        self.log_api_call(app_key, request)
-        
-        # For now, create a mock user object that represents the API key
-        # In a real implementation, you might want to associate API keys with actual user accounts
-        user = self.get_or_create_api_user(app_key)
-        
-        logger.info(f"Successful API key authentication: {public_key} from IP: {client_ip}")
-        
-        return (user, app_key)
-    
-    def get_or_create_api_user(self, app_key: AppKey):
-        """
-        Get or create a user object for API key authentication.
-        
-        Args:
-            app_key: The authenticated AppKey instance
-            
-        Returns:
-            User: A user object representing the API key
-        """
-        # For API key authentication, we'll create a special user that represents the partner
-        # This allows us to use the standard Django/DRF authentication and permission systems
-        
+    except CheckoutPage.DoesNotExist:
+        return render(request, 'checkout/page_not_found.html', status=404)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def create_checkout_page(request):
+    """Create a new checkout page"""
+    if request.method == 'POST':
         try:
-            # Try to find an existing API user for this partner
-            user = User.objects.get(
-                email=f"api.{app_key.partner.code}@partner.api",
-                is_active=True
-            )
-        except User.DoesNotExist:
-            # Create a new API user for this partner
-            user = User.objects.create(
-                email=f"api.{app_key.partner.code}@partner.api",
-                first_name=app_key.partner.name,
-                last_name="API",
-                is_active=True,
-                is_verified=True,
-                role='user',
-                is_api_user=True  # This field might need to be added to your User model
-            )
-        
-        # Store the app_key in the user object for later use in views
-        user._api_key = app_key
-        user._partner = app_key.partner
-        
-        return user
-    
-    def log_api_call(self, app_key: AppKey, request: Request):
-        """
-        Log the API call for analytics and monitoring.
-        
-        Args:
-            app_key: The authenticated AppKey instance
-            request: The DRF request object
-        """
-        try:
-            # Extract request information
-            endpoint = request.path
-            method = request.method
-            ip_address = self._get_client_ip(request)
-            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            data = json.loads(request.body)
             
-            # Create usage log entry
-            AppKeyUsageLog.objects.create(
-                app_key=app_key,
-                endpoint=endpoint,
-                method=method,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                status_code=200,  # Will be updated by middleware if available
-                response_time_ms=0,  # Will be updated by middleware if available
-                request_id=getattr(request, 'id', ''),
+            checkout_page = CheckoutPage.objects.create(
+                merchant=request.user.merchant_account,
+                name=data.get('name'),
+                description=data.get('description', ''),
+                amount=data.get('amount'),
+                currency=data.get('currency', 'USD'),
+                logo_url=data.get('logo_url', ''),
+                primary_color=data.get('primary_color', '#007bff'),
+                secondary_color=data.get('secondary_color', '#6c757d'),
+                background_color=data.get('background_color', '#ffffff'),
+                success_url=data.get('success_url', ''),
+                cancel_url=data.get('cancel_url', ''),
+                collect_customer_info=data.get('collect_customer_info', True),
+                custom_css=data.get('custom_css', ''),
+                is_active=data.get('is_active', True)
             )
+            
+            # Create payment method configurations
+            payment_methods = data.get('payment_methods', [])
+            for pm in payment_methods:
+                PaymentMethodConfig.objects.create(
+                    checkout_page=checkout_page,
+                    payment_method=pm.get('payment_method'),
+                    display_name=pm.get('display_name'),
+                    icon_url=pm.get('icon_url', ''),
+                    is_enabled=pm.get('is_enabled', True),
+                    display_order=pm.get('display_order', 0),
+                    config_data=pm.get('config_data', {})
+                )
+            
+            return JsonResponse({
+                'success': True,
+                'checkout_page_id': str(checkout_page.id),
+                'slug': checkout_page.slug,
+                'message': 'Checkout page created successfully'
+            })
+            
         except Exception as e:
-            # Don't fail authentication if logging fails
-            logger.error(f"Failed to log API call: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=400)
     
-    def _get_client_ip(self, request: Request) -> str:
-        """Get the client IP address from the request."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0].strip()
-        else:
-            ip = request.META.get('REMOTE_ADDR', '')
-        return ip
-    
-    def authenticate_header(self, request: Request) -> str:
-        """
-        Return a string to be used as the value of the `WWW-Authenticate`
-        header in a `401 Unauthenticated` response, or `None` if the
-        authentication scheme should return `403 Permission Denied` responses.
-        """
-        return f'{self.keyword} realm="API Key Required"'
+    # GET request - show form
+    return render(request, 'checkout/create_checkout_page.html')
 
 
-class APIKeyOrTokenAuthentication(APIKeyAuthentication):
-    """
-    Authentication class that supports both API keys and JWT tokens.
+@csrf_exempt
+def process_payment(request):
+    """Process payment for a checkout session"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
     
-    This allows endpoints to accept either form of authentication,
-    which is useful during migration periods or for different client types.
-    """
-    
-    def authenticate(self, request: Request):
-        """
-        Try API key authentication first, then fall back to token authentication.
-        """
-        # First try API key authentication
-        result = super().authenticate(request)
-        if result is not None:
-            return result
+    try:
+        data = json.loads(request.body)
+        session_id = data.get('session_id')
         
-        # If API key auth didn't work, we could try other authentication methods
-        # For now, just return None to let other authentication classes try
-        return None
+        if not session_id:
+            return JsonResponse({'error': 'Session ID is required'}, status=400)
+            
+        session = get_object_or_404(CheckoutSession, session_id=session_id)
+        
+        # Check if session has expired
+        if session.expires_at < timezone.now():
+            return JsonResponse({'error': 'Checkout session has expired'}, status=400)
+        
+        # Check if session is already completed
+        if session.status == 'completed':
+            return JsonResponse({'error': 'Payment has already been processed'}, status=400)
+        
+        # Simulate payment processing
+        session.status = 'completed'
+        session.payment_method_used = data.get('payment_method', 'card')
+        session.payment_data = {
+            'transaction_id': str(uuid.uuid4()),
+            'payment_method': data.get('payment_method', 'card'),
+            'processed_at': timezone.now().isoformat(),
+        }
+        session.save()
+        
+        return JsonResponse({
+            'success': True,
+            'transaction_id': session.payment_data['transaction_id'],
+            'redirect_url': session.checkout_page.success_url or '/payment/success/',
+            'message': 'Payment processed successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': f'Payment processing failed: {str(e)}'}, status=500)
 
 
-class APIKeyPermission:
-    """
-    Permission class for API key-based access control.
-    """
+def get_checkout_page_info(request, slug):
+    """Get checkout page information for API"""
+    try:
+        checkout_page = get_object_or_404(CheckoutPage, slug=slug, is_active=True)
+        
+        # Get payment methods
+        payment_methods = PaymentMethodConfig.objects.filter(
+            checkout_page=checkout_page,
+            is_enabled=True
+        ).order_by('display_order')
+        
+        payment_methods_data = [
+            {
+                'payment_method': pm.payment_method,
+                'display_name': pm.display_name,
+                'icon_url': pm.icon_url,
+                'display_order': pm.display_order
+            }
+            for pm in payment_methods
+        ]
+        
+        return JsonResponse({
+            'id': str(checkout_page.id),
+            'name': checkout_page.name,
+            'description': checkout_page.description,
+            'amount': str(checkout_page.amount),
+            'currency': checkout_page.currency,
+            'logo_url': checkout_page.logo_url,
+            'primary_color': checkout_page.primary_color,
+            'secondary_color': checkout_page.secondary_color,
+            'background_color': checkout_page.background_color,
+            'collect_customer_info': checkout_page.collect_customer_info,
+            'payment_methods': payment_methods_data
+        })
+        
+    except CheckoutPage.DoesNotExist:
+        return JsonResponse({'error': 'Checkout page not found'}, status=404)
+
+
+def get_checkout_session(request, session_token):
+    """Get checkout session details"""
+    try:
+        session = get_object_or_404(CheckoutSession, session_id=session_token)
+        
+        return JsonResponse({
+            'session_id': session.session_id,
+            'checkout_page': {
+                'name': session.checkout_page.name,
+                'slug': session.checkout_page.slug
+            },
+            'amount': str(session.amount),
+            'currency': session.currency,
+            'status': session.status,
+            'customer_email': session.customer_email,
+            'expires_at': session.expires_at.isoformat(),
+            'created_at': session.created_at.isoformat()
+        })
+        
+    except CheckoutSession.DoesNotExist:
+        return JsonResponse({'error': 'Session not found'}, status=404)
+
+
+@login_required
+def create_checkout_session(request):
+    """Create a checkout session for a customer"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
     
-    def has_permission(self, request, view):
-        """
-        Check if the request has the required API key permissions.
-        """
-        if not hasattr(request.user, '_api_key'):
-            return False
+    try:
+        data = json.loads(request.body)
+        checkout_page_id = data.get('checkout_page_id')
         
-        app_key = request.user._api_key
+        if not checkout_page_id:
+            return JsonResponse({'error': 'Checkout page ID is required'}, status=400)
+            
+        checkout_page = get_object_or_404(CheckoutPage, id=checkout_page_id)
         
-        # Check if the API key has the required scope for this operation
-        if request.method in ['GET', 'HEAD', 'OPTIONS']:
-            required_scope = 'read'
-        elif request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            required_scope = 'write'
-        else:
-            required_scope = 'admin'
+        # Verify the merchant owns this checkout page
+        if hasattr(request.user, 'merchant_account') and checkout_page.merchant != request.user.merchant_account:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
         
-        return app_key.has_scope(required_scope)
-    
-    def has_object_permission(self, request, view, obj):
-        """
-        Check if the request has permission to access a specific object.
-        """
-        # This can be customized based on your business logic
-        # For example, you might want to ensure that merchants can only
-        # access their own data
-        return self.has_permission(request, view)
+        # Create the checkout session
+        session = CheckoutSession.objects.create(
+            checkout_page=checkout_page,
+            session_id=str(uuid.uuid4()),
+            amount=data.get('amount', checkout_page.amount),
+            currency=data.get('currency', checkout_page.currency),
+            customer_email=data.get('customer_email'),
+            customer_data=data.get('customer_data', {}),
+            expires_at=timezone.now() + timezone.timedelta(hours=24)
+        )
+        
+        return JsonResponse({
+            'session_id': session.session_id,
+            'checkout_url': f'/checkout/{checkout_page.slug}/?session_id={session.session_id}',
+            'expires_at': session.expires_at.isoformat()
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

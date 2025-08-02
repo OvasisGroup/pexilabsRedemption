@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - PexiShop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .product-detail-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            color: #333;
+        }
+        .product-image {
+            height: 400px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 5rem;
+            border-radius: 15px;
+        }
+        .price-display {
+            background: #ff4757;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 2rem;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .navbar {
+            background: rgba(30, 60, 114, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .btn-primary {
+            background: #ff4757;
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .btn-outline-secondary {
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+        .btn-outline-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+            color: white;
+        }
+        .quantity-input {
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid #ff4757;
+        }
+        .stock-badge {
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .stock-badge.low-stock {
+            background: #ffc107;
+            color: #000;
+        }
+        .stock-badge.out-of-stock {
+            background: #dc3545;
+        }
+        .category-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.9rem;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'shop:product_list' %}">
+                <i class="fas fa-store"></i> PexiShop
+            </a>
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <a class="nav-link" href="{% url 'shop:cart' %}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                    </a>
+                    <a class="nav-link" href="#">Hello, {{ user.username }}</a>
+                {% else %}
+                    <a class="nav-link" href="/auth/login/">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{% url 'shop:product_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="product-image">
+                    {% if product.image_url %}
+                        <img src="{{ product.image_url }}" class="img-fluid" alt="{{ product.name }}">
+                    {% else %}
+                        <i class="fas fa-box"></i>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card product-detail-card border-0 shadow-lg">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h1 class="card-title mb-0">{{ product.name }}</h1>
+                            <span class="badge category-badge">{{ product.category }}</span>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="price-display">${{ product.price }}</span>
+                        </div>
+
+                        <div class="mb-4">
+                            {% if product.stock_quantity > 10 %}
+                                <span class="stock-badge">
+                                    <i class="fas fa-check-circle"></i> {{ product.stock_quantity }} in stock
+                                </span>
+                            {% elif product.stock_quantity > 0 %}
+                                <span class="stock-badge low-stock">
+                                    <i class="fas fa-exclamation-triangle"></i> Only {{ product.stock_quantity }} left!
+                                </span>
+                            {% else %}
+                                <span class="stock-badge out-of-stock">
+                                    <i class="fas fa-times-circle"></i> Out of stock
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Description</h5>
+                            <p class="text-muted">{{ product.description }}</p>
+                        </div>
+
+                        {% if user.is_authenticated and product.stock_quantity > 0 %}
+                            <form method="post" action="{% url 'shop:add_to_cart' product.id %}">
+                                {% csrf_token %}
+                                <div class="row mb-3">
+                                    <div class="col-4">
+                                        <label for="quantity" class="form-label">Quantity:</label>
+                                        <input type="number" class="form-control quantity-input" id="quantity" name="quantity" 
+                                               value="1" min="1" max="{{ product.stock_quantity }}" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </form>
+                        {% elif not user.is_authenticated %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <a href="/auth/login/" class="alert-link">Login</a> to add items to cart
+                            </div>
+                        {% else %}
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                <i class="fas fa-times"></i> Out of Stock
+                            </button>
+                        {% endif %}
+
+                        <div class="mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Added on {{ product.created_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
