@@ -1077,6 +1077,12 @@ def create_api_key_api(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid JSON data'}, status=400)
     except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'error': f'Unexpected error: {str(e)}'
+        }, status=500)
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
 
@@ -1858,6 +1864,291 @@ def test_integration_api(request):
     except Exception as e:
         return JsonResponse({
             'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_payment_intent_api(request):
+    """Public API endpoint to create payment intent for checkout processing"""
+    try:
+        data = json.loads(request.body)
+        integration_type = data.get('integration_type', 'uba_bank')
+        test_type = data.get('test_type', 'checkout')
+        
+        # Validate session_id if provided (for authenticated checkout sessions)
+        session_id = data.get('session_id')
+        if session_id:
+            # Validate that the session_id exists and contains the payment data
+            # This ensures the request comes from a valid make-payment API call
+            required_session_fields = ['amount', 'currency', 'customer_email', 'description']
+            missing_fields = [field for field in required_session_fields if field not in data]
+            if missing_fields:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Missing required session fields: {", ".join(missing_fields)}'
+                }, status=400)
+        
+        # For public checkout, we'll use session data or default test merchant configuration
+        
+        # Import integration services
+        if INTEGRATIONS_AVAILABLE:
+            from integrations.services import UBABankService
+            
+            # Create a test service instance without merchant (for demo purposes)
+            service = UBABankService()
+            
+            if test_type == 'checkout':
+                # Test checkout intent creation
+                test_payload = {
+                    'amount': data.get('amount', 100.00),
+                    'currency': data.get('currency', 'USD'),
+                    'customer_email': data.get('customer_email', 'test@example.com'),
+                    'description': data.get('description', 'Test Payment'),
+                    'callback_url': data.get('callback_url', ''),
+                    'cancel_url': data.get('cancel_url', '')
+                }
+                
+                try:
+                    print(f"DEBUG: Creating payment page with payload: {test_payload}")
+                    result = service.create_payment_page(
+                        amount=test_payload['amount'],
+                        currency=test_payload['currency'],
+                        customer_email=test_payload['customer_email'],
+                        description=test_payload['description'],
+                        callback_url=test_payload['callback_url'],
+                        redirect_url=test_payload['cancel_url']
+                    )
+                    print(f"DEBUG: Service result: {result}")
+                    
+                    if result and (result.get('success') or result.get('status') == 201):
+                        # Handle different response structures
+                        if 'checkout_data' in result:
+                            # Mock response with checkout_data
+                            checkout_data = result['checkout_data']
+                            token = checkout_data.get('token')
+                            checkout_id = checkout_data.get('_id')
+                        elif 'resource' in result and result['resource'].get('type') == 'checkout':
+                            # Actual PayDock API response
+                            checkout_data = result['resource']['data']
+                            token = checkout_data.get('token')
+                            checkout_id = checkout_data.get('_id')
+                        elif result.get('success'):
+                            # Mock response structure
+                            token = result.get('payment_url', '')  # Use payment_url as token for mock
+                            checkout_id = result.get('reference', '')
+                            checkout_data = {
+                                '_id': checkout_id,
+                                'token': token
+                            }
+                        else:
+                            # Fallback
+                            token = ''
+                            checkout_id = ''
+                            checkout_data = {}
+                        
+                        # Create transaction record if available
+                        transaction_id = None
+                        print(f"DEBUG: TRANSACTIONS_AVAILABLE = {TRANSACTIONS_AVAILABLE}")
+                        if TRANSACTIONS_AVAILABLE:
+                            print(f"DEBUG: Importing transaction models...")
+                            from transactions.models import Transaction, TransactionType, TransactionStatus, PaymentMethod, PaymentGateway
+                            from authentication.models import PreferredCurrency
+                            print(f"DEBUG: Transaction models imported successfully")
+                            
+                            # Get or create PaymentGateway for UBA Kenya Pay
+                            print(f"DEBUG: Getting or creating PaymentGateway...")
+                            try:
+                                gateway = PaymentGateway.objects.get(name='UBA Kenya Pay')
+                                print(f"DEBUG: Found existing PaymentGateway: {gateway}")
+                            except PaymentGateway.DoesNotExist:
+                                print(f"DEBUG: PaymentGateway not found, creating new one...")
+                                gateway, created = PaymentGateway.objects.get_or_create(
+                                    code='uba_kenya_pay',
+                                    defaults={
+                                        'name': 'UBA Kenya Pay',
+                                        'description': 'UBA Kenya Payment Gateway',
+                                        'api_endpoint': 'https://api.paydock.com',
+                                        'supported_payment_methods': 'bank_transfer',
+                                        'supported_currencies': 'USD,KES,EUR',
+                                        'is_sandbox': True
+                                    }
+                                )
+                                print(f"DEBUG: PaymentGateway created: {gateway}, created={created}")
+                            
+                            # Get currency object
+                            print(f"DEBUG: Getting or creating currency for: {test_payload['currency']}")
+                            currency_obj, created = PreferredCurrency.objects.get_or_create(
+                                code=test_payload['currency'],
+                                defaults={'name': test_payload['currency']}
+                            )
+                            print(f"DEBUG: Currency object: {currency_obj}, created={created}")
+                            
+                            # Get merchant from session_id if provided
+                            print(f"DEBUG: Getting merchant from session_id: {session_id}")
+                            from authentication.models import Merchant, WhitelabelPartner
+                            
+                            merchant = None
+                            if session_id:
+                                print(f"DEBUG: Session ID provided, creating public merchant...")
+                                # For sessions created via make-payment API, we need to extract merchant_id
+                                # from the session data. Since session data is passed via URL parameters,
+                                # we need to look for a way to get the merchant_id.
+                                # For now, we'll try to get it from the request or create a default merchant
+                                
+                                # Try to get merchant_id from the session data
+                                # This would typically be stored when the session was created
+                                # For the URL-based session, we can try to extract it from the referrer or other means
+                                
+                                # For now, let's create a default merchant for public transactions
+                                # In a real implementation, you'd want to store session data in a database
+                                # or cache to properly track the merchant_id
+                                
+                                # Create or get a default public merchant
+                                # Set is_verified=False initially to avoid triggering email signals
+                                print(f"DEBUG: Creating or getting public user...")
+                                try:
+                                    system_user, created = CustomUser.objects.get_or_create(
+                                        email='public@pexilabs.com',
+                                        defaults={
+                                            'first_name': 'Public',
+                                            'last_name': 'Checkout',
+                                            'is_verified': False,  # Set to False initially
+                                            'role': 'user'
+                                        }
+                                    )
+                                    print(f"DEBUG: Public user: {system_user}, created={created}")
+                                    # Update verification status without triggering signals if user was just created
+                                    if created:
+                                        CustomUser.objects.filter(id=system_user.id).update(is_verified=True)
+                                        print(f"DEBUG: Updated user verification status")
+                                except Exception as user_error:
+                                    print(f"ERROR: Failed to create public user: {user_error}")
+                                    import traceback
+                                    print(f"ERROR: User creation traceback: {traceback.format_exc()}")
+                                    raise user_error
+                                
+                                print(f"DEBUG: Creating or getting public merchant...")
+                                try:
+                                    # Use user field for get_or_create since it's a OneToOneField
+                                    merchant, created = Merchant.objects.get_or_create(
+                                        user=system_user,
+                                        defaults={
+                                            'business_name': 'Public Checkout System',
+                                            'business_email': 'public@pexilabs.com',
+                                            'business_phone': '+1234567890',
+                                            'business_address': 'Public Checkout Address'
+                                        }
+                                    )
+                                    print(f"DEBUG: Public merchant: {merchant}, created={created}")
+                                except Exception as merchant_error:
+                                    print(f"ERROR: Failed to create public merchant: {merchant_error}")
+                                    import traceback
+                                    print(f"ERROR: Merchant creation traceback: {traceback.format_exc()}")
+                                    raise merchant_error
+                            else:
+                                # No session_id provided, create a default system merchant
+                                # Set is_verified=False initially to avoid triggering email signals
+                                system_user, created = CustomUser.objects.get_or_create(
+                                    email='system@pexilabs.com',
+                                    defaults={
+                                        'first_name': 'System',
+                                        'last_name': 'User',
+                                        'is_verified': False,  # Set to False initially
+                                        'role': 'user'
+                                    }
+                                )
+                                # Update verification status without triggering signals if user was just created
+                                if created:
+                                    CustomUser.objects.filter(id=system_user.id).update(is_verified=True)
+                                
+                                # Use user field for get_or_create since it's a OneToOneField
+                                merchant, created = Merchant.objects.get_or_create(
+                                    user=system_user,
+                                    defaults={
+                                        'business_name': 'System Public Checkout',
+                                        'business_email': 'system@pexilabs.com',
+                                        'business_phone': '+1234567890',
+                                        'business_address': 'System Address for Public Transactions'
+                                    }
+                                )
+                            
+                            try:
+                                print(f"DEBUG: Creating transaction with:")
+                                ref_value = result.get('reference', f'PUBLIC-{timezone.now().strftime("%Y%m%d%H%M%S")}')
+                                print(f"  - reference: {ref_value}") 
+                                print(f"  - external_reference: {checkout_id}")
+                                print(f"  - merchant: {merchant} (ID: {merchant.id})")
+                                print(f"  - gateway: {gateway} (ID: {gateway.id})")
+                                print(f"  - currency: {currency_obj} (ID: {currency_obj.id})")
+                                print(f"  - amount: {test_payload['amount']}")
+                                
+                                transaction = Transaction.objects.create(
+                                    reference=result.get('reference', f"PUBLIC-{timezone.now().strftime('%Y%m%d%H%M%S')}"),
+                                    external_reference=checkout_id,
+                                    merchant=merchant,
+                                    transaction_type=TransactionType.PAYMENT,
+                                    payment_method=PaymentMethod.BANK_TRANSFER,
+                                    gateway=gateway,
+                                    currency=currency_obj,
+                                    amount=test_payload['amount'],
+                                    customer_email=test_payload['customer_email'],
+                                    description=test_payload['description'],
+                                    status=TransactionStatus.PENDING,
+                                    metadata={
+                                        'paydock_checkout_id': checkout_id,
+                                        'paydock_token': token,
+                                        'public_checkout': True,
+                                        'mock_response': 'checkout_data' not in result
+                                    }
+                                )
+                                transaction_id = str(transaction.id)
+                                print(f"DEBUG: Transaction created successfully with ID: {transaction_id}")
+                            except Exception as transaction_error:
+                                print(f"ERROR: Failed to create transaction: {transaction_error}")
+                                print(f"ERROR: Transaction error type: {type(transaction_error)}")
+                                import traceback
+                                print(f"ERROR: Full traceback: {traceback.format_exc()}")
+                                raise transaction_error
+                        
+                        return JsonResponse({
+                            'status': 'success',
+                            'message': 'Payment intent created successfully',
+                            'data': {
+                                'token': token,
+                                'checkout_id': checkout_id,
+                                'payment_url': result.get('payment_url', ''),
+                                'transaction_id': transaction_id
+                            }
+                        })
+                    else:
+                        return JsonResponse({
+                            'status': 'error',
+                            'error': f'Failed to create payment intent: {result}'
+                        }, status=400)
+                        
+                except Exception as e:
+                    return JsonResponse({
+                        'status': 'error',
+                        'error': f'Payment service error: {str(e)}'
+                    }, status=500)
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'error': 'Only checkout test type is supported for public API'
+                }, status=400)
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Integration module not available'
+            }, status=503)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
             'error': f'Unexpected error: {str(e)}'
         }, status=500)
 

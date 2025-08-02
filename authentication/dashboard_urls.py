@@ -68,6 +68,9 @@ urlpatterns = [
     path('api/notifications/<uuid:notification_id>/dismiss/', dashboard_views.dismiss_notification_api, name='dismiss_notification_api'),
     path('api/notifications/mark-all-read/', dashboard_views.mark_all_notifications_read_api, name='mark_all_notifications_read_api'),
     
+    # Public API endpoints (no authentication required)
+    path('api/public/create-payment-intent/', dashboard_views.create_payment_intent_api, name='create_payment_intent_api'),
+    
     # Webhook endpoints
     path('webhooks/uba-payment/', dashboard_views.uba_payment_webhook, name='uba_payment_webhook'),
 ]

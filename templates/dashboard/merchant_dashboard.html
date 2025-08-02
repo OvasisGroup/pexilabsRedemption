@@ -1886,8 +1886,7 @@ function generateCompleteApiKey(keyId) {
             button.classList.add('bg-green-600');
             
             // Show alert with the complete key
-            alert(`Complete API Key Generated!\n\nPublic Key: ${data.public_key}\nSecret Key: ${data.secret_key}\n\nFull Key: ${data.full_key}\n\nThe cURL command has been updated with the complete key. This secret will not be shown again!`);
-            
+            alert(`Complete API Key Generated`)
         } else {
             button.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Error';
             button.classList.remove('bg-orange-600', 'hover:bg-orange-700');

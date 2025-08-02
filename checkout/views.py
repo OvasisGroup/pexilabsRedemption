@@ -8,6 +8,7 @@ from django.urls import reverse
 import json
 import uuid
 from decimal import Decimal
+from urllib.parse import quote
 
 from .models import CheckoutPage, PaymentMethodConfig, CheckoutSession
 from authentication.api_auth import APIKeyAuthentication
@@ -226,10 +227,10 @@ def make_payment_api(request):
         process_url += f"?session_id={payment_session['session_id']}"
         process_url += f"&amount={payment_session['amount']}"
         process_url += f"&currency={payment_session['currency']}"
-        process_url += f"&customer_email={payment_session['customer_email']}"
-        process_url += f"&description={payment_session['description']}"
-        process_url += f"&callback_url={payment_session['callback_url']}"
-        process_url += f"&cancel_url={payment_session['cancel_url']}"
+        process_url += f"&customer_email={quote(payment_session['customer_email'])}"
+        process_url += f"&description={quote(payment_session['description'])}"
+        process_url += f"&callback_url={quote(payment_session['callback_url'])}"
+        process_url += f"&cancel_url={quote(payment_session['cancel_url'])}"
         
         # Log API usage
         app_key.record_usage()
