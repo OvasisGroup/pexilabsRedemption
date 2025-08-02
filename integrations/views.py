@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 import logging
+import uuid
 
 from .models import (
     Integration,
@@ -56,6 +57,7 @@ from .serializers import (
     IntegrationHealthSerializer
 )
 from .services import UBABankService, UBAAPIException, CyberSourceService, CyberSourceAPIException, CorefyService, CorefyAPIException
+from .uba_usage import UBAUsageService
 from authentication.models import Merchant
 from authentication.api_auth import APIKeyAuthentication, APIKeyOrTokenAuthentication
 
@@ -2389,3 +2391,302 @@ def remove_integration_api(request, integration_id):
     except Exception as e:
         logger.error(f"Error removing integration: {str(e)}")
         return JsonResponse({'error': 'Internal server error'}, status=500)
+
+
+# UBA Checkout API Endpoints for API Key Authentication
+
+@extend_schema(
+    summary="Create UBA checkout intent",
+    description="Create a checkout intent using UBA Kenya Pay integration with API key authentication",
+    request={
+        'type': 'object',
+        'properties': {
+            'currency': {'type': 'string', 'example': 'KES'},
+            'amount': {'type': 'number', 'example': 1000.00},
+            'reference': {'type': 'string', 'example': 'ORDER123'},
+            'customer': {
+                'type': 'object',
+                'properties': {
+                    'billing_address': {
+                        'type': 'object',
+                        'properties': {
+                            'first_name': {'type': 'string'},
+                            'last_name': {'type': 'string'},
+                            'address_line1': {'type': 'string'},
+                            'address_line2': {'type': 'string'},
+                            'address_city': {'type': 'string'},
+                            'address_state': {'type': 'string'},
+                            'address_country': {'type': 'string'},
+                            'address_postcode': {'type': 'string'}
+                        }
+                    },
+                    'email': {'type': 'string', 'format': 'email'},
+                    'phone': {'type': 'string'}
+                }
+            },
+            'version': {'type': 'integer', 'default': 1}
+        },
+        'required': ['currency', 'amount', 'reference', 'customer']
+    },
+    responses={201: OpenApiResponse(description="Checkout intent created successfully")}
+)
+@api_view(['POST'])
+@authentication_classes([APIKeyAuthentication])
+@permission_classes([APIKeyPermission])
+def uba_create_checkout_intent(request):
+    """Create UBA checkout intent for API key authenticated merchants"""
+    try:
+        # Get the API key from the authenticated user
+        app_key = getattr(request.user, '_api_key', None)
+        if not app_key:
+            return Response({
+                'success': False,
+                'message': 'API key authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Initialize UBA usage service
+        uba_usage = UBAUsageService(app_key=app_key)
+        
+        # Validate merchant access
+        if not uba_usage.validate_merchant_access():
+            return Response({
+                'success': False,
+                'message': 'Access denied: Invalid API key or insufficient permissions'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Create checkout intent
+        result = uba_usage.create_checkout_intent(request.data)
+        
+        if result['status'] == 200:
+            return Response(result, status=status.HTTP_201_CREATED)
+        else:
+            return Response(result, status=result['status'])
+            
+    except Exception as e:
+        logger.error(f"UBA checkout intent creation error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Get UBA payment status",
+    description="Get payment status from UBA using API key authentication",
+    responses={200: OpenApiResponse(description="Payment status retrieved")}
+)
+@api_view(['GET'])
+@authentication_classes([APIKeyAuthentication])
+@permission_classes([APIKeyPermission])
+def uba_get_payment_status_api(request, payment_id):
+    """Get UBA payment status for API key authenticated merchants"""
+    try:
+        # Get the API key from the authenticated user
+        app_key = getattr(request.user, '_api_key', None)
+        if not app_key:
+            return Response({
+                'success': False,
+                'message': 'API key authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Initialize UBA usage service
+        uba_usage = UBAUsageService(app_key=app_key)
+        
+        # Validate merchant access
+        if not uba_usage.validate_merchant_access():
+            return Response({
+                'success': False,
+                'message': 'Access denied: Invalid API key or insufficient permissions'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get payment status
+        result = uba_usage.get_payment_status(payment_id)
+        
+        return Response(result, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"UBA payment status error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Get UBA integration info",
+    description="Get UBA integration information for the authenticated merchant",
+    responses={200: OpenApiResponse(description="Integration information retrieved")}
+)
+@api_view(['GET'])
+@authentication_classes([APIKeyAuthentication])
+@permission_classes([APIKeyPermission])
+def uba_integration_info(request):
+    """Get UBA integration info for API key authenticated merchants"""
+    try:
+        # Get the API key from the authenticated user
+        app_key = getattr(request.user, '_api_key', None)
+        if not app_key:
+            return Response({
+                'success': False,
+                'message': 'API key authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Initialize UBA usage service
+        uba_usage = UBAUsageService(app_key=app_key)
+        
+        # Get integration info
+        info = uba_usage.get_integration_info()
+        
+        return Response({
+            'success': True,
+            'data': info
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        logger.error(f"UBA integration info error: {str(e)}")
+        return Response({
+            'success': False,
+            'message': 'An unexpected error occurred'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@extend_schema(
+    summary="Create checkout session",
+    description="Create a checkout session similar to the TypeScript controller implementation",
+    request={
+        'type': 'object',
+        'properties': {
+            'merchantId': {'type': 'string'},
+            'amount': {'type': 'number'},
+            'currency': {'type': 'string', 'example': 'KES'},
+            'successUrl': {'type': 'string', 'format': 'uri'},
+            'cancelUrl': {'type': 'string', 'format': 'uri'},
+            'customer': {
+                'type': 'object',
+                'properties': {
+                    'billing_address': {
+                        'type': 'object',
+                        'properties': {
+                            'first_name': {'type': 'string'},
+                            'last_name': {'type': 'string'},
+                            'address_line1': {'type': 'string'},
+                            'address_city': {'type': 'string'},
+                            'address_state': {'type': 'string'},
+                            'address_country': {'type': 'string'},
+                            'address_postcode': {'type': 'string'}
+                        }
+                    },
+                    'email': {'type': 'string', 'format': 'email'},
+                    'phone': {'type': 'string'}
+                }
+            },
+            'cardNumber': {'type': 'string'},
+            'expiryDate': {'type': 'string'},
+            'cvv': {'type': 'string'},
+            'first_name': {'type': 'string'},
+            'last_name': {'type': 'string'}
+        },
+        'required': ['merchantId', 'amount', 'currency', 'customer']
+    },
+    responses={201: OpenApiResponse(description="Checkout session created successfully")}
+)
+@api_view(['POST'])
+@authentication_classes([APIKeyAuthentication])
+@permission_classes([APIKeyPermission])
+def create_checkout_session(request):
+    """Create checkout session similar to TypeScript controller"""
+    try:
+        # Get the API key from the authenticated user
+        app_key = getattr(request.user, '_api_key', None)
+        if not app_key:
+            return Response({
+                'message': 'API key authentication required'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # Validate required fields
+        required_fields = ['merchantId', 'amount', 'currency', 'customer']
+        for field in required_fields:
+            if field not in request.data:
+                return Response({
+                    'message': 'Invalid request parameters',
+                    'errors': [{'field': field, 'message': f'{field} is required'}]
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Initialize UBA usage service
+        uba_usage = UBAUsageService(app_key=app_key)
+        
+        # Validate merchant access
+        if not uba_usage.validate_merchant_access():
+            return Response({
+                'message': 'Access denied: Invalid API key or insufficient permissions'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Generate session ID
+        session_id = str(uuid.uuid4())
+        
+        # Prepare checkout payload
+        checkout_payload = {
+            'currency': request.data['currency'],
+            'amount': float(request.data['amount']),
+            'reference': f"SESSION_{session_id[:8]}",
+            'customer': request.data['customer']
+        }
+        
+        # Create checkout intent
+        result = uba_usage.create_checkout_intent(checkout_payload)
+        
+        if result['status'] == 200:
+            # Construct checkout URL similar to TypeScript implementation
+            protocol = 'https' if request.is_secure() else 'http'
+            host = request.get_host()
+            
+            # Build query parameters
+            customer = request.data['customer']
+            billing_address = customer.get('billing_address', {})
+            
+            query_params = {
+                'first_name': billing_address.get('first_name', ''),
+                'last_name': billing_address.get('last_name', ''),
+                'address_line1': billing_address.get('address_line1', ''),
+                'address_city': billing_address.get('address_city', ''),
+                'address_state': billing_address.get('address_state', ''),
+                'address_country': billing_address.get('address_country', ''),
+                'address_postcode': billing_address.get('address_postcode', ''),
+                'email': customer.get('email', ''),
+                'phone': customer.get('phone', ''),
+                'currency': request.data['currency'],
+                'amount': request.data['amount'],
+                'merchantId': request.data['merchantId']
+            }
+            
+            # Add optional card details if provided
+            if 'cardNumber' in request.data:
+                query_params['cardNumber'] = request.data['cardNumber']
+            if 'expiryDate' in request.data:
+                query_params['expiryDate'] = request.data['expiryDate']
+            if 'cvv' in request.data:
+                query_params['cvv'] = request.data['cvv']
+            if 'first_name' in request.data and 'last_name' in request.data:
+                query_params['cardholderName'] = f"{request.data['first_name']} {request.data['last_name']}"
+            
+            # Build query string
+            query_string = '&'.join([f"{k}={v}" for k, v in query_params.items() if v])
+            checkout_url = f"{protocol}://{host}/api/payments/checkout/{session_id}?{query_string}"
+            
+            return Response({
+                'sessionId': session_id,
+                'checkoutUrl': checkout_url,
+                'ubaResponse': result
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'message': 'Error creating the session',
+                'error': result.get('error', 'Unknown error')
+            }, status=result['status'])
+            
+    except Exception as e:
+        logger.error(f"Checkout session creation error: {str(e)}")
+        return Response({
+            'message': 'Error creating the session',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

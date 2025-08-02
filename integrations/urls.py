@@ -24,6 +24,12 @@ urlpatterns = [
     path('uba/webhook/', views.uba_webhook_handler, name='uba-webhook'),
     path('uba/test-connection/', views.uba_test_connection, name='uba-test-connection'),
     
+    # UBA API Key endpoints (for merchant API key authentication)
+    path('uba/api/checkout-intent/', views.uba_create_checkout_intent, name='uba-api-checkout-intent'),
+    path('uba/api/payment-status/<str:payment_id>/', views.uba_get_payment_status_api, name='uba-api-payment-status'),
+    path('uba/api/integration-info/', views.uba_integration_info, name='uba-api-integration-info'),
+    path('api/checkout/session/', views.create_checkout_session, name='api-checkout-session'),
+    
     # CyberSource specific endpoints
     path('cybersource/payment/', views.cybersource_create_payment, name='cybersource-create-payment'),
     path('cybersource/capture/', views.cybersource_capture_payment, name='cybersource-capture-payment'),

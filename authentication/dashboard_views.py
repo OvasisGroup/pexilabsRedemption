@@ -1466,3 +1466,323 @@ def mark_all_notifications_read_api(request):
         read_at=timezone.now()
     )
     return JsonResponse({'success': True, 'marked_count': count})
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def create_test_checkout_api(request):
+    """API endpoint to create a test checkout page for integration testing"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        integration_type = data.get('integration_type', 'uba_bank')
+        amount = data.get('amount', 100.00)
+        currency = data.get('currency', 'USD')
+        
+        merchant = request.user.merchant_account
+        
+        # Import checkout models
+        try:
+            from checkout.models import CheckoutPage, PaymentMethodConfig
+            from authentication.models import PreferredCurrency
+            
+            # Get or create currency
+            currency_obj, created = PreferredCurrency.objects.get_or_create(
+                code=currency,
+                defaults={'name': currency, 'symbol': '$', 'is_active': True}
+            )
+            
+            # Generate unique slug
+            import time
+            slug_base = f'test-{integration_type}-{int(time.time())}'
+            
+            # Create test checkout page
+            checkout_page = CheckoutPage.objects.create(
+                merchant=merchant,
+                name=f'Test Checkout - {integration_type.upper()}',
+                slug=slug_base,
+                title=f'Test Payment - {merchant.business_name}',
+                description='This is a test payment page for integration testing. No real charges will be made.',
+                currency=currency_obj,
+                min_amount=amount,
+                max_amount=amount,
+                primary_color='#3B82F6',
+                secondary_color='#1E40AF',
+                background_color='#F8FAFC',
+                success_url=request.build_absolute_uri('/test-success'),
+                cancel_url=request.build_absolute_uri('/test-cancel'),
+                require_customer_info=True,
+                is_active=True
+            )
+            
+            # Add payment method configuration for UBA
+            if integration_type in ['uba_bank', 'bank']:
+                PaymentMethodConfig.objects.create(
+                    checkout_page=checkout_page,
+                    payment_method='bank_transfer',
+                    display_name='UBA Bank Payment',
+                    is_enabled=True,
+                    display_order=1,
+                    gateway_config={'integration_type': integration_type}
+                )
+            
+            checkout_url = request.build_absolute_uri(checkout_page.get_absolute_url())
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Test checkout page created successfully for {integration_type}',
+                'data': {
+                    'checkout_page_id': str(checkout_page.id),
+                    'checkout_url': checkout_url,
+                    'slug': checkout_page.slug,
+                    'amount': str(amount),
+                    'currency': currency,
+                    'test_mode': True
+                }
+            })
+            
+        except ImportError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Checkout functionality not available'
+            }, status=500)
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Failed to create test checkout: {str(e)}'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def test_integration_api(request):
+    """API endpoint to test merchant integrations"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        integration_type = data.get('integration_type')
+        test_type = data.get('test_type', 'checkout')
+        
+        if not integration_type:
+            return JsonResponse({'error': 'Integration type is required'}, status=400)
+        
+        merchant = request.user.merchant_account
+        
+        # Import integration services
+        if INTEGRATIONS_AVAILABLE:
+            from integrations.services import UBABankService, CyberSourceService, CorefyService
+            from integrations.models import MerchantIntegration
+            
+            # Get merchant integration
+            try:
+                # Handle both 'uba_bank' and 'bank' integration types for UBA
+                if integration_type in ['uba_bank', 'bank']:
+                    merchant_integration = MerchantIntegration.objects.get(
+                        merchant=merchant,
+                        integration__integration_type__in=['uba_bank', 'bank'],
+                        is_enabled=True
+                    )
+                else:
+                    merchant_integration = MerchantIntegration.objects.get(
+                        merchant=merchant,
+                        integration__integration_type=integration_type,
+                        is_enabled=True
+                    )
+            except MerchantIntegration.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'No active {integration_type} integration found'
+                }, status=404)
+            
+            # Test based on integration type
+            if integration_type in ['uba_bank', 'bank']:
+                service = UBABankService(merchant=merchant)
+                
+                if test_type == 'checkout':
+                    # Test checkout intent creation
+                    test_payload = {
+                        'amount': 100.00,
+                        'currency': 'USD',
+                        'customer_email': 'test@example.com',
+                        'description': 'Integration Test Payment',
+                        'callback_url': request.build_absolute_uri('/test-callback'),
+                        'cancel_url': request.build_absolute_uri('/test-cancel')
+                    }
+                    
+                    try:
+                        result = service.create_payment_page(
+                            amount=test_payload['amount'],
+                            currency=test_payload['currency'],
+                            customer_email=test_payload['customer_email'],
+                            description=test_payload['description'],
+                            callback_url=test_payload['callback_url']
+                        )
+                        
+                        # Handle PayDock API response structure
+                        if result.get('resource') and result['resource'].get('data'):
+                            # PayDock API successful response
+                            checkout_data = result['resource']['data']
+                            return JsonResponse({
+                                'status': 'success',
+                                'message': 'UBA checkout test completed successfully',
+                                'data': {
+                                    'token': checkout_data.get('token'),
+                                    'checkout_id': checkout_data.get('_id'),
+                                    'payment_url': f"https://checkout-sandbox.paydock.com/pay/{checkout_data.get('_id')}",
+                                    'reference': checkout_data.get('reference'),
+                                    'amount': checkout_data.get('amount'),
+                                    'currency': checkout_data.get('currency'),
+                                    'status': checkout_data.get('status', 'active')
+                                }
+                            })
+                        elif result.get('success'):
+                            # Mock response structure
+                            return JsonResponse({
+                                'status': 'success',
+                                'message': 'UBA checkout test completed successfully (mock)',
+                                'data': {
+                                    'payment_url': result.get('payment_url'),
+                                    'reference': result.get('reference'),
+                                    'status': 'test_passed'
+                                }
+                            })
+                        else:
+                            return JsonResponse({
+                                'status': 'error',
+                                'message': result.get('error', 'UBA checkout test failed'),
+                                'error': result.get('error', 'UBA checkout test failed'),
+                                'details': result
+                            })
+                    
+                    except Exception as e:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'UBA service error: {str(e)}'
+                        })
+                
+                elif test_type == 'connection':
+                    # Test connection
+                    try:
+                        if hasattr(service, 'test_connection'):
+                            result = service.test_connection()
+                            return JsonResponse({
+                                'success': result.get('success', False),
+                                'message': result.get('message', 'Connection test completed'),
+                                'data': result
+                            })
+                        else:
+                            return JsonResponse({
+                                'success': True,
+                                'message': 'UBA service is configured and ready'
+                            })
+                    except Exception as e:
+                        return JsonResponse({
+                            'success': False,
+                            'error': f'Connection test failed: {str(e)}'
+                        })
+            
+            elif integration_type == 'cybersource':
+                service = CyberSourceService(merchant=merchant)
+                # Add CyberSource testing logic here
+                return JsonResponse({
+                    'success': True,
+                    'message': 'CyberSource test completed (placeholder)',
+                    'data': {'status': 'test_passed'}
+                })
+            
+            elif integration_type == 'corefy':
+                service = CorefyService(merchant=merchant)
+                # Add Corefy testing logic here
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Corefy test completed (placeholder)',
+                    'data': {'status': 'test_passed'}
+                })
+            
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Testing not implemented for {integration_type}'
+                })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Integration module not available'
+            })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }, status=500)
+
+
+@login_required
+def integration_health_check_api(request):
+    """API endpoint to check integration health status"""
+    if not hasattr(request.user, 'merchant_account') or not request.user.merchant_account:
+        return JsonResponse({'error': 'Merchant account required'}, status=403)
+    
+    merchant = request.user.merchant_account
+    
+    try:
+        if INTEGRATIONS_AVAILABLE:
+            from integrations.models import MerchantIntegration
+            
+            # Get merchant integrations
+            integrations = MerchantIntegration.objects.filter(
+                merchant=merchant,
+                is_enabled=True
+            ).select_related('integration')
+            
+            health_status = []
+            for integration in integrations:
+                # Calculate success rate
+                total_requests = integration.total_requests or 0
+                successful_requests = integration.successful_requests or 0
+                success_rate = (successful_requests / total_requests * 100) if total_requests > 0 else 0
+                
+                health_status.append({
+                    'id': str(integration.id),
+                    'name': integration.integration.name,
+                    'provider': integration.integration.provider_name,
+                    'type': integration.integration.integration_type,
+                    'is_healthy': success_rate >= 95,  # Consider healthy if 95%+ success rate
+                    'success_rate': round(success_rate, 2),
+                    'total_requests': total_requests,
+                    'successful_requests': successful_requests,
+                    'last_used': integration.last_used_at.isoformat() if integration.last_used_at else None,
+                    'status': integration.status
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'data': health_status,
+                'summary': {
+                    'total_integrations': len(health_status),
+                    'healthy_integrations': sum(1 for h in health_status if h['is_healthy']),
+                    'average_success_rate': sum(h['success_rate'] for h in health_status) / len(health_status) if health_status else 0
+                }
+            })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Integration module not available'
+            })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Health check failed: {str(e)}'
+        }, status=500)

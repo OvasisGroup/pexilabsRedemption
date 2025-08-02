@@ -372,9 +372,11 @@ ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv
 # INTEGRATION SETTINGS
 # =============================================================================
 
-# UBA Bank Integration Configuration
-UBA_BASE_URL = os.getenv('UBA_BASE_URL', 'https://api-sandbox.ubakenya-pay.com')
-UBA_ACCESS_TOKEN = os.getenv('UBA_ACCESS_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZGM2OTJlYzRkNDNjZWRmYmUzODNhZCIsIm1ldGEiOm51bGwsImlhdCI6MTc0MjQ5ODA5NH0.zhhV3tWp6DwvpLsBTXi4B9qUztbHw_ZLepYEiuHVBRE')
+# UBA Bank Integration Configuration (PayDock API)
+# Note: UBA_ACCESS_TOKEN should be a 40-character PayDock API Secret Key, not a JWT token
+# Get your API Secret Key from PayDock admin portal: https://admin.paydock.com
+UBA_BASE_URL = os.getenv('UBA_BASE_URL', 'https://api-sandbox.paydock.com/v1')
+UBA_ACCESS_TOKEN = os.getenv('UBA_ACCESS_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2QwMjc3OWNhMWFjNjFlMzlkNjYzNiIsIm1ldGEiOm51bGwsImlhdCI6MTc1MzAyMzA5NSwiZXhwIjoxNzkwNDM0MjU4fQ._zUYa1ZuesS6KKVwGjEMIX9kyE3EKj-3Ie7oOKG5PQ4')
 UBA_CONFIGURATION_TEMPLATE_ID = os.getenv('UBA_CONFIGURATION_TEMPLATE_ID', '67dc6492c77feba890450b44')
 UBA_CUSTOMIZATION_TEMPLATE_ID = os.getenv('UBA_CUSTOMIZATION_TEMPLATE_ID', '67e1857d419c65d3259ab827')
 UBA_WEBHOOK_SECRET = os.getenv('UBA_WEBHOOK_SECRET', 'uba_webhook_secret_key_here')

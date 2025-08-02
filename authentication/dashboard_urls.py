@@ -51,6 +51,11 @@ urlpatterns = [
     # API Key API endpoints
     path('api/api-keys/', dashboard_views.create_api_key_api, name='create_api_key_api'),
     path('api/api-keys/list/', dashboard_views.list_api_keys_api, name='list_api_keys_api'),
+    
+    # Integration Testing API endpoints
+    path('api/test-integration/', dashboard_views.test_integration_api, name='test_integration_api'),
+    path('api/create-test-checkout/', dashboard_views.create_test_checkout_api, name='create_test_checkout_api'),
+    path('api/integration-health/', dashboard_views.integration_health_check_api, name='integration_health_check_api'),
     path('api/api-keys/<uuid:key_id>/revoke/', dashboard_views.revoke_api_key_api, name='revoke_api_key_api'),
     path('api/api-keys/<uuid:key_id>/regenerate/', dashboard_views.regenerate_api_key_api, name='regenerate_api_key_api'),
     
