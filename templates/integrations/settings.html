@@ -1,0 +1,841 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-10 animate-fade-in">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Integration Settings</h1>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Manage your payment and service integrations with ease. Connect, configure, and monitor all your business integrations from one central hub.</p>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ integration_stats.total_available }}</h3>
+                        <p class="text-sm font-medium text-gray-600">Available Integrations</p>
+                        <p class="text-xs text-gray-500 mt-1">Ready to configure</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600">
+                        <i class="fas fa-store text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ integration_stats.total_configured }}</h3>
+                        <p class="text-sm font-medium text-gray-600">Configured</p>
+                        <p class="text-xs text-gray-500 mt-1">Setup complete</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-green-500 to-green-600">
+                        <i class="fas fa-cogs text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-1">{{ integration_stats.active_integrations }}</h3>
+                        <p class="text-sm font-medium text-gray-600">Active Now</p>
+                        <p class="text-xs text-gray-500 mt-1">Currently running</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600">
+                        <i class="fas fa-bolt text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-1">{% widthratio integration_stats.active_integrations integration_stats.total_configured 100 %}%</h3>
+                        <p class="text-sm font-medium text-gray-600">Success Rate</p>
+                        <p class="text-xs text-gray-500 mt-1">Performance metric</p>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600">
+                        <i class="fas fa-chart-line text-white text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Validation Status -->
+        <div class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Integration Configuration Status</h2>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-600">Last validated:</span>
+                        <span class="text-sm font-medium text-gray-900">{{ "now"|date:"M d, Y H:i" }}</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- UBA Bank Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">UBA Kenya Pay</h3>
+                            <div class="p-2 rounded-lg bg-blue-100">
+                                <i class="fas fa-university text-blue-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.configured|yesno:'check,times' }} text-{{ validation_status.uba_bank.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.feature_enabled|yesno:'check,times' }} text-{{ validation_status.uba_bank.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.uba_bank.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.uba_bank.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.uba_bank.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CyberSource Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">CyberSource</h3>
+                            <div class="p-2 rounded-lg bg-green-100">
+                                <i class="fas fa-credit-card text-green-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.configured|yesno:'check,times' }} text-{{ validation_status.cybersource.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.feature_enabled|yesno:'check,times' }} text-{{ validation_status.cybersource.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.cybersource.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.cybersource.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.cybersource.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Corefy Status -->
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">Corefy Platform</h3>
+                            <div class="p-2 rounded-lg bg-purple-100">
+                                <i class="fas fa-layer-group text-purple-600"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Configuration:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.configured|yesno:'check,times' }} text-{{ validation_status.corefy.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.configured|yesno:'Complete,Missing' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Feature Flag:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.feature_enabled|yesno:'check,times' }} text-{{ validation_status.corefy.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.feature_enabled|yesno:'Enabled,Disabled' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600">Environment:</span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-{{ validation_status.corefy.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.corefy.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                    {{ validation_status.corefy.sandbox_mode|yesno:'Sandbox,Production' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Global Settings Status -->
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-medium text-gray-900 mb-3">Global Integration Settings</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Health Check:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.health_check_enabled|yesno:'check,times' }} text-{{ validation_status.global_settings.health_check_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.health_check_enabled|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Request Logging:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.request_logging|yesno:'check,times' }} text-{{ validation_status.global_settings.request_logging|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.request_logging|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Response Logging:</span>
+                            <span class="flex items-center">
+                                <i class="fas fa-{{ validation_status.global_settings.response_logging|yesno:'check,times' }} text-{{ validation_status.global_settings.response_logging|yesno:'green,red' }}-500 mr-1"></i>
+                                {{ validation_status.global_settings.response_logging|yesno:'Enabled,Disabled' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-8 animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-lg p-2 border border-gray-100">
+                <nav class="flex space-x-2">
+                    <button id="configured-tab" class="tab-button active flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg">
+                        <i class="fas fa-cogs mr-2"></i>
+                        Configured Integrations
+                    </button>
+                    <button id="available-tab" class="tab-button flex-1 py-3 px-6 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Available Integrations
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Configured Integrations Tab -->
+        <div id="configured-content" class="tab-content animate-fade-in">
+            {% if merchant_integrations %}
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {% for merchant_integration in merchant_integrations %}
+                    <div class="integration-card bg-white rounded-2xl shadow-lg border border-gray-100 p-6 relative overflow-hidden">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center">
+                                <div class="p-2 rounded-lg bg-gray-100">
+                                    {% if merchant_integration.integration.integration_type == 'bank' %}
+                                        <i class="fas fa-university text-blue-600"></i>
+                                    {% elif merchant_integration.integration.integration_type == 'payment_gateway' %}
+                                        <i class="fas fa-credit-card text-green-600"></i>
+                                    {% elif merchant_integration.integration.integration_type == 'sms' %}
+                                        <i class="fas fa-sms text-purple-600"></i>
+                                    {% elif merchant_integration.integration.integration_type == 'email' %}
+                                        <i class="fas fa-envelope text-red-600"></i>
+                                    {% else %}
+                                        <i class="fas fa-plug text-gray-600"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ merchant_integration.integration.name }}</h3>
+                                    <p class="text-sm text-gray-600">{{ merchant_integration.integration.provider_name }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer integration-toggle" 
+                                           data-integration-id="{{ merchant_integration.id }}"
+                                           {% if merchant_integration.is_enabled %}checked{% endif %}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <span class="status-badge status-{{ merchant_integration.status|lower }}">
+                                {% if merchant_integration.status == 'active' %}
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                {% elif merchant_integration.status == 'inactive' %}
+                                    <i class="fas fa-pause-circle mr-1"></i>
+                                {% elif merchant_integration.status == 'error' %}
+                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                {% else %}
+                                    <i class="fas fa-circle mr-1"></i>
+                                {% endif %}
+                                {{ merchant_integration.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="text-sm text-gray-600 mb-4">
+                            <p><strong>Type:</strong> {{ merchant_integration.integration.get_integration_type_display }}</p>
+                            <p><strong>Last Used:</strong> 
+                                {% if merchant_integration.last_used_at %}
+                                    {{ merchant_integration.last_used_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </p>
+                            <p><strong>Success Rate:</strong> 
+                                {% if merchant_integration.total_requests > 0 %}
+                                    {% widthratio merchant_integration.successful_requests merchant_integration.total_requests 100 %}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Validation Status -->
+                            {% if merchant_integration.integration.code == 'uba_kenya_pay' and validation_status.uba_bank %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.configured|yesno:'check,times' }} text-{{ validation_status.uba_bank.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.feature_enabled|yesno:'check,times' }} text-{{ validation_status.uba_bank.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.uba_bank.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.uba_bank.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.uba_bank.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% elif merchant_integration.integration.code == 'cybersource_payment_gateway' and validation_status.cybersource %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.configured|yesno:'check,times' }} text-{{ validation_status.cybersource.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.feature_enabled|yesno:'check,times' }} text-{{ validation_status.cybersource.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.cybersource.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.cybersource.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.cybersource.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% elif merchant_integration.integration.code == 'corefy_payment_platform' and validation_status.corefy %}
+                                <div class="mt-3 p-2 bg-gray-50 rounded-lg">
+                                    <p class="text-xs font-semibold text-gray-700 mb-1">Configuration Status:</p>
+                                    <div class="flex items-center space-x-2 text-xs">
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.configured|yesno:'check,times' }} text-{{ validation_status.corefy.configured|yesno:'green,red' }}-500 mr-1"></i>
+                                            Configured
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.feature_enabled|yesno:'check,times' }} text-{{ validation_status.corefy.feature_enabled|yesno:'green,red' }}-500 mr-1"></i>
+                                            Enabled
+                                        </span>
+                                        <span class="flex items-center">
+                                            <i class="fas fa-{{ validation_status.corefy.sandbox_mode|yesno:'flask,shield-alt' }} text-{{ validation_status.corefy.sandbox_mode|yesno:'yellow,blue' }}-500 mr-1"></i>
+                                            {{ validation_status.corefy.sandbox_mode|yesno:'Sandbox,Production' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button class="configure-btn flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                                    data-integration-id="{{ merchant_integration.integration.id }}"
+                                    data-merchant-integration-id="{{ merchant_integration.id }}">
+                                <i class="fas fa-cog mr-1"></i>
+                                Configure
+                            </button>
+                            <button class="remove-btn bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                                    data-integration-id="{{ merchant_integration.id }}">
+                                <i class="fas fa-trash mr-1"></i>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-plug text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No Integrations Configured</h3>
+                    <p class="text-gray-600 mb-4">Get started by adding your first integration from the available options.</p>
+                    <button id="switch-to-available" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>
+                        Browse Available Integrations
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Available Integrations Tab -->
+        <div id="available-content" class="tab-content hidden animate-fade-in">
+            <div class="mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div class="mb-4 sm:mb-0">
+                        <h2 class="text-xl font-semibold text-gray-900">Available Integrations</h2>
+                        <p class="text-gray-600">Choose from our supported integrations</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <select id="type-filter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">All Types</option>
+                            {% for type_code, type_name in integration_types %}
+                                <option value="{{ type_code }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="search-filter" placeholder="Search integrations..." 
+                               class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="available-integrations">
+                {% for integration in available_integrations %}
+                <div class="integration-card bg-white rounded-xl shadow-sm border border-gray-200 p-6 available-integration" 
+                     data-type="{{ integration.integration_type }}" 
+                     data-name="{{ integration.name|lower }} {{ integration.provider_name|lower }}">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="p-2 rounded-lg bg-gray-100">
+                                {% if integration.integration_type == 'bank' %}
+                                    <i class="fas fa-university text-blue-600"></i>
+                                {% elif integration.integration_type == 'payment_gateway' %}
+                                    <i class="fas fa-credit-card text-green-600"></i>
+                                {% elif integration.integration_type == 'sms' %}
+                                    <i class="fas fa-sms text-purple-600"></i>
+                                {% elif integration.integration_type == 'email' %}
+                                    <i class="fas fa-envelope text-red-600"></i>
+                                {% else %}
+                                    <i class="fas fa-plug text-gray-600"></i>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-semibold text-gray-900">{{ integration.name }}</h3>
+                                <p class="text-sm text-gray-600">{{ integration.provider_name }}</p>
+                            </div>
+                        </div>
+                        {% if integration.is_sandbox %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                                Sandbox
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600 mb-2">{{ integration.description|truncatewords:20 }}</p>
+                        <div class="flex items-center text-xs text-gray-500">
+                            <span class="mr-4">
+                                <i class="fas fa-tag mr-1"></i>
+                                {{ integration.get_integration_type_display }}
+                            </span>
+                            {% if integration.supports_webhooks %}
+                                <span class="mr-4">
+                                    <i class="fas fa-webhook mr-1"></i>
+                                    Webhooks
+                                </span>
+                            {% endif %}
+                            {% if integration.supports_real_time %}
+                                <span>
+                                    <i class="fas fa-bolt mr-1"></i>
+                                    Real-time
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button class="add-integration-btn flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                                data-integration-id="{{ integration.id }}"
+                                data-integration-name="{{ integration.name }}">
+                            <i class="fas fa-plus mr-1"></i>
+                            Add Integration
+                        </button>
+                        {% if integration.provider_documentation %}
+                            <a href="{{ integration.provider_documentation }}" target="_blank" 
+                               class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-lg text-sm transition-colors">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Configure Integration</h3>
+                    <button id="closeModal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="configForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Integration Name</label>
+                        <input type="text" id="integrationName" class="w-full border border-gray-300 rounded-lg px-3 py-2" readonly>
+                    </div>
+                    
+                    <!-- UBA-specific fields -->
+                    <div id="uba-fields" class="hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Access Token</label>
+                            <input type="password" id="accessToken" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your UBA access token">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Configuration ID</label>
+                            <input type="text" id="configurationId" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter configuration ID">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Customization ID</label>
+                            <input type="text" id="customizationId" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter customization ID">
+                        </div>
+                    </div>
+                    
+                    <!-- Generic fields for other integrations -->
+                    <div id="generic-fields">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                            <input type="password" id="apiKey" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API key">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">API Secret</label>
+                            <input type="password" id="apiSecret" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Enter your API secret">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
+                        <select id="environment" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                            <option value="sandbox">Sandbox</option>
+                            <option value="production">Production</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button type="button" id="cancelConfig" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                            Save Configuration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+</div>
+
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const configuredTab = document.getElementById('configured-tab');
+            const availableTab = document.getElementById('available-tab');
+            const configuredContent = document.getElementById('configured-content');
+            const availableContent = document.getElementById('available-content');
+            const switchToAvailable = document.getElementById('switch-to-available');
+            
+            function showConfiguredTab() {
+                configuredTab.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                configuredTab.classList.remove('border-transparent', 'text-gray-500');
+                availableTab.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                availableTab.classList.add('border-transparent', 'text-gray-500');
+                configuredContent.classList.remove('hidden');
+                availableContent.classList.add('hidden');
+            }
+            
+            function showAvailableTab() {
+                availableTab.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                availableTab.classList.remove('border-transparent', 'text-gray-500');
+                configuredTab.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                configuredTab.classList.add('border-transparent', 'text-gray-500');
+                availableContent.classList.remove('hidden');
+                configuredContent.classList.add('hidden');
+            }
+            
+            configuredTab.addEventListener('click', showConfiguredTab);
+            availableTab.addEventListener('click', showAvailableTab);
+            if (switchToAvailable) {
+                switchToAvailable.addEventListener('click', showAvailableTab);
+            }
+            
+            // Search and filter functionality
+            const searchFilter = document.getElementById('search-filter');
+            const typeFilter = document.getElementById('type-filter');
+            const availableIntegrations = document.querySelectorAll('.available-integration');
+            
+            function filterIntegrations() {
+                const searchTerm = searchFilter.value.toLowerCase();
+                const selectedType = typeFilter.value;
+                
+                availableIntegrations.forEach(integration => {
+                    const name = integration.dataset.name;
+                    const type = integration.dataset.type;
+                    
+                    const matchesSearch = name.includes(searchTerm);
+                    const matchesType = !selectedType || type === selectedType;
+                    
+                    if (matchesSearch && matchesType) {
+                        integration.style.display = 'block';
+                    } else {
+                        integration.style.display = 'none';
+                    }
+                });
+            }
+            
+            searchFilter.addEventListener('input', filterIntegrations);
+            typeFilter.addEventListener('change', filterIntegrations);
+            
+            // Modal functionality
+            const configModal = document.getElementById('configModal');
+            const closeModal = document.getElementById('closeModal');
+            const cancelConfig = document.getElementById('cancelConfig');
+            const configForm = document.getElementById('configForm');
+            let currentIntegrationId = null;
+            
+            function showModal(integrationId, integrationName) {
+                currentIntegrationId = integrationId;
+                document.getElementById('integrationName').value = integrationName;
+                
+                // Show/hide fields based on integration type
+                const ubaFields = document.getElementById('uba-fields');
+                const genericFields = document.getElementById('generic-fields');
+                
+                if (integrationName.toLowerCase().includes('uba')) {
+                    ubaFields.classList.remove('hidden');
+                    genericFields.classList.add('hidden');
+                } else {
+                    ubaFields.classList.add('hidden');
+                    genericFields.classList.remove('hidden');
+                }
+                
+                configModal.classList.remove('hidden');
+            }
+            
+            function hideModal() {
+                configModal.classList.add('hidden');
+                configForm.reset();
+                
+                // Reset field visibility
+                document.getElementById('uba-fields').classList.add('hidden');
+                document.getElementById('generic-fields').classList.remove('hidden');
+                
+                // Clear all field values
+                document.getElementById('accessToken').value = '';
+                document.getElementById('configurationId').value = '';
+                document.getElementById('customizationId').value = '';
+                document.getElementById('apiKey').value = '';
+                document.getElementById('apiSecret').value = '';
+                
+                currentIntegrationId = null;
+            }
+            
+            closeModal.addEventListener('click', hideModal);
+            cancelConfig.addEventListener('click', hideModal);
+            
+            // Add integration buttons
+            document.querySelectorAll('.add-integration-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const integrationId = this.dataset.integrationId;
+                    const integrationName = this.dataset.integrationName;
+                    showModal(integrationId, integrationName);
+                });
+            });
+            
+            // Configure integration buttons
+            document.querySelectorAll('.configure-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const integrationId = this.dataset.integrationId;
+                    const integrationName = this.closest('.integration-card').querySelector('h3').textContent;
+                    showModal(integrationId, integrationName);
+                });
+            });
+            
+            // Form submission
+            configForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const integrationName = document.getElementById('integrationName').value;
+                let formData;
+                
+                if (integrationName.toLowerCase().includes('uba')) {
+                    // UBA-specific configuration
+                    formData = {
+                        integration_id: currentIntegrationId,
+                        credentials: {
+                            access_token: document.getElementById('accessToken').value,
+                            configuration_id: document.getElementById('configurationId').value,
+                            customization_id: document.getElementById('customizationId').value
+                        },
+                        configuration: {
+                            environment: document.getElementById('environment').value
+                        }
+                    };
+                } else {
+                    // Generic integration configuration
+                    formData = {
+                        integration_id: currentIntegrationId,
+                        credentials: {
+                            api_key: document.getElementById('apiKey').value,
+                            api_secret: document.getElementById('apiSecret').value
+                        },
+                        configuration: {
+                            environment: document.getElementById('environment').value
+                        }
+                    };
+                }
+                
+                fetch('{% url "integrations:configure-integration-api" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Integration configured successfully!', 'success');
+                        hideModal();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast(data.error || 'Configuration failed', 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('An error occurred', 'error');
+                });
+            });
+            
+            // Toggle integration status
+            document.querySelectorAll('.integration-toggle').forEach(toggle => {
+                toggle.addEventListener('change', function() {
+                    const integrationId = this.dataset.integrationId;
+                    
+                    fetch(`/integrations/api/toggle/${integrationId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            // Update status badge
+                            const card = this.closest('.integration-card');
+                            const statusBadge = card.querySelector('.status-badge');
+                            statusBadge.className = `status-badge status-${data.status.toLowerCase()}`;
+                            statusBadge.innerHTML = `<i class="fas fa-${data.enabled ? 'check' : 'pause'}-circle mr-1"></i>${data.enabled ? 'Active' : 'Inactive'}`;
+                        } else {
+                            showToast(data.error || 'Toggle failed', 'error');
+                            this.checked = !this.checked; // Revert toggle
+                        }
+                    })
+                    .catch(error => {
+                        showToast('An error occurred', 'error');
+                        this.checked = !this.checked; // Revert toggle
+                    });
+                });
+            });
+            
+            // Remove integration
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to remove this integration?')) {
+                        const integrationId = this.dataset.integrationId;
+                        
+                        fetch(`/integrations/api/remove/${integrationId}/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showToast(data.message, 'success');
+                                this.closest('.integration-card').remove();
+                            } else {
+                                showToast(data.error || 'Removal failed', 'error');
+                            }
+                        })
+                        .catch(error => {
+                            showToast('An error occurred', 'error');
+                        });
+                    }
+                });
+            });
+        });
+        
+        // Utility functions
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast bg-${type === 'success' ? 'green' : type === 'error' ? 'red' : 'blue'}-600 text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation' : 'info'}-circle mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.getElementById('toast-container').appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+{% endblock %}

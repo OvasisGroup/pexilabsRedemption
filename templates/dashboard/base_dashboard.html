@@ -133,50 +133,48 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
-            <!-- User Info -->
-            <div class="p-4 border-b border-gray-200">
-                <div class="flex items-center">
-                    <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-indigo-600"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</p>
-                        <p class="text-xs text-gray-500 capitalize">{{ user.role }}</p>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Navigation -->
-            <nav class="mt-4 px-4 custom-scrollbar overflow-y-auto h-full">
+            <nav class="mt-4 px-4 custom-scrollbar overflow-y-auto" style="height: calc(100vh - 4rem);">
                 {% block sidebar_nav %}
-                <div class="space-y-2">
+                <div class="space-y-1">
+                    <!-- Main Dashboard -->
                     <a href="{% url 'dashboard:dashboard_redirect' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                         <i class="fas fa-tachometer-alt mr-3"></i>
                         Dashboard
                     </a>
                     
+                    <!-- Admin Section -->
                     {% if user.role == 'admin' %}
-                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-users mr-3"></i>
-                            Manage Users
+                        <div class="mt-6 mb-2">
+                            <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Administration</h3>
+                        </div>
+                        <a href="{% url 'dashboard:admin_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            Admin Overview
                         </a>
-                        <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <a href="{% url 'dashboard:user_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-users mr-3"></i>
+                            User Management
+                        </a>
+                        <a href="{% url 'dashboard:merchant_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-store mr-3"></i>
-                            Manage Merchants
+                            Merchant Management
                         </a>
                         <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-cog mr-3"></i>
-                            Admin Panel
+                            Django Admin
                         </a>
                     {% elif user.role == 'staff' or user.is_staff %}
+                        <div class="mt-6 mb-2">
+                            <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Staff Tools</h3>
+                        </div>
+                        <a href="{% url 'dashboard:staff_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Staff Dashboard
+                        </a>
                         <a href="{% url 'dashboard:merchant_verifier_dashboard' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-user-check mr-3"></i>
-                            Merchant Verifier
-                        </a>
-                        <a href="/admin/authentication/merchant/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-store mr-3"></i>
-                            Merchants
+                            Merchant Verification
                         </a>
                         <a href="/admin/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-tools mr-3"></i>
@@ -184,15 +182,18 @@
                         </a>
                     {% endif %}
                     
+                    <!-- Merchant Business Section -->
                     {% if user.merchant_account %}
-
+                        <div class="mt-6 mb-2">
+                            <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Business</h3>
+                        </div>
                         <a href="{% url 'dashboard:merchant_transactions' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-credit-card mr-3"></i>
                             Transactions
                         </a>
-                        <a href="{% url 'dashboard:merchant_api_keys' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-key mr-3"></i>
-                            API Keys
+                        <a href="{% url 'payments:create_payment_link' %}" class="flex items-center px-4 py-2 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors font-medium">
+                            <i class="fas fa-link mr-3"></i>
+                            Create Payment Link
                         </a>
                         <a href="{% url 'dashboard:merchant_documents' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                             <i class="fas fa-file-alt mr-3"></i>
@@ -202,72 +203,71 @@
                             <i class="fas fa-university mr-3"></i>
                             Bank Details
                         </a>
-                        {% comment %} <a href="#" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-plug mr-3"></i>
-                            Integrations
-                        </a> {% endcomment %}
                     {% endif %}
                     
+                    <!-- Settings Section -->
+                    <div class="mt-6 mb-2">
+                        <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Settings & Configuration</h3>
+                    </div>
+                    {% if user.merchant_account %}
+                        <a href="{% url 'dashboard:merchant_api_keys' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-key mr-3"></i>
+                            API Keys
+                        </a>
+                    {% endif %}
                     <a href="{% url 'dashboard:merchant_profile' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                         <i class="fas fa-user-circle mr-3"></i>
-                        Profile
+                        Profile Settings
+                    </a>
+                    <a href="{% url 'integrations:integration-settings' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-cog mr-3"></i>
+                        General Settings
                     </a>
                     
-                    <!-- Developer Documentation Section -->
+                    <!-- Integrations Section -->
+                    {% if user.merchant_account %}
+                        <div class="mt-6 mb-2">
+                            <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Integrations</h3>
+                        </div>
+                        <a href="{% url 'integrations:integration-list' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-plug mr-3"></i>
+                            Available Integrations
+                        </a>
+                        <a href="{% url 'integrations:merchant-integration-list-create' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-link mr-3"></i>
+                            My Integrations
+                        </a>
+                        <a href="{% url 'integrations:integration-statistics' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            Integration Analytics
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Documentation Section -->
                     <div class="mt-6 mb-2">
-                        <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Developer Tools</h3>
+                        <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Documentation & Support</h3>
                     </div>
-                    <a href="{% url 'payments:create_payment_link' %}" class="flex items-center px-4 py-2 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors font-semibold">
-    <i class="fas fa-link mr-3"></i>
-    Create Payment Link
-</a>
-                    {% comment %} <a href="{% url 'payments:create_payment_link' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-book mr-3"></i>
-                        Payments
+                    <a href="{% url 'docs:api_explorer' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-flask mr-3"></i>
+                        API Explorer
                     </a>
                     <a href="{% url 'docs:integration_guides' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                         <i class="fas fa-code mr-3"></i>
                         Integration Guides
                     </a>
-                    <a href="{% url 'docs:sdk_documentation' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-cube mr-3"></i>
-                        SDK Documentation
+                    <a href="/api/docs/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-book mr-3"></i>
+                        API Documentation
                     </a>
-                    <a href="{% url 'docs:webhook_testing' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-webhook mr-3"></i>
-                        Webhook Testing
+                    <a href="/contact/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-headset mr-3"></i>
+                        Support Center
                     </a>
-                    <a href="{% url 'docs:api_explorer' %}" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-flask mr-3"></i>
-                        API Explorer
-                    </a> {% endcomment %}
-                    
-                    <a href="#" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-cog mr-3"></i>
-                        Settings
-                    </a>
-                    
-                    <div class="border-t border-gray-200 pt-4 mt-4">
-                        <a href="/api/docs/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-book mr-3"></i>
-                            API Docs
-                        </a>
-                        <a href="/contact/" class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-headset mr-3"></i>
-                            Support
-                        </a>
-                    </div>
                 </div>
                 {% endblock %}
             </nav>
             
-            <!-- Logout Button -->
-            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
-                <a href="{% url 'auth:logout_page' %}" class="flex items-center justify-center w-full px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
-                    Logout
-                </a>
-            </div>
+
         </aside>
         
         <!-- Main Content -->
@@ -333,6 +333,75 @@
                                         class="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                                     >
                                         View all notifications
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Profile Dropdown -->
+                        <div class="relative" id="userProfileDropdown">
+                            <button 
+                                id="userProfileButton"
+                                class="flex items-center space-x-2 p-2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none rounded-lg hover:bg-gray-50"
+                                onclick="toggleUserProfileDropdown()"
+                            >
+                                <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                                    {{ user.get_full_name|first|default:user.email|first|upper }}
+                                </div>
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </button>
+                            
+                            <!-- User Profile Dropdown Menu -->
+                            <div 
+                                id="userProfileMenu"
+                                class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50 hidden"
+                            >
+                                <!-- User Info Header -->
+                                <div class="px-4 py-3 border-b border-gray-200">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white font-medium">
+                                            {{ user.get_full_name|first|default:user.email|first|upper }}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900 truncate">
+                                                {{ user.get_full_name|default:"User" }}
+                                            </p>
+                                            <p class="text-sm text-gray-500 truncate">
+                                                {{ user.email }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Menu Items -->
+                                <div class="py-2">
+                                    <!-- Profile Settings -->
+                                    <a 
+                                        href="{% url 'dashboard:merchant_profile' %}" 
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                    >
+                                        <i class="fas fa-user-circle w-5 h-5 mr-3 text-gray-400"></i>
+                                        Profile Settings
+                                    </a>
+                                    <!-- Documentation -->
+                                    <a 
+                                        href="{% url 'docs:api_explorer' %}" 
+                                        class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                        target="_blank"
+                                    >
+                                        <i class="fas fa-book w-5 h-5 mr-3 text-gray-400"></i>
+                                        API Documentation
+                                    </a>
+                                </div>
+                                
+                                <!-- Logout Section -->
+                                <div class="border-t border-gray-200 py-2">
+                                    <a 
+                                        href="{% url 'auth:logout_page' %}" 
+                                        class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                        <i class="fas fa-sign-out-alt w-5 h-5 mr-3 text-red-500"></i>
+                                        Sign Out
                                     </a>
                                 </div>
                             </div>
@@ -712,6 +781,224 @@
                 console.error('Error loading notification count:', error);
             }
         }
+
+        // User Profile Dropdown Functions
+        let isUserProfileDropdownOpen = false;
+
+        function toggleUserProfileDropdown() {
+            const menu = document.getElementById('userProfileMenu');
+            const button = document.getElementById('userProfileButton');
+            
+            if (isUserProfileDropdownOpen) {
+                menu.classList.add('hidden');
+                isUserProfileDropdownOpen = false;
+            } else {
+                menu.classList.remove('hidden');
+                isUserProfileDropdownOpen = true;
+            }
+        }
+
+        // Close user profile dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('userProfileDropdown');
+            const menu = document.getElementById('userProfileMenu');
+            
+            if (!dropdown.contains(e.target) && isUserProfileDropdownOpen) {
+                menu.classList.add('hidden');
+                isUserProfileDropdownOpen = false;
+            }
+        });
+
+        // Help Modal Functions
+        function openHelpModal() {
+            // Create help modal if it doesn't exist
+            let helpModal = document.getElementById('helpModal');
+            if (!helpModal) {
+                createHelpModal();
+                helpModal = document.getElementById('helpModal');
+            }
+            
+            helpModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHelpModal() {
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal) {
+                helpModal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function createHelpModal() {
+            const modalHTML = `
+                <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+                    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <!-- Modal Header -->
+                        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h2 class="text-xl font-semibold text-gray-900">Help & Support</h2>
+                            <button onclick="closeHelpModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal Content -->
+                        <div class="px-6 py-4">
+                            <!-- Quick Help Section -->
+                            <div class="mb-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-3">Quick Help</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <a href="{% url 'docs:api_explorer' %}" target="_blank" class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-book text-indigo-500 text-xl"></i>
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">API Documentation</h4>
+                                                <p class="text-sm text-gray-500">Complete API reference and guides</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    
+                                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="showContactSupport()">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-headset text-green-500 text-xl"></i>
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">Contact Support</h4>
+                                                <p class="text-sm text-gray-500">Get help from our support team</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="showKeyboardShortcuts()">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-keyboard text-blue-500 text-xl"></i>
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">Keyboard Shortcuts</h4>
+                                                <p class="text-sm text-gray-500">Learn useful shortcuts</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="showSystemStatus()">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-chart-line text-orange-500 text-xl"></i>
+                                            <div>
+                                                <h4 class="font-medium text-gray-900">System Status</h4>
+                                                <p class="text-sm text-gray-500">Check system health and uptime</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- FAQ Section -->
+                            <div class="mb-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-3">Frequently Asked Questions</h3>
+                                <div class="space-y-3">
+                                    <div class="border border-gray-200 rounded-lg">
+                                        <button class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors" onclick="toggleFAQ(1)">
+                                            <span class="font-medium text-gray-900">How do I set up payment integrations?</span>
+                                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="faq-icon-1"></i>
+                                        </button>
+                                        <div class="px-4 pb-3 text-gray-600 hidden" id="faq-content-1">
+                                            Navigate to Integrations → Settings to configure your payment providers. Follow the setup wizard for each integration type.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg">
+                                        <button class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors" onclick="toggleFAQ(2)">
+                                            <span class="font-medium text-gray-900">How do I generate API keys?</span>
+                                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="faq-icon-2"></i>
+                                        </button>
+                                        <div class="px-4 pb-3 text-gray-600 hidden" id="faq-content-2">
+                                            Go to Profile Settings → API Keys to generate and manage your API keys. Make sure to store them securely.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border border-gray-200 rounded-lg">
+                                        <button class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors" onclick="toggleFAQ(3)">
+                                            <span class="font-medium text-gray-900">How do I track transaction status?</span>
+                                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="faq-icon-3"></i>
+                                        </button>
+                                        <div class="px-4 pb-3 text-gray-600 hidden" id="faq-content-3">
+                                            Use the Transactions dashboard to monitor all payment activities. You can filter by status, date, and integration type.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-gray-500">Need more help? Contact our support team.</p>
+                                <button onclick="closeHelpModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function toggleFAQ(faqNumber) {
+            const content = document.getElementById(`faq-content-${faqNumber}`);
+            const icon = document.getElementById(`faq-icon-${faqNumber}`);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function showContactSupport() {
+            alert('Contact Support: support@pexilabs.com\nPhone: +1 (555) 123-4567\nLive Chat: Available 24/7');
+        }
+
+        function showKeyboardShortcuts() {
+            alert('Keyboard Shortcuts:\n\nCtrl/Cmd + K: Quick search\nCtrl/Cmd + /: Toggle help\nEsc: Close modals\nCtrl/Cmd + N: New transaction');
+        }
+
+        function showSystemStatus() {
+            alert('System Status: All systems operational\nUptime: 99.9%\nLast updated: ' + new Date().toLocaleString());
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal && e.target === helpModal) {
+                closeHelpModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Close modals with Escape key
+            if (e.key === 'Escape') {
+                closeHelpModal();
+                
+                // Close dropdowns
+                if (isNotificationDropdownOpen) {
+                    document.getElementById('notificationMenu').classList.add('hidden');
+                    isNotificationDropdownOpen = false;
+                }
+                if (isUserProfileDropdownOpen) {
+                    document.getElementById('userProfileMenu').classList.add('hidden');
+                    isUserProfileDropdownOpen = false;
+                }
+            }
+            
+            // Open help with Ctrl/Cmd + /
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                openHelpModal();
+            }
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

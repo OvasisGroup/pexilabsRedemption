@@ -4,7 +4,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 import uuid
 import json
-import secrets
 from decimal import Decimal
 from datetime import timedelta
 from cryptography.fernet import Fernet
@@ -24,6 +23,21 @@ class IntegrationType(models.TextChoices):
     ACCOUNTING = 'accounting', 'Accounting Software'
     CRM = 'crm', 'Customer Relationship Management'
     ANALYTICS = 'analytics', 'Analytics Platform'
+    # Specific provider types
+    UBA_BANK = 'uba_bank', 'UBA Bank Integration'
+    CYBERSOURCE = 'cybersource', 'CyberSource Payment Gateway'
+    COREFY = 'corefy', 'Corefy Payment Platform'
+    STRIPE = 'stripe', 'Stripe Payment Gateway'
+    PAYPAL = 'paypal', 'PayPal Integration'
+    FLUTTERWAVE = 'flutterwave', 'Flutterwave Payment Gateway'
+    PAYSTACK = 'paystack', 'Paystack Payment Gateway'
+    MPESA = 'mpesa', 'M-Pesa Mobile Money'
+    BLOCKCHAIN = 'blockchain', 'Blockchain Integration'
+    AI_SERVICE = 'ai_service', 'AI/ML Service'
+    LOGISTICS = 'logistics', 'Logistics Provider'
+    SOCIAL_MEDIA = 'social_media', 'Social Media Platform'
+    MESSAGING = 'messaging', 'Messaging Service'
+    CUSTOM_API = 'custom_api', 'Custom API Integration'
     OTHER = 'other', 'Other Integration'
 
 
@@ -401,6 +415,108 @@ class BankIntegration(models.Model):
             return self.operating_hours_start <= current_time <= self.operating_hours_end
         
         return True  # If no hours specified, assume 24/7
+
+
+class IntegrationProvider(models.Model):
+    """Model for specific integration provider configurations"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    integration = models.OneToOneField(
+        Integration,
+        on_delete=models.CASCADE,
+        related_name='provider_config'
+    )
+    
+    # Provider-specific configuration
+    provider_config = models.JSONField(
+        default=dict,
+        help_text='Provider-specific configuration and capabilities'
+    )
+    
+    # API endpoints configuration
+    endpoints = models.JSONField(
+        default=dict,
+        help_text='API endpoints mapping for different operations'
+    )
+    
+    # Supported operations
+    supported_operations = models.JSONField(
+        default=list,
+        help_text='List of supported operations for this provider'
+    )
+    
+    # Fee structure
+    fee_structure = models.JSONField(
+        default=dict,
+        help_text='Fee structure for different operations'
+    )
+    
+    # Limits and constraints
+    limits = models.JSONField(
+        default=dict,
+        help_text='Transaction limits and constraints'
+    )
+    
+    # Webhook configuration
+    webhook_config = models.JSONField(
+        default=dict,
+        help_text='Webhook configuration and event types'
+    )
+    
+    # Environment-specific settings
+    sandbox_config = models.JSONField(
+        default=dict,
+        help_text='Sandbox environment specific configuration'
+    )
+    production_config = models.JSONField(
+        default=dict,
+        help_text='Production environment specific configuration'
+    )
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Integration Provider'
+        verbose_name_plural = 'Integration Providers'
+        ordering = ['integration__provider_name']
+    
+    def __str__(self):
+        return f"{self.integration.provider_name} - {self.integration.name} Config"
+    
+    def get_endpoint(self, operation):
+        """Get endpoint URL for specific operation"""
+        return self.endpoints.get(operation)
+    
+    def supports_operation(self, operation):
+        """Check if provider supports specific operation"""
+        return operation in self.supported_operations
+    
+    def get_fee_for_operation(self, operation, amount=None):
+        """Calculate fee for specific operation"""
+        fee_config = self.fee_structure.get(operation, {})
+        if not fee_config:
+            return Decimal('0.00')
+        
+        fixed_fee = Decimal(str(fee_config.get('fixed', '0.00')))
+        percentage = Decimal(str(fee_config.get('percentage', '0.00')))
+        
+        if amount and percentage > 0:
+            percentage_fee = amount * (percentage / 100)
+            return fixed_fee + percentage_fee
+        
+        return fixed_fee
+    
+    def get_limit(self, limit_type):
+        """Get specific limit value"""
+        return self.limits.get(limit_type)
+    
+    def get_config_for_environment(self, is_sandbox=True):
+        """Get configuration for specific environment"""
+        if is_sandbox:
+            return {**self.provider_config, **self.sandbox_config}
+        return {**self.provider_config, **self.production_config}
 
 
 class IntegrationAPICall(models.Model):

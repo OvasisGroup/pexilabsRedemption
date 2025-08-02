@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'integrations'
+
 urlpatterns = [
     # Integration management
     path('', views.IntegrationListView.as_view(), name='integration-list'),
@@ -21,6 +23,12 @@ urlpatterns = [
     path('uba/bill-payment/', views.uba_bill_payment, name='uba-bill-payment'),
     path('uba/webhook/', views.uba_webhook_handler, name='uba-webhook'),
     path('uba/test-connection/', views.uba_test_connection, name='uba-test-connection'),
+    
+    # UBA API Key endpoints (for merchant API key authentication)
+    path('uba/api/checkout-intent/', views.uba_create_checkout_intent, name='uba-api-checkout-intent'),
+    path('uba/api/payment-status/<str:payment_id>/', views.uba_get_payment_status_api, name='uba-api-payment-status'),
+    path('uba/api/integration-info/', views.uba_integration_info, name='uba-api-integration-info'),
+    path('api/checkout/session/', views.create_checkout_session, name='api-checkout-session'),
     
     # CyberSource specific endpoints
     path('cybersource/payment/', views.cybersource_create_payment, name='cybersource-create-payment'),
@@ -48,10 +56,24 @@ urlpatterns = [
     # Statistics and monitoring
     path('stats/', views.integration_stats, name='integration-stats'),
     path('health/', views.integration_health, name='integration-health'),
+    
+    # Enhanced Integration Management
+    path('providers/', views.integration_providers_list, name='integration-providers-list'),
+    path('providers/<uuid:integration_id>/', views.integration_provider_detail, name='integration-provider-detail'),
+    path('configure/<uuid:integration_id>/', views.configure_merchant_integration, name='configure-merchant-integration'),
+    path('statistics/', views.integration_statistics, name='integration-statistics'),
+    
+    # Utility endpoints
     path('type-choices/', views.integration_type_choices, name='integration-type-choices'),
     path('status-choices/', views.integration_status_choices, name='integration-status-choices'),
     
-    # API calls and webhooks log
+    # API calls and webhooks
     path('api-calls/', views.IntegrationAPICallListView.as_view(), name='api-calls-list'),
     path('webhooks/', views.IntegrationWebhookListView.as_view(), name='webhooks-list'),
+    
+    # Settings and configuration
+    path('settings/', views.integration_settings_view, name='integration-settings'),
+    path('api/configure/', views.configure_integration_api, name='configure-integration-api'),
+    path('api/toggle/<uuid:integration_id>/', views.toggle_integration_api, name='toggle-integration-api'),
+    path('api/remove/<uuid:integration_id>/', views.remove_integration_api, name='remove-integration-api'),
 ]

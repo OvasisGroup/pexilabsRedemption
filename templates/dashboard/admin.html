@@ -170,7 +170,13 @@
             <!-- User Growth Chart -->
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">User Growth (Last 7 Days)</h3>
-                <canvas id="userGrowthChart" width="400" height="200"></canvas>
+                <div id="chartContainer">
+                    <canvas id="userGrowthChart" width="400" height="200"></canvas>
+                    <div id="chartError" style="display: none;" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                        <p>Chart temporarily unavailable</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Quick Actions -->
@@ -252,41 +258,143 @@
         </div>
     </div>
 
+    <!-- Chart Data -->
+    <script id="user-growth-data" type="application/json">
+    {
+        "labels": {{ user_labels|safe }},
+        "data": {{ user_data|safe }}
+    }
+    </script>
+
     <!-- Chart Script -->
     <script>
-        // User Growth Chart
-        const ctx = document.getElementById('userGrowthChart').getContext('2d');
-        const userGrowthChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ user_labels|safe }},
-                datasets: [{
-                    label: 'New Users',
-                    data: {{ user_data|safe }},
-                    borderColor: 'rgb(99, 102, 241)',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Admin dashboard chart initialization started');
+        
+        function showChartError() {
+            const canvas = document.getElementById('userGrowthChart');
+            const errorDiv = document.getElementById('chartError');
+            if (canvas) canvas.style.display = 'none';
+            if (errorDiv) errorDiv.style.display = 'block';
+        }
+        
+        // Set a timeout to prevent infinite loops
+        const chartTimeout = setTimeout(() => {
+            console.error('Chart initialization timeout');
+            showChartError();
+        }, 5000);
+        
+        try {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded');
+                showChartError();
+                return;
+            }
+            
+            // Get chart data
+            const chartDataElement = document.getElementById('user-growth-data');
+            if (!chartDataElement) {
+                console.error('Chart data element not found');
+                showChartError();
+                return;
+            }
+            
+            let chartData;
+            try {
+                chartData = JSON.parse(chartDataElement.textContent);
+                console.log('Chart data parsed:', chartData);
+            } catch (e) {
+                console.error('Failed to parse chart data:', e);
+                showChartError();
+                return;
+            }
+            
+            // Validate data
+            if (!chartData.labels || !chartData.data || !Array.isArray(chartData.labels) || !Array.isArray(chartData.data)) {
+                console.error('Invalid chart data format:', chartData);
+                showChartError();
+                return;
+            }
+            
+            // Limit data points to prevent infinite loops
+            const maxDataPoints = 7; // Only last 7 days
+            const labels = chartData.labels.slice(0, maxDataPoints);
+            const data = chartData.data.slice(0, maxDataPoints);
+            
+            console.log('Final chart data - Labels:', labels, 'Data:', data);
+            
+            // User Growth Chart
+            const ctx = document.getElementById('userGrowthChart');
+            if (ctx) {
+                console.log('Creating chart...');
+                
+                const chart = new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'New Users',
+                            data: data,
+                            borderColor: 'rgb(99, 102, 241)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.3,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 800 // Limit animation duration
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: Math.max(...data, 10) + 2, // Set a reasonable max
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    maxTicksLimit: 7
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: 'white',
+                                bodyColor: 'white'
+                            }
                         }
                     }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
+                });
+                
+                console.log('Chart created successfully');
+                clearTimeout(chartTimeout);
+                
+            } else {
+                console.error('Chart canvas element not found');
+                showChartError();
             }
-        });
+        } catch (e) {
+            console.error('Error in chart initialization:', e);
+            showChartError();
+            clearTimeout(chartTimeout);
+        }
+    });
     </script>
 </body>
 </html>

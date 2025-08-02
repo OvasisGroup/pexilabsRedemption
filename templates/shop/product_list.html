@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Products</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            background: white;
+            color: #333;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .product-image {
+            height: 250px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        .price-tag {
+            background: #ff4757;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .navbar {
+            background: rgba(30, 60, 114, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .btn-primary {
+            background: #ff4757;
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: #ff3742;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+        .btn-add-cart {
+            background: #ff4757;
+            border: none;
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .btn-add-cart:hover {
+            background: #ff3742;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(255, 71, 87, 0.4);
+            color: white;
+        }
+        .filters-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 15px;
+        }
+        .page-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .pagination .page-link {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 10px;
+            margin: 0 2px;
+        }
+        .pagination .page-link:hover {
+            background: #ff4757;
+            border-color: #ff4757;
+            color: white;
+        }
+        .pagination .page-item.active .page-link {
+            background: #ff4757;
+            border-color: #ff4757;
+        }
+        .category-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'shop:product_list' %}">
+                <i class="fas fa-store"></i> PexiShop
+            </a>
+            <div class="navbar-nav ms-auto">
+                {% if user.is_authenticated %}
+                    <a class="nav-link" href="{% url 'shop:cart' %}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                    </a>
+                    <a class="nav-link" href="#">Hello, {{ user.username }}</a>
+                {% else %}
+                    <a class="nav-link" href="/auth/login/">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="page-header text-center">
+                    <h1 class="display-4 mb-3">🎮 PexiPay Gaming Store</h1>
+                    <p class="lead mb-2">Discover amazing gaming products at great prices</p>
+                    <p class="mb-0">{{ total_products }} products available</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card filters-card border-0 shadow-sm">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <label for="search" class="form-label">Search Products</label>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       value="{{ current_search }}" placeholder="Search by name or description...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">All Categories</option>
+                                    {% for value, label in categories %}
+                                        <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="price_min" class="form-label">Min Price</label>
+                                <input type="number" class="form-control" id="price_min" name="price_min" 
+                                       value="{{ current_price_min }}" placeholder="$0" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="price_max" class="form-label">Max Price</label>
+                                <input type="number" class="form-control" id="price_max" name="price_max" 
+                                       value="{{ current_price_max }}" placeholder="$999" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="sort" class="form-label">Sort By</label>
+                                <select class="form-select" id="sort" name="sort">
+                                    <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name A-Z</option>
+                                    <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                    <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                                    <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        {% if current_search or current_category or current_price_min or current_price_max %}
+                            <div class="mt-3">
+                                <a href="{% url 'shop:product_list' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-times"></i> Clear Filters
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card product-card h-100 shadow-sm">
+                        <div class="product-image">
+                            {% if product.image_url %}
+                                <img src="{{ product.image_url }}" class="card-img-top" alt="{{ product.name }}">
+                            {% else %}
+                                <i class="fas fa-box"></i>
+                            {% endif %}
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title mb-0">{{ product.name }}</h5>
+                                <span class="badge category-badge">{{ product.category }}</span>
+                            </div>
+                            <p class="card-text text-muted flex-grow-1">{{ product.description|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="price-tag">${{ product.price }}</span>
+                                <small class="text-muted">
+                                    <i class="fas fa-boxes"></i> {{ product.stock_quantity }} in stock
+                                </small>
+                            </div>
+                            <div class="mt-3 d-flex gap-2">
+                                <form method="post" action="{% url 'shop:add_to_cart' product.id %}" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <input type="hidden" name="quantity" value="1">
+                                    {% if product.stock_quantity > 0 %}
+                                        <button type="submit" class="btn btn-add-cart w-100">
+                                            <i class="fas fa-cart-plus"></i> Add to Cart
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-secondary w-100" disabled>
+                                            <i class="fas fa-times"></i> Out of Stock
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                <a href="{% url 'shop:product_detail' product.id %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+                        <h3 class="text-muted">No products available</h3>
+                        <p class="text-muted">Check back later for new products!</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if products.has_other_pages %}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <nav aria-label="Product pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if products.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if current_search %}search={{ current_search }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_price_min %}price_min={{ current_price_min }}&{% endif %}{% if current_price_max %}price_max={{ current_price_max }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page=1">
+                                        <i class="fas fa-angle-double-left"></i> First
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if current_search %}search={{ current_search }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_price_min %}price_min={{ current_price_min }}&{% endif %}{% if current_price_max %}price_max={{ current_price_max }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ products.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i> Previous
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in products.paginator.page_range %}
+                                {% if products.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?{% if current_search %}search={{ current_search }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_price_min %}price_min={{ current_price_min }}&{% endif %}{% if current_price_max %}price_max={{ current_price_max }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if products.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if current_search %}search={{ current_search }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_price_min %}price_min={{ current_price_min }}&{% endif %}{% if current_price_max %}price_max={{ current_price_max }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ products.next_page_number }}">
+                                        Next <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if current_search %}search={{ current_search }}&{% endif %}{% if current_category %}category={{ current_category }}&{% endif %}{% if current_price_min %}price_min={{ current_price_min }}&{% endif %}{% if current_price_max %}price_max={{ current_price_max }}&{% endif %}{% if current_sort %}sort={{ current_sort }}&{% endif %}page={{ products.paginator.num_pages }}">
+                                        Last <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Showing {{ products.start_index }} to {{ products.end_index }} of {{ products.paginator.count }} products
+                        </small>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -22,6 +22,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,12 +35,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_8-^e_9e42f-yh!ca7g71jbr%q-5q)#908waj-ue#()pn)i)gs'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-_8-^e_9e42f-yh!ca7g71jbr%q-5q)#908waj-ue#()pn)i)gs')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'testserver,localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -50,15 +54,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'import_export',
-    # 'rest_framework_simplejwt',
-    # 'corsheaders',
-    # 'drf_spectacular',  # Temporarily commented out
-    # 'django_filters',
+    'corsheaders',  # CORS headers for API access
+    'drf_spectacular',  # Re-enabled for API documentation
+    'django_filters',
     'authentication',
     'transactions',  # Re-enabled
-    # 'integrations',  # Temporarily disabled due to cryptography import
+    'integrations',  # Re-enabled for integration settings
     'payments',  # Payment processing app
     'checkout',  # Checkout page app
+    'shop',  # Shop app for products and cart
     'widget_tweaks',
 ]
 
@@ -100,21 +104,14 @@ WSGI_APPLICATION = 'pexilabs.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pexilabs',
-        'USER': 'postgres',
-        'PASSWORD': 'omondi13',
-        'HOST': 'localhost',
-        'PORT': '5433',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.getenv('DB_USER', ''),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', ''),
+        'PORT': os.getenv('DB_PORT', ''),
     }
 }
 
@@ -132,7 +129,7 @@ AUTHENTICATION_BACKENDS = [
 
 # REST Framework Configuration
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': None,  # Disable schema generation since drf_spectacular is not available
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
@@ -272,16 +269,11 @@ SIMPLE_JWT = {
 
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-]
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080').split(',')
 
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = os.getenv('CORS_ALLOW_CREDENTIALS', 'True').lower() == 'true'
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
+CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', str(DEBUG)).lower() == 'true'  # Only allow all origins in development
 
 
 # # Email Configuration
@@ -294,25 +286,25 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 # DEFAULT_FROM_EMAIL = 'ayaraerick@gmail.com'
 
 # Email Configuration (Zoho Mail)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.zoho.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'info@pexipay.com'
-EMAIL_HOST_PASSWORD = 'EMAbNtLjkuy2'
-DEFAULT_FROM_EMAIL = 'info@pexipay.com'
-SERVER_EMAIL = 'info@pexipay.com'
-EMAIL_TIMEOUT = 60
-EMAIL_DEBUG = True 
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.zoho.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'info@pexipay.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'EMAbNtLjkuy2')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'info@pexipay.com')
+SERVER_EMAIL = os.getenv('SERVER_EMAIL', 'info@pexipay.com')
+EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '60'))
+EMAIL_DEBUG = os.getenv('EMAIL_DEBUG', 'True').lower() == 'true' 
 
 # Additional settings
-X_FRAME_OPTIONS = 'DENY'
+X_FRAME_OPTIONS = os.getenv('X_FRAME_OPTIONS', 'DENY')
 
 # Session Configuration
-SESSION_COOKIE_AGE = 1209600  # 2 weeks
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '1209600'))  # 2 weeks
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+SESSION_COOKIE_HTTPONLY = os.getenv('SESSION_COOKIE_HTTPONLY', 'True').lower() == 'true'
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
 
 
 # Password Validation
@@ -338,33 +330,33 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'en-us')
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = os.getenv('TIME_ZONE', 'UTC')
 
-USE_I18N = True
+USE_I18N = os.getenv('USE_I18N', 'True').lower() == 'true'
 
-USE_TZ = True
+USE_TZ = os.getenv('USE_TZ', 'True').lower() == 'true'
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = os.getenv('STATIC_URL', 'static/')
+STATIC_ROOT = BASE_DIR / os.getenv('STATIC_ROOT', 'staticfiles')
 
 # Media files (user uploads)
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = os.getenv('MEDIA_URL', 'media/')
+MEDIA_ROOT = BASE_DIR / os.getenv('MEDIA_ROOT', 'media')
 
 # File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', str(10 * 1024 * 1024)))  # 10MB
+FILE_UPLOAD_PERMISSIONS = int(os.getenv('FILE_UPLOAD_PERMISSIONS', '0o644'), 8)
 
 # Security settings for file uploads
-SECURE_FILE_UPLOADS = True
-ALLOWED_FILE_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx']
+SECURE_FILE_UPLOADS = os.getenv('SECURE_FILE_UPLOADS', 'True').lower() == 'true'
+ALLOWED_FILE_EXTENSIONS = os.getenv('ALLOWED_FILE_EXTENSIONS', '.pdf,.jpg,.jpeg,.png,.doc,.docx').split(',')
 
 
 # Default primary key field type
@@ -374,15 +366,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Encryption settings for sensitive data
 # Generate encryption key for development (use environment variable in production)
-ENCRYPTION_KEY = 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg='  # This is base64 encoded
+ENCRYPTION_KEY = os.getenv('ENCRYPTION_KEY', 'ZmDfcTF7_60GrrY167zsiPd67pEvs0aGOv2oasOM1Pg=')  # This is base64 encoded
 
 # =============================================================================
 # INTEGRATION SETTINGS
 # =============================================================================
 
-# UBA Bank Integration Configuration
-UBA_BASE_URL = os.getenv('UBA_BASE_URL', 'https://api-sandbox.ubakenya-pay.com')
-UBA_ACCESS_TOKEN = os.getenv('UBA_ACCESS_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZGM2OTJlYzRkNDNjZWRmYmUzODNhZCIsIm1ldGEiOm51bGwsImlhdCI6MTc0MjQ5ODA5NH0.zhhV3tWp6DwvpLsBTXi4B9qUztbHw_ZLepYEiuHVBRE')
+# UBA Bank Integration Configuration (PayDock API)
+# Note: UBA_ACCESS_TOKEN should be a 40-character PayDock API Secret Key, not a JWT token
+# Get your API Secret Key from PayDock admin portal: https://admin.paydock.com
+UBA_BASE_URL = os.getenv('UBA_BASE_URL', 'https://api-sandbox.paydock.com/v1')
+UBA_ACCESS_TOKEN = os.getenv('UBA_ACCESS_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4N2QwMjc3OWNhMWFjNjFlMzlkNjYzNiIsIm1ldGEiOm51bGwsImlhdCI6MTc1MzAyMzA5NSwiZXhwIjoxNzkwNDM0MjU4fQ._zUYa1ZuesS6KKVwGjEMIX9kyE3EKj-3Ie7oOKG5PQ4')
 UBA_CONFIGURATION_TEMPLATE_ID = os.getenv('UBA_CONFIGURATION_TEMPLATE_ID', '67dc6492c77feba890450b44')
 UBA_CUSTOMIZATION_TEMPLATE_ID = os.getenv('UBA_CUSTOMIZATION_TEMPLATE_ID', '67e1857d419c65d3259ab827')
 UBA_WEBHOOK_SECRET = os.getenv('UBA_WEBHOOK_SECRET', 'uba_webhook_secret_key_here')
@@ -416,7 +410,7 @@ COREFY_SANDBOX_MODE = os.getenv('COREFY_SANDBOX_MODE', 'True').lower() == 'true'
 # Integration Feature Flags
 ENABLE_UBA_INTEGRATION = os.getenv('ENABLE_UBA_INTEGRATION', 'True').lower() == 'true'
 ENABLE_CYBERSOURCE_INTEGRATION = os.getenv('ENABLE_CYBERSOURCE_INTEGRATION', 'True').lower() == 'true'
-ENABLE_COREFY_INTEGRATION = os.getenv('COREFY_INTEGRATION', 'True').lower() == 'true'
+ENABLE_COREFY_INTEGRATION = os.getenv('ENABLE_COREFY_INTEGRATION', 'True').lower() == 'true'
 
 # Global Integration Settings
 INTEGRATION_HEALTH_CHECK_INTERVAL = int(os.getenv('INTEGRATION_HEALTH_CHECK_INTERVAL', '300'))  # seconds
@@ -424,7 +418,7 @@ INTEGRATION_LOG_REQUESTS = os.getenv('INTEGRATION_LOG_REQUESTS', 'True').lower()
 INTEGRATION_LOG_RESPONSES = os.getenv('INTEGRATION_LOG_RESPONSES', 'True').lower() == 'true'
 
 # Authentication URLs
-LOGIN_URL = '/'
-LOGOUT_URL = '/auth/logout/'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = os.getenv('LOGIN_URL', '/')
+LOGOUT_URL = os.getenv('LOGOUT_URL', '/auth/logout/')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/dashboard/')
+LOGOUT_REDIRECT_URL = os.getenv('LOGOUT_REDIRECT_URL', '/')

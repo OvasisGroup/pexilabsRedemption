@@ -51,15 +51,26 @@ urlpatterns = [
     # API Key API endpoints
     path('api/api-keys/', dashboard_views.create_api_key_api, name='create_api_key_api'),
     path('api/api-keys/list/', dashboard_views.list_api_keys_api, name='list_api_keys_api'),
+    
+    # Integration Testing API endpoints
+    path('api/test-integration/', dashboard_views.test_integration_api, name='test_integration_api'),
+    path('api/create-test-checkout/', dashboard_views.create_test_checkout_api, name='create_test_checkout_api'),
+    path('api/integration-health/', dashboard_views.integration_health_check_api, name='integration_health_check_api'),
     path('api/api-keys/<uuid:key_id>/revoke/', dashboard_views.revoke_api_key_api, name='revoke_api_key_api'),
     path('api/api-keys/<uuid:key_id>/regenerate/', dashboard_views.regenerate_api_key_api, name='regenerate_api_key_api'),
     
     # Bank Details API endpoints
     path('api/bank-details/', dashboard_views.update_bank_details_api, name='update_bank_details_api'),
     
-    # Notification API endpoints
+    # Notifications API endpoints
     path('api/notifications/', dashboard_views.get_notifications_api, name='get_notifications_api'),
     path('api/notifications/<uuid:notification_id>/read/', dashboard_views.mark_notification_read_api, name='mark_notification_read_api'),
     path('api/notifications/<uuid:notification_id>/dismiss/', dashboard_views.dismiss_notification_api, name='dismiss_notification_api'),
     path('api/notifications/mark-all-read/', dashboard_views.mark_all_notifications_read_api, name='mark_all_notifications_read_api'),
+    
+    # Public API endpoints (no authentication required)
+    path('api/public/create-payment-intent/', dashboard_views.create_payment_intent_api, name='create_payment_intent_api'),
+    
+    # Webhook endpoints
+    path('webhooks/uba-payment/', dashboard_views.uba_payment_webhook, name='uba_payment_webhook'),
 ]

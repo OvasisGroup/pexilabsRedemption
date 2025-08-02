@@ -102,7 +102,7 @@
         <!-- User Role Distribution -->
         <div class="glass-card rounded-xl p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">User Role Distribution</h3>
-            <div class="h-64">
+            <div class="h-48">
                 <canvas id="roleChart"></canvas>
             </div>
         </div>
@@ -110,7 +110,7 @@
         <!-- Merchant Status Distribution -->
         <div class="glass-card rounded-xl p-6">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Merchant Status</h3>
-            <div class="h-64">
+            <div class="h-48">
                 <canvas id="merchantChart"></canvas>
             </div>
         </div>
@@ -214,76 +214,101 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Role Distribution Chart
-    const roleCtx = document.getElementById('roleChart').getContext('2d');
-    const roleData = [
+{{ block.super }}
+
+<!-- Chart Data -->
+<script id="chart-data" type="application/json">
+{
+    "roleStats": [
         {% for role_stat in role_stats %}
-        { label: '{{ role_stat.role|capfirst }}', value: {{ role_stat.count }} },
+        {"role": "{{ role_stat.role|capfirst }}", "count": {{ role_stat.count|default:0 }}}{% if not forloop.last %},{% endif %}
+        {% empty %}
+        {"role": "No Data", "count": 0}
         {% endfor %}
-    ];
+    ],
+    "merchantStats": {
+        "pending": {% if merchant_stats %}{{ merchant_stats.pending|default:0 }}{% else %}0{% endif %},
+        "approved": {% if merchant_stats %}{{ merchant_stats.approved|default:0 }}{% else %}0{% endif %},
+        "active": {% if merchant_stats %}{{ merchant_stats.active|default:0 }}{% else %}0{% endif %},
+        "total": {% if merchant_stats %}{{ merchant_stats.total|default:0 }}{% else %}0{% endif %}
+    }
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get chart data
+    const chartDataElement = document.getElementById('chart-data');
+    const chartData = JSON.parse(chartDataElement.textContent);
     
-    new Chart(roleCtx, {
-        type: 'doughnut',
-        data: {
-            labels: roleData.map(item => item.label),
-            datasets: [{
-                data: roleData.map(item => item.value),
-                backgroundColor: [
-                    '#3B82F6', // blue
-                    '#10B981', // green
-                    '#8B5CF6', // purple
-                    '#F59E0B', // yellow
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
+    // Role Distribution Chart
+    const roleCtx = document.getElementById('roleChart');
+    if (roleCtx) {
+        new Chart(roleCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: chartData.roleStats.map(item => item.role),
+                datasets: [{
+                    data: chartData.roleStats.map(item => item.count),
+                    backgroundColor: [
+                        '#3B82F6',
+                        '#10B981',
+                        '#8B5CF6',
+                        '#F59E0B'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     // Merchant Status Chart
-    const merchantCtx = document.getElementById('merchantChart').getContext('2d');
-    new Chart(merchantCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Pending', 'Approved', 'Active', 'Total'],
-            datasets: [{
-                label: 'Merchants',
-                data: [
-                    {{ merchant_stats.pending }},
-                    {{ merchant_stats.approved }},
-                    {{ merchant_stats.active }},
-                    {{ merchant_stats.total }}
-                ],
-                backgroundColor: [
-                    '#F59E0B', // yellow
-                    '#10B981', // green
-                    '#3B82F6', // blue
-                    '#8B5CF6', // purple
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    const merchantCtx = document.getElementById('merchantChart');
+    if (merchantCtx) {
+        new Chart(merchantCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Pending', 'Approved', 'Active', 'Total'],
+                datasets: [{
+                    label: 'Merchants',
+                    data: [
+                        chartData.merchantStats.pending,
+                        chartData.merchantStats.approved,
+                        chartData.merchantStats.active,
+                        chartData.merchantStats.total
+                    ],
+                    backgroundColor: [
+                        '#F59E0B',
+                        '#10B981',
+                        '#3B82F6',
+                        '#8B5CF6'
+                    ]
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+});
 </script>
 {% endblock %}
