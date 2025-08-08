@@ -56,9 +56,12 @@ def get_or_create_merchant_partner(merchant):
     return partner, created
 
 
-@login_required
 def dashboard_redirect(request):
     """Redirect to appropriate dashboard based on user role and permissions"""
+    # Check if user is authenticated first
+    if not request.user.is_authenticated:
+        return redirect('/auth/')  # Redirect to login page if not authenticated
+    
     user = request.user
     
     # Check for superuser/admin first (highest priority)
@@ -85,7 +88,7 @@ def dashboard_redirect(request):
     elif user.role == UserRole.ADMIN:
         return redirect('dashboard:admin_dashboard')
     
-    # Default to user dashboard
+    # Default to user dashboard (user profile)
     return redirect('dashboard:user_dashboard')
 
 @login_required

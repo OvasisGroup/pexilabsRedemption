@@ -1,31 +1,17 @@
-"""
-URL configuration for pexilabs project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from authentication.dashboard_views import dashboard_redirect
 # from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
-    # Landing pages (root)
-    # path('', include('website.urls')),
+    # Root redirect - redirect to user profile if logged in, /admin for admin users, else to login page
+    path('', dashboard_redirect, name='root_redirect'),
     
     # Web authentication pages
-    path('', include('authentication.auth_urls')),
+    path('auth/', include('authentication.auth_urls')),
     
     # Dashboard pages
     path('dashboard/', include('authentication.dashboard_urls')),
@@ -34,8 +20,7 @@ urlpatterns = [
     path('checkout/', include('checkout.urls')),
     
     # Payment processing
-    path('', include('payments.urls')),
-    path('payments/', include('payments.urls', namespace='payments')),  # Add this line
+    path('payments/', include('payments.urls', namespace='payments')),
     
     # Shop functionality
     path('shop/', include('shop.urls')),
