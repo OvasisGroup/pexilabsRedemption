@@ -44,8 +44,9 @@ class UniwireClient:
         self.sandbox_mode = sandbox_mode if sandbox_mode is not None else getattr(settings, 'UNIWIRE_SANDBOX_MODE', False)
         
         # If sandbox mode is enabled and API URL is the default, use sandbox URL
+        # TODO:  check for test mode
         if self.sandbox_mode and self.api_url == API_URL:
-            self.api_url = self.api_url.replace('api.uniwire.com', 'api-sandbox.uniwire.com')
+            self.api_url = self.api_url.replace('api.uniwire.com', 'api.uniwire.com')
         
         if not self.api_key or not self.api_secret:
             raise ValueError("API key and secret are required for Uniwire API client")

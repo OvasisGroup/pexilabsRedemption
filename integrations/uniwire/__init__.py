@@ -4,13 +4,8 @@ This module provides integration with Uniwire API for cryptocurrency payment pro
 and related services.
 """
 
-# Import and expose key components
-from .service import UniwireService
-from .client import UniwireClient, UniwireAPIException
-from .utils import (
-    is_supported_cryptocurrency, format_amount,
-    get_network_for_token, validate_address, parse_uniwire_error
-)
+# Import and expose key components will be done in the modules that need them
+# Avoid circular imports by not importing here
 
 import base64
 import hashlib

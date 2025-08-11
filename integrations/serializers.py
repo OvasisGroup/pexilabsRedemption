@@ -19,6 +19,60 @@ from authentication.models import Merchant, PreferredCurrency
 User = get_user_model()
 
 
+# Uniwire Invoice Serializers
+
+class UniwireInvoiceSerializer(serializers.Serializer):
+    """Serializer for Uniwire invoice creation"""
+    amount = serializers.DecimalField(max_digits=15, decimal_places=2, min_value=Decimal('0.01'))
+    currency = serializers.CharField(max_length=3, default='USD')
+    customer_email = serializers.EmailField(required=True)
+    customer_name = serializers.CharField(max_length=100, required=False)
+    customer_phone = serializers.CharField(max_length=20, required=False)
+    description = serializers.CharField(max_length=255, required=False)
+    due_date = serializers.DateField(required=False)
+    reference = serializers.CharField(max_length=100, required=False)
+    callback_url = serializers.URLField(required=False)
+    success_url = serializers.URLField(required=False)
+    cancel_url = serializers.URLField(required=False)
+    metadata = serializers.JSONField(required=False)
+    
+    def validate_currency(self, value):
+        """Validate currency code"""
+        supported_currencies = ['USD', 'EUR', 'GBP', 'KES', 'NGN', 'ZAR', 'GHS']
+        if value.upper() not in supported_currencies:
+            raise serializers.ValidationError(
+                f"Currency {value} not supported. Supported currencies: {', '.join(supported_currencies)}"
+            )
+        return value.upper()
+
+
+class UniwireInvoiceStatusSerializer(serializers.Serializer):
+    """Serializer for checking Uniwire invoice status"""
+    invoice_id = serializers.CharField(max_length=100)
+
+
+class UniwireInvoiceCancelSerializer(serializers.Serializer):
+    """Serializer for canceling Uniwire invoice"""
+    invoice_id = serializers.CharField(max_length=100)
+    reason = serializers.CharField(max_length=255, required=False)
+
+
+class UniwireWebhookSerializer(serializers.Serializer):
+    """Serializer for Uniwire webhook data"""
+    event_type = serializers.CharField(max_length=100)
+    event_id = serializers.CharField(max_length=100)
+    event_time = serializers.DateTimeField()
+    invoice_id = serializers.CharField(max_length=100)
+    amount = serializers.DecimalField(max_digits=15, decimal_places=2)
+    currency = serializers.CharField(max_length=3)
+    status = serializers.CharField(max_length=50)
+    payment_method = serializers.CharField(max_length=50, required=False)
+    customer_email = serializers.EmailField()
+    reference = serializers.CharField(max_length=100, required=False)
+    metadata = serializers.JSONField(required=False)
+    signature = serializers.CharField(max_length=500)
+
+
 class IntegrationListSerializer(serializers.ModelSerializer):
     """Serializer for listing integrations"""
     

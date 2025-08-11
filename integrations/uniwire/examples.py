@@ -7,10 +7,10 @@ import json
 from typing import Dict, Any
 from django.conf import settings
 
-from . import UniwireClient, UniwireAPIException
-from .service import UniwireService
-from .constants import COIN_BTC, TOKEN_ETH_USDT
-from .utils import format_amount, is_supported_cryptocurrency, get_network_for_token, validate_address, parse_uniwire_error
+from integrations.uniwire.client import UniwireClient, UniwireAPIException
+from integrations.uniwire.service import UniwireService
+from integrations.uniwire.constants import COIN_BTC, TOKEN_ETH_USDT, COIN_ETH
+from integrations.uniwire.utils import format_amount, is_supported_cryptocurrency, get_network_for_token, validate_address, parse_uniwire_error
 
 
 def example_get_profiles():
