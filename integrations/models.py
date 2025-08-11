@@ -27,6 +27,7 @@ class IntegrationType(models.TextChoices):
     UBA_BANK = 'uba_bank', 'UBA Bank Integration'
     CYBERSOURCE = 'cybersource', 'CyberSource Payment Gateway'
     COREFY = 'corefy', 'Corefy Payment Platform'
+    UNIWIRE = 'uniwire', 'Uniwire Cryptocurrency Integration'
     STRIPE = 'stripe', 'Stripe Payment Gateway'
     PAYPAL = 'paypal', 'PayPal Integration'
     FLUTTERWAVE = 'flutterwave', 'Flutterwave Payment Gateway'

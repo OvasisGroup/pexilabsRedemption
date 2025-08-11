@@ -1,0 +1,134 @@
+"""Uniwire Constants
+
+This module defines constants for the Uniwire integration, including
+supported cryptocurrencies and tokens.
+"""
+
+# Supported Coins
+COIN_BTC = 'BTC'  # Bitcoin On-chain (Format based on Wallet address format setting)
+COIN_BTC_P2SH = 'BTC_P2SH'  # Bitcoin On-Chain (P2SH Segwit / Starts with 3...)
+COIN_BTC_BECH32 = 'BTC_BECH32'  # Bitcoin On-Chain (Bech32 / Native Segwit)
+COIN_BTC_LIGHTNING = 'BTC_LIGHTNING'  # Bitcoin Lightning Network invoice
+COIN_LTC = 'LTC'  # Litecoin
+COIN_XRP = 'XRP'  # Ripple
+COIN_DOGE = 'DOGE'  # Dogecoin
+COIN_TON = 'TON'  # The Open Network
+COIN_SOL = 'SOL'  # Solana
+COIN_ETH = 'ETH'  # Ethereum
+COIN_ETH_BASE = 'ETH-BASE'  # Ethereum on Base Network
+COIN_ETH_ARBITRUM = 'ETH-ARBITRUM'  # Ethereum on Arbitrum Network
+COIN_POL = 'POL'  # Polygon POL
+COIN_BNB = 'BNB'  # Binance Coin (on BSC)
+COIN_TRX = 'TRX'  # Tron
+COIN_CELO = 'CELO'  # Celo main asset on Celo Network
+
+# Ethereum ERC-20 Tokens
+TOKEN_ETH_USDT = 'ETH_USDT'  # Tether
+TOKEN_ETH_USDC = 'ETH_USDC'  # USD Coin
+TOKEN_ETH_TUSD = 'ETH_TUSD'  # True USD
+TOKEN_ETH_PAX = 'ETH_PAX'  # Paxos Standard
+TOKEN_ETH_GUSD = 'ETH_GUSD'  # Gemini Dollar
+TOKEN_ETH_SAND = 'ETH_SAND'  # The Sandbox
+TOKEN_ETH_SHIB = 'ETH_SHIB'  # Shiba Inu
+TOKEN_ETH_BUSD = 'ETH_BUSD'  # Binance USD
+TOKEN_ETH_SHFL = 'ETH_SHFL'  # Shuffle
+TOKEN_ETH_cbBTC = 'ETH_cbBTC'  # Coinbase Wrapped BTC
+TOKEN_ETH_USD1 = 'ETH_USD1'  # WLFI USD1
+
+# Polygon ERC-20 Tokens
+TOKEN_POLYGON_USDT = 'USDT-POLYGON'  # Tether
+TOKEN_POLYGON_USDC = 'USDC-POLYGON'  # USD Coin
+TOKEN_POLYGON_USDCE = 'USDCE-POLYGON'  # USD Coin Bridged
+
+# Base Network ERC-20 Tokens
+TOKEN_BASE_USDC = 'USDC-BASE'  # USD Coin
+TOKEN_BASE_cbBTC = 'cbBTC-BASE'  # Coinbase Wrapped BTC
+
+# Arbitrum ERC-20 Tokens
+TOKEN_ARBITRUM_USDT = 'USDT-ARBITRUM'  # Tether
+TOKEN_ARBITRUM_USDC = 'USDC-ARBITRUM'  # USD Coin
+TOKEN_ARBITRUM_USDCE = 'USDCE-ARBITRUM'  # USD Coin Bridged
+
+# Celo ERC-20 Tokens
+TOKEN_CELO_CELO = 'CELO-CELO'  # Celo Token
+TOKEN_CELO_CUSD = 'CUSD-CELO'  # Celo Dollar
+TOKEN_CELO_USDT = 'USDT-CELO'  # Tether
+TOKEN_CELO_USDC = 'USDC-CELO'  # USD Coin
+
+# TRON Network TRC-20 Tokens
+TOKEN_TRX_USDT = 'USDT-TRX'  # Tether
+TOKEN_TRX_USDC = 'USDC-TRX'  # USD Coin
+
+# Solana Network SPL Tokens
+TOKEN_SOL_USDT = 'USDT-SOL'  # Tether
+TOKEN_SOL_USDC = 'USDC-SOL'  # USD Coin
+TOKEN_SOL_WSOL = 'WSOL-SOL'  # Wrapped Solana
+TOKEN_SOL_BONK = 'BONK-SOL'  # Bonk
+TOKEN_SOL_TRUMP = 'TRUMP-SOL'  # Official Trump
+TOKEN_SOL_JAMBO = 'JAMBO-SOL'  # Jambo
+
+# Binance Smart Chain (BSC) BEP-20 Tokens
+TOKEN_BSC_USDT = 'USDT-BSC'  # Tether
+TOKEN_BSC_USDC = 'USDC-BSC'  # USD Coin
+TOKEN_BSC_ETH = 'ETH-BSC'  # Binance-pegged Ethereum
+TOKEN_BSC_DAI = 'DAI-BSC'  # DAI
+TOKEN_BSC_SHIB = 'SHIB-BSC'  # Shiba Inu
+TOKEN_BSC_BUSD = 'BUSD'  # Binance USD
+TOKEN_BSC_WBNB = 'WBNB'  # Wrapped BNB
+TOKEN_BSC_USD1 = 'USD1-BSC'  # WLFI USD1
+
+# Liquid Network Tokens
+TOKEN_LIQUID_BTC = 'L-BTC'  # Bitcoin on Liquid network
+TOKEN_LIQUID_USDT = 'L-USDT'  # Tether on Liquid network
+
+# TON Jettons
+TOKEN_TON_USDT = 'USDT-TON'  # Tether Jetton on TON
+TOKEN_TON_NOT = 'NOT-TON'  # Notcoin on TON
+
+# Group all tokens by network for easier access
+ETHEREUM_TOKENS = [
+    TOKEN_ETH_USDT, TOKEN_ETH_USDC, TOKEN_ETH_TUSD, TOKEN_ETH_PAX, TOKEN_ETH_GUSD,
+    TOKEN_ETH_SAND, TOKEN_ETH_SHIB, TOKEN_ETH_BUSD, TOKEN_ETH_SHFL, TOKEN_ETH_cbBTC,
+    TOKEN_ETH_USD1
+]
+
+POLYGON_TOKENS = [TOKEN_POLYGON_USDT, TOKEN_POLYGON_USDC, TOKEN_POLYGON_USDCE]
+
+BASE_TOKENS = [TOKEN_BASE_USDC, TOKEN_BASE_cbBTC]
+
+ARBITRUM_TOKENS = [TOKEN_ARBITRUM_USDT, TOKEN_ARBITRUM_USDC, TOKEN_ARBITRUM_USDCE]
+
+CELO_TOKENS = [TOKEN_CELO_CELO, TOKEN_CELO_CUSD, TOKEN_CELO_USDT, TOKEN_CELO_USDC]
+
+TRON_TOKENS = [TOKEN_TRX_USDT, TOKEN_TRX_USDC]
+
+SOLANA_TOKENS = [
+    TOKEN_SOL_USDT, TOKEN_SOL_USDC, TOKEN_SOL_WSOL, TOKEN_SOL_BONK,
+    TOKEN_SOL_TRUMP, TOKEN_SOL_JAMBO
+]
+
+BSC_TOKENS = [
+    TOKEN_BSC_USDT, TOKEN_BSC_USDC, TOKEN_BSC_ETH, TOKEN_BSC_DAI,
+    TOKEN_BSC_SHIB, TOKEN_BSC_BUSD, TOKEN_BSC_WBNB, TOKEN_BSC_USD1
+]
+
+LIQUID_TOKENS = [TOKEN_LIQUID_BTC, TOKEN_LIQUID_USDT]
+
+TON_TOKENS = [TOKEN_TON_USDT, TOKEN_TON_NOT]
+
+# All supported coins (main chains)
+SUPPORTED_COINS = [
+    COIN_BTC, COIN_BTC_P2SH, COIN_BTC_BECH32, COIN_BTC_LIGHTNING,
+    COIN_LTC, COIN_XRP, COIN_DOGE, COIN_TON, COIN_SOL, COIN_ETH,
+    COIN_ETH_BASE, COIN_ETH_ARBITRUM, COIN_POL, COIN_BNB, COIN_TRX, COIN_CELO
+]
+
+# All supported tokens
+SUPPORTED_TOKENS = (
+    ETHEREUM_TOKENS + POLYGON_TOKENS + BASE_TOKENS + ARBITRUM_TOKENS +
+    CELO_TOKENS + TRON_TOKENS + SOLANA_TOKENS + BSC_TOKENS +
+    LIQUID_TOKENS + TON_TOKENS
+)
+
+# All supported cryptocurrencies (coins and tokens)
+SUPPORTED_CRYPTOCURRENCIES = SUPPORTED_COINS + SUPPORTED_TOKENS

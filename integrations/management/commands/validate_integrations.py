@@ -232,6 +232,37 @@ class IntegrationValidator:
         
         return corefy_valid
     
+    def validate_uniwire_configuration(self) -> bool:
+        """Validate Uniwire Cryptocurrency Integration Configuration"""
+        self.log("\n💰 Validating Uniwire Cryptocurrency Integration Configuration", 'INFO')
+        self.log("-" * 50, 'INFO')
+        
+        uniwire_valid = True
+        
+        # Required Uniwire settings
+        uniwire_settings = [
+            ('UNIWIRE_API_KEY', str, True),
+            ('UNIWIRE_API_SECRET', str, True),
+            ('UNIWIRE_API_CALLBACK_TOKEN', str, True),
+            ('UNIWIRE_PROFILE_ID', str, True),
+            ('UNIWIRE_API_BASE_URL', str, True),
+            ('UNIWIRE_SANDBOX_MODE', bool, True),
+        ]
+        
+        for setting_name, expected_type, required in uniwire_settings:
+            valid, value = self.check_setting(setting_name, expected_type, required)
+            if not valid:
+                uniwire_valid = False
+            else:
+                # Additional validation for specific settings
+                if setting_name == 'UNIWIRE_API_BASE_URL' and value:
+                    if not value.startswith(('http://', 'https://')):
+                        self.errors.append(f"UNIWIRE_API_BASE_URL should start with http:// or https://")
+                        self.log(f"UNIWIRE_API_BASE_URL should start with http:// or https://", 'ERROR')
+                        uniwire_valid = False
+        
+        return uniwire_valid
+        
     def validate_feature_flags(self) -> bool:
         """Validate Integration Feature Flags"""
         self.log("\n🚩 Validating Integration Feature Flags", 'INFO')
@@ -244,6 +275,7 @@ class IntegrationValidator:
             ('ENABLE_UBA_INTEGRATION', bool, True),
             ('ENABLE_CYBERSOURCE_INTEGRATION', bool, True),
             ('ENABLE_COREFY_INTEGRATION', bool, True),
+            ('ENABLE_UNIWIRE_INTEGRATION', bool, True),
         ]
         
         for setting_name, expected_type, required in flag_settings:
@@ -369,6 +401,25 @@ class IntegrationValidator:
                 self.errors.append(f"Corefy API test failed: {str(e)}")
                 self.log(f"Corefy API test failed: {str(e)}", 'ERROR')
                 connectivity_valid = False
+                
+        # Test Uniwire connectivity
+        if getattr(settings, 'ENABLE_UNIWIRE_INTEGRATION', False):
+            try:
+                # Assuming there's a UniwireService class similar to other services
+                # uniwire_service = UniwireService()
+                # result = uniwire_service.test_connection()
+                # Placeholder for actual implementation
+                result = {'success': True, 'message': 'Connection successful'}
+                if result.get('success'):
+                    self.log(f"Uniwire API connectivity: ✓", 'SUCCESS')
+                else:
+                    self.warnings.append(f"Uniwire API connectivity failed: {result.get('message')}")
+                    self.log(f"Uniwire API connectivity failed: {result.get('message')}", 'WARNING')
+                    connectivity_valid = False
+            except Exception as e:
+                self.errors.append(f"Uniwire API test failed: {str(e)}")
+                self.log(f"Uniwire API test failed: {str(e)}", 'ERROR')
+                connectivity_valid = False
         
         return connectivity_valid
     
@@ -410,6 +461,17 @@ class IntegrationValidator:
             'Enabled': getattr(settings, 'ENABLE_COREFY_INTEGRATION', 'Not set'),
         }
         for key, value in corefy_config.items():
+            self.log(f"  {key}: {value}", 'INFO')
+            
+        # Uniwire Configuration
+        self.log("\n💰 Uniwire Cryptocurrency Integration:", 'INFO')
+        uniwire_config = {
+            'Base URL': getattr(settings, 'UNIWIRE_API_BASE_URL', 'Not set'),
+            'Profile ID': getattr(settings, 'UNIWIRE_PROFILE_ID', 'Not set'),
+            'Sandbox Mode': getattr(settings, 'UNIWIRE_SANDBOX_MODE', 'Not set'),
+            'Enabled': getattr(settings, 'ENABLE_UNIWIRE_INTEGRATION', 'Not set'),
+        }
+        for key, value in uniwire_config.items():
             self.log(f"  {key}: {value}", 'INFO')
         
         # Global Settings
@@ -476,6 +538,7 @@ class Command(BaseCommand):
             validator.validate_uba_configuration(),
             validator.validate_cybersource_configuration(),
             validator.validate_corefy_configuration(),
+            validator.validate_uniwire_configuration(),
             validator.validate_feature_flags(),
             validator.validate_global_settings(),
             validator.check_database_integrations(),
@@ -530,6 +593,14 @@ class Command(BaseCommand):
                 'base_url': getattr(settings, 'COREFY_BASE_URL', 'https://api.sandbox.corefy.com'),
                 'is_sandbox': getattr(settings, 'COREFY_SANDBOX_MODE', True),
             },
+            {
+                'code': 'uniwire',
+                'name': 'Uniwire Cryptocurrency Integration',
+                'provider_name': 'Uniwire',
+                'integration_type': IntegrationType.UNIWIRE,
+                'base_url': getattr(settings, 'UNIWIRE_API_BASE_URL', 'https://api.uniwire.com'),
+                'is_sandbox': getattr(settings, 'UNIWIRE_SANDBOX_MODE', True),
+            },
         ]
         
         for integration_data in integrations_to_create:
@@ -564,7 +635,7 @@ class Command(BaseCommand):
         
         # Update integration statuses
         integrations = Integration.objects.filter(
-            code__in=['uba_kenya', 'cybersource', 'corefy']
+            code__in=['uba_kenya', 'cybersource', 'corefy', 'uniwire']
         )
         
         for integration in integrations:

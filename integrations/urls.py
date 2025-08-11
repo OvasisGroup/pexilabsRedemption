@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import uniwire
 
 app_name = 'integrations'
 
@@ -48,6 +49,12 @@ urlpatterns = [
     path('corefy/customer/', views.corefy_create_customer, name='corefy-create-customer'),
     path('corefy/customer/<str:customer_id>/', views.corefy_get_customer, name='corefy-get-customer'),
     path('corefy/payment-method/', views.corefy_create_payment_method, name='corefy-create-payment-method'),
+    
+    # Uniwire specific endpoints
+    path('uniwire/invoice/', uniwire.uniwire_create_invoice, name='uniwire-create-invoice'),
+    path('uniwire/invoice/<str:invoice_id>/', uniwire.uniwire_get_invoice, name='uniwire-get-invoice'),
+    path('uniwire/invoices/', uniwire.uniwire_list_invoices, name='uniwire-list-invoices'),
+    path('uniwire/network-invoice/', uniwire.uniwire_create_network_invoice, name='uniwire-create-network-invoice'),
     path('corefy/customer/<str:customer_id>/payment-methods/', views.corefy_get_payment_methods, name='corefy-get-payment-methods'),
     path('corefy/supported-methods/', views.corefy_get_supported_payment_methods, name='corefy-supported-methods'),
     path('corefy/webhook/', views.corefy_webhook_handler, name='corefy-webhook'),
@@ -60,7 +67,7 @@ urlpatterns = [
     # Enhanced Integration Management
     path('providers/', views.integration_providers_list, name='integration-providers-list'),
     path('providers/<uuid:integration_id>/', views.integration_provider_detail, name='integration-provider-detail'),
-    path('configure/<uuid:integration_id>/', views.configure_merchant_integration, name='configure-merchant-integration'),
+    path('configure/<uuid:integration_id>/', views.configure_merchant_integration, name='configure-merschant-integration'),
     path('statistics/', views.integration_statistics, name='integration-statistics'),
     
     # Utility endpoints

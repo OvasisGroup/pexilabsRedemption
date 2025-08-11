@@ -499,6 +499,9 @@
                             
                             // Show success message
                             showSuccessMessage('Payment completed successfully!');
+
+                            // Update transaction status via AJAX
+                            updateTransactionStatus('completed', '', data.reference || '');
                             
                             // Redirect to callback URL if provided
                             if (formData.callback_url) {
@@ -513,6 +516,10 @@
                     if (typeof window.kpsPaydockWidget.onPaymentFailure === "function") {
                         window.kpsPaydockWidget.onPaymentFailure(function (error) {
                             console.error("Payment failure:", error);
+                            
+                            // Update transaction status via AJAX
+                            updateTransactionStatus('failed', error.message || 'Payment failed', error.reference || '');
+                            
                             handlePaymentError(error.message || "An error occurred during payment.");
                         });
                     }
@@ -521,6 +528,10 @@
                     if (typeof window.kpsPaydockWidget.onPaymentExpired === "function") {
                         window.kpsPaydockWidget.onPaymentExpired(function (error) {
                             console.error("Payment expired:", error);
+                            
+                            // Update transaction status via AJAX
+                            updateTransactionStatus('expired', error.message || 'Payment session expired', error.reference || '');
+                            
                             handlePaymentError(error.message || "Your payment session has expired. Please retry.");
                         });
                     }
@@ -596,6 +607,49 @@
                     notification.parentNode.removeChild(notification);
                 }
             }, 5000);
+        }
+
+        // Function to update transaction status via AJAX
+        function updateTransactionStatus(status, failureReason = '', paymentReference = '') {
+            const sessionId = formData.session_id;
+            
+            if (!sessionId) {
+                console.error('No session ID available for transaction status update');
+                return;
+            }
+            
+            const requestData = {
+                session_id: sessionId,
+                status: status
+            };
+            
+            if (failureReason) {
+                requestData.failure_reason = failureReason;
+            }
+            
+            if (paymentReference) {
+                requestData.payment_reference = paymentReference;
+            }
+            
+            fetch('/transactions/api/update-transaction-status/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Transaction status updated successfully:', data);
+                } else {
+                    console.error('Failed to update transaction status:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating transaction status:', error);
+            });
         }
 
         // Helper function to get CSRF token

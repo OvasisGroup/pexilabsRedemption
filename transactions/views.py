@@ -10,6 +10,7 @@ from decimal import Decimal
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 from django.shortcuts import render, get_object_or_404
+from checkout.models import CheckoutSession
 
 from .models import (
     PaymentGateway,
@@ -514,12 +515,170 @@ def transaction_type_choices(request):
 )
 @api_view(['GET'])
 def transaction_status_choices(request):
-    """Get transaction status choices"""
+    """Get available transaction status choices"""
     choices = [
-        {'value': choice[0], 'display': choice[1]}
+        {'value': choice[0], 'label': choice[1]}
         for choice in TransactionStatus.choices
     ]
     return Response(choices)
+
+
+@extend_schema(
+    summary="Update transaction status",
+    description="Update transaction status based on payment events (success, failure, expiration)",
+    request={
+        'application/json': {
+            'type': 'object',
+            'properties': {
+                'session_id': {'type': 'string', 'description': 'Payment session ID'},
+                'status': {'type': 'string', 'enum': ['completed', 'failed', 'expired'], 'description': 'New transaction status'},
+                'failure_reason': {'type': 'string', 'description': 'Reason for failure (optional)'},
+                'payment_reference': {'type': 'string', 'description': 'Payment gateway reference (optional)'}
+            },
+            'required': ['session_id', 'status']
+        }
+    },
+    responses={
+        200: {
+            'type': 'object',
+            'properties': {
+                'success': {'type': 'boolean'},
+                'message': {'type': 'string'},
+                'transaction_id': {'type': 'string'}
+            }
+        },
+        400: {
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string'},
+                'message': {'type': 'string'}
+            }
+        }
+    }
+)
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])  # Allow anonymous access for payment callbacks
+def update_transaction_status(request):
+    """Update transaction status based on payment events"""
+    try:
+        data = request.data
+        session_id = data.get('session_id')
+        new_status = data.get('status')
+        failure_reason = data.get('failure_reason', '')
+        payment_reference = data.get('payment_reference', '')
+        
+        if not session_id or not new_status:
+            return Response({
+                'error': 'Missing required fields',
+                'message': 'session_id and status are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_status not in ['completed', 'failed', 'expired']:
+            return Response({
+                'error': 'Invalid status',
+                'message': 'Status must be one of: completed, failed, expired'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+     
+        
+        # Find the checkout session
+        try:
+            checkout_session = CheckoutSession.objects.get(session_token=session_id)
+        except CheckoutSession.DoesNotExist:
+            return Response({
+                'error': 'Session not found',
+                'message': f'No checkout session found with ID: {session_id}'
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if session is already completed
+        if checkout_session.status in ['completed', 'failed', 'expired']:
+            return Response({
+                'error': 'Session already processed',
+                'message': f'Session is already in {checkout_session.status} status'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update checkout session status
+        checkout_session.status = new_status
+        if new_status == 'completed':
+            checkout_session.completed_at = timezone.now()
+        if payment_reference:
+            checkout_session.payment_reference = payment_reference
+        checkout_session.save()
+        
+        # Try to find or create a corresponding transaction
+        transaction = None
+        try:
+            # Look for existing transaction with this session reference
+            transaction = Transaction.objects.filter(
+                metadata__session_id=session_id
+            ).first()
+            
+            if not transaction:
+                # Create a new transaction if none exists
+                from authentication.models import PreferredCurrency
+                
+                # Get currency object
+                currency_obj = checkout_session.currency
+                
+                transaction = Transaction.objects.create(
+                    merchant=checkout_session.checkout_page.merchant,
+                    customer_email=checkout_session.customer_email,
+                    transaction_type=TransactionType.PAYMENT,
+                    status=TransactionStatus.PENDING,
+                    payment_method=PaymentMethod.CARD,  # Default to card
+                    currency=currency_obj,
+                    amount=checkout_session.amount,
+                    net_amount=checkout_session.amount,  # Simplified for now
+                    description=f"Payment for {checkout_session.checkout_page.name}",
+                    metadata={
+                        'session_id': session_id,
+                        'checkout_page_id': str(checkout_session.checkout_page.id)
+                    },
+                    external_reference=payment_reference
+                )
+            
+            # Update transaction status based on checkout session status
+            if new_status == 'completed':
+                transaction.mark_as_completed()
+            elif new_status == 'failed':
+                transaction.mark_as_failed(reason=failure_reason)
+            elif new_status == 'expired':
+                transaction.status = TransactionStatus.EXPIRED
+                transaction.failed_at = timezone.now()
+                transaction.failure_reason = 'Payment session expired'
+                transaction.save()
+            
+            # Create transaction event
+            TransactionEvent.objects.create(
+                transaction=transaction,
+                event_type='status_update',
+                old_status=TransactionStatus.PENDING,
+                new_status=transaction.status,
+                description=f'Status updated via payment widget callback',
+                source='payment_widget',
+                metadata={
+                    'session_id': session_id,
+                    'payment_reference': payment_reference,
+                    'failure_reason': failure_reason
+                }
+            )
+            
+        except Exception as e:
+            # Log the error but don't fail the status update
+            print(f"Error creating/updating transaction: {str(e)}")
+        
+        return Response({
+            'success': True,
+            'message': f'Transaction status updated to {new_status}',
+            'transaction_id': str(transaction.id) if transaction else None,
+            'session_id': session_id
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Internal server error',
+            'message': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Template Views for Transactions

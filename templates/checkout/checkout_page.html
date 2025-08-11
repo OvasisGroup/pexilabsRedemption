@@ -401,7 +401,6 @@
             </div>
         </div>
     </div>
-
     <!-- JavaScript -->
     <script>
         // Initialize checkout page
@@ -411,9 +410,9 @@
                 code: '{{ checkout_page.currency.code }}',
                 symbol: '{{ checkout_page.currency.symbol }}'
             },
-            minAmount: {{ checkout_page.min_amount }},
-            maxAmount: {{ checkout_page.max_amount }},
-            allowCustomAmount: {{ checkout_page.allow_custom_amount|yesno:"true,false" }}
+            minAmount: "{{ checkout_page.min_amount }}",
+            maxAmount: "{{ checkout_page.max_amount }}",
+            allowCustomAmount: "{{ checkout_page.allow_custom_amount|yesno:'true,false' }}"
         };
         
         let currentSession = null;
