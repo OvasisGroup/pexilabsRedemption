@@ -55,11 +55,11 @@ def verify_documentation_system():
         client = Client()
         
         docs_urls = [
-            'docs:api_documentation',
-            'docs:integration_guides', 
-            'docs:sdk_documentation',
-            'docs:webhook_testing',
-            'docs:api_explorer',
+            'documentation:api_documentation',
+        'documentation:integration_guides',
+        'documentation:sdk_documentation',
+        'documentation:webhook_testing',
+        'documentation:api_explorer',
         ]
         
         print("\n📝 Checking documentation URLs:")

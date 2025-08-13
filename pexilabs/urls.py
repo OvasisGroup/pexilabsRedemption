@@ -29,7 +29,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # Developer Documentation
-    path('docs/', include('docs_urls')),
+    path('docs/', include('documentation.urls')),
     
     # API endpoints - commented out temporarily
     # path('api/auth/', include('authentication.urls')),

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'payments',  # Payment processing app
     'checkout',  # Checkout page app
     'shop',  # Shop app for products and cart
+    'documentation',  # Documentation app
     'widget_tweaks',
 ]
 
@@ -390,5 +391,5 @@ INTEGRATION_LOG_RESPONSES = os.getenv('INTEGRATION_LOG_RESPONSES', 'True').lower
 # Authentication URLs
 LOGIN_URL = os.getenv('LOGIN_URL', '/')
 LOGOUT_URL = os.getenv('LOGOUT_URL', '/auth/logout/')
-LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/dashboard/')
+LOGIN_REDIRECT_URL = os.getenv('LOGIN_REDIRECT_URL', '/dashboard/merchant/')
 LOGOUT_REDIRECT_URL = os.getenv('LOGOUT_REDIRECT_URL', '/')

@@ -1,0 +1,58 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}Integration Guides{% endblock %}
+
+{% block content %}
+<style>
+    .guide-section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    pre {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+</style>
+
+<a href="{% url 'documentation:api_documentation' %}" class="btn btn-secondary mb-3">← Back to API Documentation</a>
+        
+        <div class="guide-section">
+            <h2>Getting Started</h2>
+            <p>Follow these step-by-step guides to integrate PexiLabs payment processing into your application.</p>
+            
+            <h3>1. Authentication Setup</h3>
+            <p>First, obtain your API credentials from the merchant dashboard:</p>
+            <pre><code>curl -X POST http://localhost:8001/checkout/make-payment/ \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100.00,
+    "currency": "USD",
+    "customer_email": "customer@example.com",
+    "description": "Test Payment",
+    "callback_url": "https://yoursite.com/success",
+    "cancel_url": "https://yoursite.com/cancel"
+  }'</code></pre>
+            
+            <h3>2. Processing Payments</h3>
+            <p>Use the payment API to create payment sessions and process transactions.</p>
+            
+            <h3>3. Webhook Integration</h3>
+            <p>Set up webhooks to receive real-time payment notifications.</p>
+        </div>
+        
+        <div class="guide-section">
+            <h2>Platform-Specific Guides</h2>
+            <ul>
+                <li><strong>Web Applications:</strong> JavaScript/HTML integration</li>
+                <li><strong>Mobile Apps:</strong> iOS and Android SDK integration</li>
+                <li><strong>E-commerce Platforms:</strong> WooCommerce, Shopify, Magento plugins</li>
+                <li><strong>Server-Side:</strong> Node.js, Python, PHP, Ruby examples</li>
+            </ul>
+        </div>
+{% endblock %}

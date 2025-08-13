@@ -1,0 +1,390 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}API Documentation{% endblock %}
+
+{% block content %}
+<style>
+    .nav-links {
+        display: flex;
+        gap: 20px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    .nav-links a {
+        background: #3498db;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background 0.3s;
+    }
+    .nav-links a:hover {
+        background: #2980b9;
+    }
+    .section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+</style>
+        
+        <div class="nav-links">
+            <a href="{% url 'documentation:integration_guides' %}">Integration Guides</a>
+            <a href="{% url 'documentation:sdk_documentation' %}">SDK Documentation</a>
+            <a href="{% url 'documentation:webhook_testing' %}">Webhook Testing</a>
+            <a href="{% url 'documentation:api_explorer' %}">API Explorer</a>
+        </div>
+        
+        <div class="section">
+            <h2>Welcome to PexiLabs API Documentation</h2>
+            <p>This documentation provides comprehensive information about integrating with the PexiLabs payment platform.</p>
+            
+            <h3>Quick Start</h3>
+            <ul>
+                <li><strong>Authentication:</strong> All API requests require proper authentication using API keys</li>
+                <li><strong>Base URL:</strong> <code>https://api.pexilabs.com</code> (Production) or <code>http://localhost:8001</code> (Development)</li>
+                <li><strong>Content Type:</strong> All requests should use <code>application/json</code></li>
+            </ul>
+            
+            <h3>Available Endpoints</h3>
+            <ul>
+                <li><code>POST /checkout/make-payment/</code> - Create a payment session</li>
+                <li><code>GET /integrations/merchant/dashboard/</code> - Merchant dashboard</li>
+                <li><code>POST /auth/login/</code> - User authentication</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Need Help?</h2>
+            <p>If you need assistance with integration, please contact our support team or check out our integration guides.</p>
+        </div>
+        
+        <!-- API Testing Section -->
+        <div class="section">
+            <h2>API Testing</h2>
+            <p>Test the checkout API directly from this page to understand how it works.</p>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    <span class="text-sm text-blue-700">This is a live test environment. Test payments will not be charged.</span>
+                </div>
+            </div>
+            
+            <button onclick="openApiTestModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all">
+                <i class="fas fa-play mr-2"></i>
+                Test Checkout API
+            </button>
+        </div>
+        
+        <!-- API Test Modal -->
+        <div id="api-test-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative h-full w-full bg-white">
+                <div class="h-full flex flex-col">
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between p-6 border-b bg-gray-50">
+                        <h3 class="text-xl font-semibold text-gray-900">Checkout API Test</h3>
+                        <button onclick="closeApiTestModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Modal Content -->
+                    <div class="flex-1 overflow-y-auto p-6">
+                        <!-- Test Mode Banner -->
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                            <div class="flex items-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-yellow-800">Test Mode Active</h4>
+                                    <p class="text-sm text-yellow-700 mt-1">This is a test environment. No real charges will be made.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- API Test Container -->
+                        <div class="flex flex-col xl:flex-row gap-8">
+                            <!-- Left Column - Request Configuration -->
+                            <div class="flex-1">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4">Request Configuration</h4>
+                                
+                                <!-- API Endpoint -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <h5 class="text-md font-medium text-gray-900 mb-2">Endpoint</h5>
+                                    <div class="flex items-center space-x-2">
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">POST</span>
+                                        <code class="text-sm bg-gray-100 px-2 py-1 rounded">/checkout/make-payment/</code>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Details -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <h5 class="text-md font-medium text-gray-900 mb-4">Payment Details</h5>
+                                    <div class="mb-4">
+                                        <label for="api-key" class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                                        <input type="text" id="api-key" name="api_key" placeholder="pk_merchant_xxx:sk_xxx" 
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <p class="text-xs text-gray-500 mt-1">Enter your API key in the format: public_key:secret_key</p>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label for="api-currency" class="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                                            <select id="api-currency" name="currency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="USD">USD - US Dollar</option>
+                                                <option value="EUR">EUR - Euro</option>
+                                                <option value="GBP">GBP - British Pound</option>
+                                                <option value="KES">KES - Kenyan Shilling</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="api-amount" class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+                                            <input type="number" id="api-amount" name="amount" value="100.00" step="0.01" min="1" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label for="api-email" class="block text-sm font-medium text-gray-700 mb-2">Customer Email</label>
+                                            <input type="email" id="api-email" name="email" value="test@example.com" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label for="api-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                            <input type="text" id="api-description" name="description" value="API Test Payment" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- URLs -->
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <h5 class="text-md font-medium text-gray-900 mb-4">Callback URLs</h5>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label for="api-callback" class="block text-sm font-medium text-gray-700 mb-2">Success Callback URL</label>
+                                            <input type="url" id="api-callback" name="callback_url" value="http://localhost:8001/success" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                        <div>
+                                            <label for="api-cancel" class="block text-sm font-medium text-gray-700 mb-2">Cancel URL</label>
+                                            <input type="url" id="api-cancel" name="cancel_url" value="http://localhost:8001/cancel" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Test Button -->
+                                <div class="flex justify-center">
+                                    <button type="button" onclick="testCheckoutApi()" 
+                                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                            id="test-api-btn">
+                                        <i class="fas fa-play mr-2"></i>
+                                        Test API Call
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column - Request/Response -->
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4">Request & Response</h4>
+                                
+                                <!-- cURL Command -->
+                                <div class="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
+                                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                                        <h5 class="text-sm sm:text-md font-medium text-gray-900">cURL Command</h5>
+                                        <button onclick="copyCurlCommand()" class="text-sm text-blue-600 hover:text-blue-700 self-start sm:self-auto">
+                                            <i class="fas fa-copy mr-1"></i>Copy
+                                        </button>
+                                    </div>
+                                    <pre id="curl-command" class="text-xs sm:text-sm bg-gray-800 text-green-400 p-2 sm:p-3 rounded overflow-x-auto whitespace-pre-wrap break-all sm:break-normal">curl -X POST http://localhost:8001/checkout/make-payment/ \
+  -H "Authorization: Bearer YOUR_API_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 100.00,
+    "currency": "USD",
+    "customer_email": "test@example.com",
+    "description": "API Test Payment",
+    "callback_url": "http://localhost:8001/success",
+    "cancel_url": "http://localhost:8001/cancel"
+  }'</pre>
+                                </div>
+                                
+                                <!-- Response -->
+                                <div class="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                    <h5 class="text-sm sm:text-md font-medium text-gray-900 mb-2">Response</h5>
+                                    <div id="api-response" class="bg-gray-800 text-green-400 p-2 sm:p-3 rounded min-h-[150px] sm:min-h-[200px] text-xs sm:text-sm overflow-x-auto">
+                                        <div class="text-gray-500 text-center py-6 sm:py-8">
+                                            <i class="fas fa-code text-xl sm:text-2xl mb-2"></i>
+                                            <p class="text-xs sm:text-sm">Click "Test API Call" to see the response</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        // API Test Modal Functions
+        function openApiTestModal() {
+            document.getElementById('api-test-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            updateCurlCommand();
+        }
+        
+        function closeApiTestModal() {
+            document.getElementById('api-test-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function updateCurlCommand() {
+            const apiKey = document.getElementById('api-key').value || 'YOUR_API_KEY_HERE';
+            const amount = document.getElementById('api-amount').value;
+            const currency = document.getElementById('api-currency').value;
+            const email = document.getElementById('api-email').value;
+            const description = document.getElementById('api-description').value;
+            const callbackUrl = document.getElementById('api-callback').value;
+            const cancelUrl = document.getElementById('api-cancel').value;
+            
+            const curlCommand = `curl -X POST http://localhost:8001/checkout/make-payment/ \\
+  -H "Authorization: Bearer ${apiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "amount": ${amount},
+    "currency": "${currency}",
+    "customer_email": "${email}",
+    "description": "${description}",
+    "callback_url": "${callbackUrl}",
+    "cancel_url": "${cancelUrl}"
+  }'`;
+            
+            document.getElementById('curl-command').textContent = curlCommand;
+        }
+        
+        function copyCurlCommand() {
+            const curlCommand = document.getElementById('curl-command').textContent;
+            navigator.clipboard.writeText(curlCommand).then(() => {
+                // Show temporary success message
+                const btn = event.target.closest('button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+        
+        function testCheckoutApi() {
+            const btn = document.getElementById('test-api-btn');
+            const originalText = btn.innerHTML;
+            const apiKey = document.getElementById('api-key').value;
+            
+            // Validate API key
+            if (!apiKey) {
+                alert('Please enter your API key');
+                return;
+            }
+            
+            // Update button to show loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+            
+            // Get form data
+            const requestData = {
+                amount: parseFloat(document.getElementById('api-amount').value),
+                currency: document.getElementById('api-currency').value,
+                customer_email: document.getElementById('api-email').value,
+                description: document.getElementById('api-description').value,
+                callback_url: document.getElementById('api-callback').value,
+                cancel_url: document.getElementById('api-cancel').value
+            };
+            
+            // Make API call
+            fetch('/checkout/make-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                // Handle both success and error responses
+                return response.json().then(data => {
+                    return {
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        data: data
+                    };
+                });
+            })
+            .then(result => {
+                // Display response with status information
+                const responseData = {
+                    status: result.status,
+                    statusText: result.statusText,
+                    success: result.ok,
+                    response: result.data
+                };
+                
+                const responseElement = document.getElementById('api-response');
+                responseElement.innerHTML = `<pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+                
+                // Add color coding based on success/failure
+                if (result.ok) {
+                    responseElement.className = 'bg-gray-800 text-green-400 p-4 rounded-md overflow-auto max-h-96';
+                } else {
+                    responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-md overflow-auto max-h-96';
+                }
+                
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            })
+            .catch(error => {
+                console.error('Network Error:', error);
+                
+                // Display network error
+                const errorResponse = {
+                    error: 'Network Error',
+                    message: error.message,
+                    type: 'fetch_error'
+                };
+                
+                const responseElement = document.getElementById('api-response');
+                responseElement.innerHTML = `<pre>${JSON.stringify(errorResponse, null, 2)}</pre>`;
+                responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-md overflow-auto max-h-96';
+                
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+            
+            // Update curl command
+            updateCurlCommand();
+        }
+        
+        // Update curl command when form fields change
+        document.addEventListener('DOMContentLoaded', function() {
+            const formFields = ['api-key', 'api-amount', 'api-currency', 'api-email', 'api-description', 'api-callback', 'api-cancel'];
+            formFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', updateCurlCommand);
+                    field.addEventListener('change', updateCurlCommand);
+                }
+            });
+        });
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('api-test-modal');
+            if (event.target === modal) {
+                closeApiTestModal();
+            }
+        });
+        </script>
+{% endblock %}
