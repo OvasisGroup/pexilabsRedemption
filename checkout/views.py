@@ -12,7 +12,8 @@ from urllib.parse import quote
 
 from .models import CheckoutPage, PaymentMethodConfig, CheckoutSession
 from authentication.api_auth import APIKeyAuthentication
-from authentication.models import AppKey, Merchant
+from authentication.models import AppKey, Merchant, PreferredCurrency
+from transactions.models import Transaction, TransactionStatus, TransactionType, PaymentMethod, PaymentGateway
 from integrations.uba_usage import UBAUsageService
 
 
@@ -234,6 +235,108 @@ def make_payment_api(request):
         
         # Log API usage
         app_key.record_usage()
+
+        # Create transaction record in database
+        try:
+            # Get merchant from API key partner
+            # The partner code follows format: merchant_{merchant_id}
+            partner_code = app_key.partner.code
+            print(f"DEBUG: Processing partner code: {partner_code}")
+            
+            if partner_code.startswith('merchant_'):
+                merchant_id = partner_code.replace('merchant_', '')
+                print(f"DEBUG: Extracted merchant_id: {merchant_id}")
+                try:
+                    merchant = Merchant.objects.get(id=merchant_id)
+                    print(f"DEBUG: Found merchant: {merchant} (ID: {merchant.id})")
+                except Merchant.DoesNotExist:
+                    print(f"ERROR: Merchant not found for partner code: {partner_code}")
+                    return JsonResponse({
+                        'error': 'Merchant account not found',
+                        'message': f'No merchant found for partner {partner_code}'
+                    }, status=400)
+            else:
+                print(f"ERROR: Invalid partner code format: {partner_code}")
+                return JsonResponse({
+                    'error': 'Invalid partner configuration',
+                    'message': f'Partner code {partner_code} does not follow expected format'
+                }, status=400)
+            
+            # Get or create PaymentGateway for API transactions
+            print(f"DEBUG: Getting or creating PaymentGateway...")
+            try:
+                gateway = PaymentGateway.objects.get(code='api_gateway')
+                print(f"DEBUG: Found existing PaymentGateway: {gateway}")
+            except PaymentGateway.DoesNotExist:
+                print(f"DEBUG: PaymentGateway not found, creating new one...")
+                gateway, created = PaymentGateway.objects.get_or_create(
+                    code='api_gateway',
+                    defaults={
+                        'name': 'API Payment Gateway',
+                        'description': 'Default gateway for API-based transactions',
+                        'api_endpoint': 'https://api.pexilabs.com',
+                        'supported_payment_methods': 'card,bank_transfer,mobile_money',
+                        'supported_currencies': 'USD,EUR,GBP,KES',
+                        'is_sandbox': True
+                    }
+                )
+                print(f"DEBUG: PaymentGateway created: {gateway}, created={created}")
+            
+            # Get or create currency object
+            print(f"DEBUG: Getting or creating currency for: {data['currency']}")
+            currency_obj, created = PreferredCurrency.objects.get_or_create(
+                code=data['currency'],
+                defaults={
+                    'name': data['currency'],
+                    'symbol': '$' if data['currency'] == 'USD' else data['currency'],
+                    'is_active': True
+                }
+            )
+            print(f"DEBUG: Currency object: {currency_obj}, created={created}")
+            
+            # Create transaction with pending status
+            print(f"DEBUG: Creating transaction with:")
+            print(f"  - reference: {payment_session['session_id']}")
+            print(f"  - merchant: {merchant} (ID: {merchant.id})")
+            print(f"  - gateway: {gateway} (ID: {gateway.id})")
+            print(f"  - currency: {currency_obj} (ID: {currency_obj.id})")
+            print(f"  - amount: {amount}")
+            
+            transaction = Transaction.objects.create(
+                reference=payment_session['session_id'],  # Use session_id as unique reference
+                merchant=merchant,
+                customer_email=data['customer_email'],
+                transaction_type=TransactionType.PAYMENT,
+                status=TransactionStatus.PENDING,
+                payment_method=PaymentMethod.CARD,  # Default to card, can be updated later
+                gateway=gateway,
+                currency=currency_obj,
+                amount=Decimal(str(amount)),
+                net_amount=Decimal(str(amount)),  # Will be updated when fees are calculated
+                description=data['description'],
+                metadata={
+                    'api_key_id': str(app_key.id),
+                    'partner_code': app_key.partner.code,
+                    'merchant_id': str(merchant.id),
+                    'callback_url': data.get('callback_url', ''),
+                    'cancel_url': data.get('cancel_url', ''),
+                    'session_data': payment_session,
+                    'created_via': 'api'
+                },
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            print(f"DEBUG: Transaction created successfully with ID: {transaction.id}")
+            
+            # Update payment session with transaction ID
+            payment_session['transaction_id'] = str(transaction.id)
+            
+        except Exception as e:
+            # Log the error but don't fail the payment session creation
+            print(f"Error creating transaction record: {str(e)}")
+            # Continue with the payment session creation 
+        
         
         return JsonResponse({
             'success': True,

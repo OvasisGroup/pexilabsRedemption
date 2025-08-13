@@ -1902,7 +1902,8 @@ function generateCompleteApiKey(keyId) {
             button.classList.add('bg-green-600');
             
             // Show alert with the complete key
-            alert(`Complete API Key Generated`)
+            // alert(`Complete API Key Generated`)
+            showAlert(`Successfully generated  full API KEY`, 'success');
         } else {
             button.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Error';
             button.classList.remove('bg-orange-600', 'hover:bg-orange-700');
