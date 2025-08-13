@@ -182,10 +182,10 @@
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
                 <div class="space-y-3">
-                    <a href="#" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
+                    <!-- <a href="#" class="block w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
                         <i class="fas fa-plus mr-2"></i>
                         Create Payment Link
-                    </a>
+                    </a> -->
                     <a href="#" class="block w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors text-center">
                         <i class="fas fa-chart-bar mr-2"></i>
                         View Analytics
@@ -299,7 +299,7 @@
                         {% for transaction in recent_transactions %}
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ transaction.id }}
+                                {{ transaction.reference }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 ${{ transaction.amount|floatformat:2 }}

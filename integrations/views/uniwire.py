@@ -1,4 +1,5 @@
 import logging
+import os 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
@@ -34,7 +35,7 @@ def uniwire_create_invoice(request):
         client = UniwireClient()
         
         # Extract parameters from request
-        profile_id = request.data.get('profile_id')
+        profile_id = os.getenv('UNIWIRE_PROFILE_ID', 'UNIWIER_PROFILE_ID_NOW')
         kind = request.data.get('kind')
         amount = request.data.get('amount')
         currency = request.data.get('currency', 'USD')
@@ -65,6 +66,9 @@ def uniwire_create_invoice(request):
             fee_amount=fee_amount,
             exchange_rate_limit=exchange_rate_limit
         )
+
+
+        #  Now crreate a transactions on our end 
         
         return Response(response, status=status.HTTP_201_CREATED)
     
@@ -180,7 +184,7 @@ def uniwire_create_network_invoice(request):
         client = UniwireClient()
         
         # Extract parameters from request
-        profile_id = request.data.get('profile_id')
+        profile_id = os.getenv('UNIWIRE_PROFILE_ID', 'UNIWIER_PROFILE_ID_NOW')
         kind = request.data.get('kind')
         passthrough = request.data.get('passthrough')
         notes = request.data.get('notes')

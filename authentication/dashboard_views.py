@@ -322,6 +322,11 @@ def merchant_dashboard(request):
         except Exception:
             api_keys = []
 
+    # Generate dynamic base URL from request
+    scheme = 'https' if request.is_secure() else 'http'
+    host = request.get_host()
+    base_url = f"{scheme}://{host}"
+
     context = {
         'page_title': f'{merchant.business_name} - Merchant Dashboard',
         'merchant': merchant,
@@ -340,6 +345,7 @@ def merchant_dashboard(request):
         'missing_info': missing_info,
         'notifications': unread_notifications,
         'api_keys': api_keys,
+        'base_url': base_url,
     }
     
     return render(request, 'dashboard/merchant_dashboard.html', context)

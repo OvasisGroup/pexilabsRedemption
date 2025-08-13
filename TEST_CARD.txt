@@ -3,3 +3,19 @@ Card Number: 5123450000000008
 Expiry Date: 12/30
 
 CVV: 123
+
+
+Payment Successfully - 
+TODO: 
+    - update the transaction status to completed
+    - update the transaction status to completed
+    - implement redirect to successful payment page
+
+implementent redirect to sucessful
+{
+    "title": "Transaction successful",
+    "status": "success",
+    "message": "Your payment has been successfully processed",
+    "charge_id": "689c694dac5f4868861e9cf4",
+    "intent_id": "689c692a507eb30eafa2befa"
+}

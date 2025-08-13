@@ -1,0 +1,49 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block page_header %}SDK Documentation{% endblock %}
+
+{% block content %}
+<style>
+    .sdk-section {
+        margin: 30px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .coming-soon {
+        text-align: center;
+        padding: 40px;
+        background: #e3f2fd;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    .coming-soon h2 {
+        color: #1976d2;
+        margin-bottom: 10px;
+    }
+</style>
+
+<a href="{% url 'documentation:api_documentation' %}" class="btn btn-secondary mb-3">← Back to API Documentation</a>
+        
+        <div class="sdk-section">
+            <h2>Available SDKs</h2>
+            <p>PexiLabs provides SDKs for multiple programming languages and platforms:</p>
+            
+            <h3>JavaScript SDK</h3>
+            <p>For web applications and Node.js backends.</p>
+            
+            <h3>Python SDK</h3>
+            <p>For Python applications and Django/Flask frameworks.</p>
+            
+            <h3>PHP SDK</h3>
+            <p>For PHP applications and popular frameworks like Laravel.</p>
+            
+            <h3>Mobile SDKs</h3>
+            <p>Native SDKs for iOS and Android applications.</p>
+        </div>
+        
+        <div class="sdk-section">
+            <h2>Coming Soon</h2>
+            <p>Detailed SDK documentation and examples will be available here soon.</p>
+        </div>
+{% endblock %}
