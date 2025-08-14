@@ -388,6 +388,13 @@ INTEGRATION_HEALTH_CHECK_INTERVAL = int(os.getenv('INTEGRATION_HEALTH_CHECK_INTE
 INTEGRATION_LOG_REQUESTS = os.getenv('INTEGRATION_LOG_REQUESTS', 'True').lower() == 'true'
 INTEGRATION_LOG_RESPONSES = os.getenv('INTEGRATION_LOG_RESPONSES', 'True').lower() == 'true'
 
+# TransVoucher Integration Configuration
+TRANSVOUCHER_API_KEY = os.getenv('TRANSVOUCHER_API_KEY', 'tvc_3BVABLu73mdNuQh0qmBlgO2DshNgxWZC')
+TRANSVOUCHER_API_SECRET = os.getenv('TRANSVOUCHER_API_SECRET', 'tvcs_asq28PVyF6ieAn2gaHrG8577EqUU4qdqCx1Y8zs35MhG8cRB')
+TRANSVOUCHER_API_BASE_URL = os.getenv('TRANSVOUCHER_API_BASE_URL', 'https://api.transvoucher.com')
+
+TRANSVOUCHER_SANDBOX_MODE = os.getenv('TRANSVOUCHER_SANDBOX_MODE', 'True').lower() == 'true' 
+
 # Authentication URLs
 LOGIN_URL = os.getenv('LOGIN_URL', '/')
 LOGOUT_URL = os.getenv('LOGOUT_URL', '/auth/logout/')

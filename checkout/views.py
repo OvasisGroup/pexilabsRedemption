@@ -9,13 +9,18 @@ import json
 import uuid
 from decimal import Decimal
 from urllib.parse import quote
-
+from datetime import  timedelta
 from .models import CheckoutPage, PaymentMethodConfig, CheckoutSession
 from authentication.api_auth import APIKeyAuthentication
 from authentication.models import AppKey, Merchant, PreferredCurrency
 from transactions.models import Transaction, TransactionStatus, TransactionType, PaymentMethod, PaymentGateway
 from integrations.uba_usage import UBAUsageService
+from integrations.models import Integration, IntegrationStatus, IntegrationType
+from integrations.transvoucher.service import TransVoucherService, TransVoucherAPIException
+from integrations.transvoucher.usage import TransVoucherUsageService
+import logging
 
+logger = logging.getLogger('checkout')
 
 def manage_checkout_pages(request):
     """Merchant interface for managing checkout pages"""
@@ -184,9 +189,20 @@ def make_payment_api(request):
                 'error': 'Invalid JSON',
                 'message': 'Request body must be valid JSON'
             }, status=400)
-        
+
+        # Validate payment method
+        payment_method = data.get('payment_method', 'card') # default "card"
+        metadata  = data.get('metadata', {}) # to  get more data from the users
+        customer_commission_percentage = 0.5 # 0.5%  By default
+        multiple_use  = False 
+        reference_id = data.get("reference_id",  f'PEX-REF-{uuid.uuid4().hex[:8].upper()}')
+        if payment_method not in ['card', 'crypto']: # supports only crupto or card
+            return JsonResponse({
+                'error': 'Invalid payment method',
+                'message': 'Payment method must be either "uba" or "transvoucher"'
+            }, status=400)
         # Validate required fields
-        required_fields = ['amount', 'currency', 'customer_email', 'description']
+        required_fields = ['amount', 'currency', 'customer_email', 'customer_name', 'customer_phone', 'description']
         missing_fields = [field for field in required_fields if field not in data]
         
         if missing_fields:
@@ -213,15 +229,27 @@ def make_payment_api(request):
             'currency': data['currency'],
             'customer_email': data['customer_email'],
             'description': data['description'],
+            'customer_name': data.get('customer_name', ''),
+            'customer_phone': data.get('customer_phone', ''),
+            'reference_id': reference_id,
+            'metadata': metadata,
             'callback_url': data.get('callback_url', ''),
             'cancel_url': data.get('cancel_url', ''),
+            'title': data.get('title', ''),
+            'payment_method': payment_method,
+            'customer_commission_percentage': customer_commission_percentage,
+            'multiple_use': multiple_use,
             'merchant_id': str(app_key.partner.id),
+            'merchant':  app_key.partner,
             'api_key_id': str(app_key.id),
             'created_at': timezone.now().isoformat()
         }
         
         # Store session data (you might want to use a proper session store or database)
         # For now, we'll pass it as query parameters to the processing page
+
+
+        print("Payment Session:", payment_session)
         
         # Generate processing URL with session data
         process_url = request.build_absolute_uri(reverse('checkout:process_payment_page'))
@@ -229,14 +257,31 @@ def make_payment_api(request):
         process_url += f"&amount={payment_session['amount']}"
         process_url += f"&currency={payment_session['currency']}"
         process_url += f"&customer_email={quote(payment_session['customer_email'])}"
-        process_url += f"&description={quote(payment_session['description'])}"
-        process_url += f"&callback_url={quote(payment_session['callback_url'])}"
-        process_url += f"&cancel_url={quote(payment_session['cancel_url'])}"
+        process_url += f"&customer_name={quote(payment_session['customer_name'])}"
+        process_url += f"&customer_phone={quote(payment_session['customer_phone'])}"
+        process_url += f"&metadata={quote(json.dumps(payment_session['metadata']))}"
+        process_url += f"&payment_method={quote(payment_session['payment_method'])}"
+        process_url += f"&customer_commission_percentage={quote(str(payment_session['customer_commission_percentage']))}"
+        process_url += f"&reference_id={quote(str(payment_session['reference_id']))}"
+        process_url += f"&created_at={quote(str(payment_session['created_at']))}"
+        # Convert merchant object to serializable format
+        merchant_data = {
+            'id': str(payment_session['merchant'].id),
+            'name': str(payment_session['merchant'].name),
+            'code': str(payment_session['merchant'].code)
+        }
+        process_url += f"&merchant_id={quote(str(payment_session['merchant_id']))}"
+        process_url += f"&merchant={quote(json.dumps(merchant_data))}"
+        process_url += f"&title={quote(str(payment_session['title']))}"
+        process_url += f"&multiple_use={quote(str(payment_session['multiple_use']))}"
+        process_url += f"&description={quote(str(payment_session['description']))}"
+        process_url += f"&callback_url={quote(str(payment_session['callback_url']))}"
+        process_url += f"&cancel_url={quote(str(payment_session['cancel_url']))}"
         
         # Log API usage
         app_key.record_usage()
-
         # Create transaction record in database
+        transaction =  None
         try:
             # Get merchant from API key partner
             # The partner code follows format: merchant_{merchant_id}
@@ -296,11 +341,24 @@ def make_payment_api(request):
             
             # Create transaction with pending status
             print(f"DEBUG: Creating transaction with:")
+            print(f"  - title: {data.get('title', '')}")
             print(f"  - reference: {payment_session['session_id']}")
             print(f"  - merchant: {merchant} (ID: {merchant.id})")
             print(f"  - gateway: {gateway} (ID: {gateway.id})")
             print(f"  - currency: {currency_obj} (ID: {currency_obj.id})")
+            print(f"  - customer_name: {data.get('customer_name', '')}")
+            print(f"  - customer_phone: {data.get('customer_phone', '')}")
+            print(f"  - payment_method: {payment_method}")
+            print(f"  - customer_commission_percentage: {customer_commission_percentage}")
+            print(f"  - multiple_use: {multiple_use}")
+            print(f"  - description: {data.get('description', '')}")
             print(f"  - amount: {amount}")
+
+
+            payment_method_type  = PaymentMethod.CARD
+
+            if payment_method  == 'uba' or payment_method == "transvoucher":
+                payment_method_type  = PaymentMethod.CARD
             
             transaction = Transaction.objects.create(
                 reference=payment_session['session_id'],  # Use session_id as unique reference
@@ -308,19 +366,28 @@ def make_payment_api(request):
                 customer_email=data['customer_email'],
                 transaction_type=TransactionType.PAYMENT,
                 status=TransactionStatus.PENDING,
-                payment_method=PaymentMethod.CARD,  # Default to card, can be updated later
+                payment_method=payment_method_type,  # Default to card, can be updated later
                 gateway=gateway,
                 currency=currency_obj,
                 amount=Decimal(str(amount)),
                 net_amount=Decimal(str(amount)),  # Will be updated when fees are calculated
                 description=data['description'],
                 metadata={
+                    'amount': payment_session['amount'],
                     'api_key_id': str(app_key.id),
                     'partner_code': app_key.partner.code,
                     'merchant_id': str(merchant.id),
+                    'customer_name': data.get('customer_name', ''),
+                    'customer_phone': data.get('customer_phone', ''),
+                    'reference_id': payment_session['reference_id'],
+                    'session_id': payment_session['session_id'],
+                    'payment_method': payment_session['payment_method'],
+                    'customer_commission_percentage': payment_session['customer_commission_percentage'],
+                    'multiple_use': payment_session['multiple_use'],
+                    'title': payment_session['title'],
                     'callback_url': data.get('callback_url', ''),
                     'cancel_url': data.get('cancel_url', ''),
-                    'session_data': payment_session,
+                    'session_id': payment_session['session_id'],
                     'created_via': 'api'
                 },
                 ip_address=request.META.get('REMOTE_ADDR'),
@@ -336,12 +403,21 @@ def make_payment_api(request):
             # Log the error but don't fail the payment session creation
             print(f"Error creating transaction record: {str(e)}")
             # Continue with the payment session creation 
-        
+            return JsonResponse({
+                'error': 'Error creating transaction record',
+                'message': str(e)
+            }, status=500)
         
         return JsonResponse({
             'success': True,
-            'session_id': payment_session['session_id'],
+            'transaction_id': str(transaction.id),
+            'reference_id': payment_session['reference_id'],
+            'expires_at':  (timezone.now() + timedelta(minutes=5)).isoformat() , # plus 5 minutes
+            'amount': amount,
+            'currency': data['currency'],
             'payment_url': process_url,
+            'status':'pending',
+            'payment_method': payment_method_type,
             'message': 'Payment session created successfully'
         }, status=201)
         
@@ -362,10 +438,35 @@ def process_payment_page(request):
     currency = request.GET.get('currency')
     customer_email = request.GET.get('customer_email')
     description = request.GET.get('description')
+    payment_method = request.GET.get('payment_method', 'card')
+    customer_name = request.GET.get('customer_name', '')
+    merchant_id = request.GET.get('merchant_id', '')
+    merchant  =  request.GET.get("merchant", {})
+    metadata  = request.GET.get('metadata', {})
+    customer_phone = request.GET.get('customer_phone', '')
+    reference_id = request.GET.get('reference_id', '')
+    multiple_use = request.GET.get('multiple_use', False)
+    customer_commission_percentage = request.GET.get('customer_commission_percentage', 0)
+    title = request.GET.get('title', '')
+    created_at = request.GET.get('created_at', '')
     callback_url = request.GET.get('callback_url', '')
     cancel_url = request.GET.get('cancel_url', '')
     
-    if not all([session_id, amount, currency, customer_email, description]):
+    if not all([
+        session_id, 
+        amount, 
+        currency, 
+        customer_email, 
+        customer_name, 
+        customer_phone, 
+        reference_id, 
+        created_at, 
+        description, 
+        multiple_use, 
+        customer_commission_percentage, 
+        callback_url, 
+        cancel_url, 
+        payment_method]):
         return render(request, 'checkout/payment_error.html', {
             'error': 'Invalid payment session',
             'message': 'Missing required payment information'
@@ -378,17 +479,111 @@ def process_payment_page(request):
             'error': 'Invalid amount',
             'message': 'Payment amount is not valid'
         })
-    
+    merchant_data = json.loads(merchant)
+
     context = {
         'session_id': session_id,
         'amount': amount,
+        "merchant": merchant_data,
         'currency': currency,
         'customer_email': customer_email,
         'description': description,
+        'customer_name': customer_name,
+        'metadata': json.loads(metadata),
+        'customer_phone': customer_phone,
+        'reference_id': reference_id,
+        'multiple_use': multiple_use,
+        'customer_commission_percentage': customer_commission_percentage,
+        'title': title,
         'callback_url': callback_url,
         'cancel_url': cancel_url,
+        'created_at': created_at,
     }
+
+    # Extract merchant ID from the code field (format: merchant_{merchant_id})
+    merchant_code = merchant_data["code"]
+    if merchant_code.startswith('merchant_'):
+        actual_merchant_id = merchant_code.replace('merchant_', '')
+        context["metadata"]["api_key_id"] =  str(actual_merchant_id)
+        merchant_partner = Merchant.objects.get(id=actual_merchant_id)
+    else:
+        # Fallback to using the id field if code doesn't follow expected format
+        merchant_partner = Merchant.objects.get(id=merchant_data["id"])
+
+    payment_methods = []
+    payment_methods.append({
+        'payment_method': 'uba',
+        'display_name': 'United Bank for Africa',
+        'icon_url': "https://uba.com/images/logo.svg",
+        'display_order': 1
+    })
+    payment_methods.append({
+        'payment_method': 'transvoucher',
+        'display_name': 'Trans Voucher',
+        'icon_url': "",
+        'display_order': 2
+    })
+    payment_methods.append({
+        'payment_method': 'uniwire',
+        'display_name': 'Uniwire',
+        'icon_url': "https://uniwire.com/images/logo.svg",
+        'display_order': 3
+    })
+    payment_methods.sort(key=lambda x: x['display_order'])
+    # 'uba',
+    allowed_methods  = {
+        'card': {'transvoucher': {'name': 'Trans Voucher', 'icon_url': "https://transvoucher.com/images/logo.svg"}},
+        'crypto': {'uniwire': {'name': 'Uniwire', 'icon_url': "https://uniwire.com/images/logo.svg"}},
+    }
+    context['payment_methods'] = payment_methods
+
+    if allowed_methods['card']:
+        context['payment_methods'] = [pm for pm in context['payment_methods'] if pm['payment_method'] in allowed_methods['card'].keys()]            
+    if allowed_methods['crypto']:
+        context['payment_methods'] = [pm for pm in context['payment_methods'] if pm['payment_method'] in allowed_methods['crypto'].keys()]
     
+    # Check if the selected payment method is transvoucher and render different view
+    if payment_method == 'card' or (context['payment_methods'] and any(pm['payment_method'] == 'transvoucher' for pm in context['payment_methods'])):
+        try:
+            transvoucher_service = TransVoucherUsageService(merchant=merchant_partner)
+            payment_data = {
+                'amount': context['amount'],
+                'currency': context.get('currency', 'USD'),
+                'title': "PEXI - Process Payment",
+                'description': context.get('description', ''),
+                'customer_email': context['customer_email'],
+                'customer_name': context['customer_name'],
+                'customer_phone': context['customer_phone'],
+                'reference_id': context['reference_id'],
+                'metadata': context.get('metadata', {}),
+                'customer_commission_percentage': context['customer_commission_percentage'],
+                'multiple_use': context['multiple_use'] if isinstance(context['multiple_use'], bool) else context['multiple_use'] == "True"
+            }
+            result = transvoucher_service.create_checkout_session(**payment_data)
+            if result.get('success'):
+                context['result'] = result
+                print("Result: ", result)
+                return render(request, 'checkout/card_payment.html', context)
+
+            else:
+                return render(request, 'checkout/payment_error.html', {
+                    'error': 'Payment creation error',
+                    'message': 'Payment creation failed'
+                })
+        except TransVoucherAPIException as e:
+            logger.error(f"TransVoucher API error: {e.message}")
+            return render(request, 'checkout/payment_error.html', {
+                    'error': 'Payment creation error',
+                    'message': e.message
+            })
+        except Exception as e:
+            logger.error(f"Unexpected error in TransVoucher payment creation: {str(e)}")
+            return render(request, 'checkout/payment_error.html', {
+                    'error': 'Internal server error',
+                    'message': "Internal server error"
+            })
+                
+    # UBA
     return render(request, 'checkout/process_payment.html', context)
 
 
