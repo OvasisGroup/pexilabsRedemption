@@ -33,6 +33,7 @@ class IntegrationType(models.TextChoices):
     FLUTTERWAVE = 'flutterwave', 'Flutterwave Payment Gateway'
     PAYSTACK = 'paystack', 'Paystack Payment Gateway'
     MPESA = 'mpesa', 'M-Pesa Mobile Money'
+    TRANSVOUCHER = 'transvoucher', 'TransVoucher Payment Gateway'
     BLOCKCHAIN = 'blockchain', 'Blockchain Integration'
     AI_SERVICE = 'ai_service', 'AI/ML Service'
     LOGISTICS = 'logistics', 'Logistics Provider'

@@ -1698,7 +1698,7 @@ def test_integration_api(request):
                                         reference=checkout_data.get('reference', f'UBA-TEST-{uuid.uuid4().hex[:8].upper()}'),
                                         external_reference=checkout_data.get('_id'),
                                         transaction_type=TransactionType.PAYMENT,
-                                        payment_method=PaymentMethod.BANK_TRANSFER,
+                                        payment_method=PaymentMethod.CARD,
                                         gateway=gateway,
                                         currency=currency,
                                         amount=checkout_data.get('amount', 100.00),

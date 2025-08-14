@@ -24,7 +24,7 @@ class UBAUsageService:
     Provides checkout functionality similar to the TypeScript implementation.
     """
     
-    def __init__(self, app_key: AppKey = None, merchant: Merchant = None):
+    def __init__(self, merchant: Merchant = None):
         """
         Initialize UBA usage service.
         
@@ -32,12 +32,12 @@ class UBAUsageService:
             app_key: The authenticated API key
             merchant: Optional merchant instance (for direct merchant access)
         """
-        self.app_key = app_key
+        # self.app_key = app_key
         self.merchant = merchant
         
-        # If we have an app_key but no merchant, try to find associated merchant
-        if app_key and not merchant:
-            self.merchant = self._get_merchant_from_app_key(app_key)
+        # # If we have an app_key but no merchant, try to find associated merchant
+        # if app_key and not merchant:
+        #     self.merchant = self._get_merchant_from_app_key(app_key)
         
         # Initialize the underlying UBA service
         self.uba_service = UBABankService(merchant=self.merchant)
@@ -45,32 +45,32 @@ class UBAUsageService:
         # Get UBA configuration from merchant integration or defaults
         self.config = self._get_uba_config()
     
-    def _get_merchant_from_app_key(self, app_key: AppKey) -> Optional[Merchant]:
-        """
-        Get merchant associated with the API key.
-        For now, we'll use a simple approach - you may need to modify this
-        based on your business logic.
-        """
-        try:
-            # Option 1: If you have a direct relationship between partner and merchant
-            # This assumes you have a way to link partners to merchants
-            # You might need to add this relationship to your models
+    # def _get_merchant_from_app_key(self, app_key: AppKey) -> Optional[Merchant]:
+    #     """
+    #     Get merchant associated with the API key.
+    #     For now, we'll use a simple approach - you may need to modify this
+    #     based on your business logic.
+    #     """
+    #     try:
+    #         # Option 1: If you have a direct relationship between partner and merchant
+    #         # This assumes you have a way to link partners to merchants
+    #         # You might need to add this relationship to your models
             
-            # Option 2: Use the first merchant that has UBA integration
-            # This is a simplified approach for demo purposes
-            uba_integration = Integration.objects.get(code='uba_kenya')
-            merchant_integration = MerchantIntegration.objects.filter(
-                integration=uba_integration,
-                is_enabled=True
-            ).first()
+    #         # Option 2: Use the first merchant that has UBA integration
+    #         # This is a simplified approach for demo purposes
+    #         uba_integration = Integration.objects.get(code='uba_kenya')
+    #         merchant_integration = MerchantIntegration.objects.filter(
+    #             integration=uba_integration,
+    #             is_enabled=True
+    #         ).first()
             
-            if merchant_integration:
-                return merchant_integration.merchant
+    #         if merchant_integration:
+    #             return merchant_integration.merchant
             
-            return None
-        except Exception as e:
-            logger.warning(f"Could not find merchant for app_key {app_key.public_key}: {str(e)}")
-            return None
+    #         return None
+    #     except Exception as e:
+    #         logger.warning(f"Could not find merchant for app_key {app_key.public_key}: {str(e)}")
+    #         return None
     
     def _get_uba_config(self) -> Dict:
         """

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import uniwire
+from .views import uniwire, transvoucher
 
 app_name = 'integrations'
 
@@ -59,6 +59,15 @@ urlpatterns = [
     path('corefy/supported-methods/', views.corefy_get_supported_payment_methods, name='corefy-supported-methods'),
     path('corefy/webhook/', views.corefy_webhook_handler, name='corefy-webhook'),
     path('corefy/test-connection/', views.corefy_test_connection, name='corefy-test-connection'),
+    
+    # TransVoucher specific endpoints
+    path('transvoucher/payment/', transvoucher.transvoucher_create_payment, name='transvoucher-create-payment'),
+    path('transvoucher/payment-status/<str:reference_id>/', transvoucher.transvoucher_get_payment_status, name='transvoucher-payment-status'),
+    path('transvoucher/payments/', transvoucher.transvoucher_list_payments, name='transvoucher-list-payments'),
+    path('transvoucher/webhook/', transvoucher.transvoucher_webhook_handler, name='transvoucher-webhook'),
+    path('transvoucher/test-connection/', transvoucher.transvoucher_test_connection, name='transvoucher-test-connection'),
+    path('transvoucher/integration-info/', transvoucher.transvoucher_integration_info, name='transvoucher-integration-info'),
+    path('transvoucher/checkout-session/', transvoucher.transvoucher_create_checkout_session, name='transvoucher-checkout-session'),
     
     # Statistics and monitoring
     path('stats/', views.integration_stats, name='integration-stats'),
