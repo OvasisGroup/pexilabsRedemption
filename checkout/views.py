@@ -19,6 +19,11 @@ from integrations.models import Integration, IntegrationStatus, IntegrationType
 from integrations.transvoucher.service import TransVoucherService, TransVoucherAPIException
 from integrations.transvoucher.usage import TransVoucherUsageService
 import logging
+from pexilabs import settings
+from integrations.uniwire.client import UniwireClient, UniwireAPIException
+from integrations.uniwire.utils import format_amount, is_supported_cryptocurrency, get_network_for_token, validate_address
+from integrations.uniwire.constants import COIN_BTC, COIN_ETH, TOKEN_ETH_USDT
+
 
 logger = logging.getLogger('checkout')
 
@@ -320,7 +325,7 @@ def make_payment_api(request):
                         'name': 'API Payment Gateway',
                         'description': 'Default gateway for API-based transactions',
                         'api_endpoint': 'https://api.pexilabs.com',
-                        'supported_payment_methods': 'card,bank_transfer,mobile_money',
+                        'supported_payment_methods': 'card,bank_transfer,mobile_money,crypto',
                         'supported_currencies': 'USD,EUR,GBP,KES',
                         'is_sandbox': True
                     }
@@ -356,9 +361,14 @@ def make_payment_api(request):
 
 
             payment_method_type  = PaymentMethod.CARD
-
-            if payment_method  == 'uba' or payment_method == "transvoucher":
+            if payment_method  == 'card':
                 payment_method_type  = PaymentMethod.CARD
+            elif payment_method == 'crypto':
+                payment_method_type  = PaymentMethod.CRYPTO
+            elif payment_method == 'mobile_money':
+                payment_method_type  = PaymentMethod.MOBILE_MONEY
+            elif payment_method == 'bank_transfer':
+                payment_method_type  = PaymentMethod.BANK_TRANSFER
             
             transaction = Transaction.objects.create(
                 reference=payment_session['session_id'],  # Use session_id as unique reference
@@ -488,6 +498,7 @@ def process_payment_page(request):
         'currency': currency,
         'customer_email': customer_email,
         'description': description,
+        'payment_method': payment_method,
         'customer_name': customer_name,
         'metadata': json.loads(metadata),
         'customer_phone': customer_phone,
@@ -499,6 +510,9 @@ def process_payment_page(request):
         'cancel_url': cancel_url,
         'created_at': created_at,
     }
+
+
+    print(context)
 
     # Extract merchant ID from the code field (format: merchant_{merchant_id})
     merchant_code = merchant_data["code"]
@@ -582,7 +596,69 @@ def process_payment_page(request):
                     'error': 'Internal server error',
                     'message': "Internal server error"
             })
-                
+
+    if payment_method == 'crypto':
+        try:
+            logger.info("Initializing Uniwire client with credentials from environment variables")
+            client = UniwireClient(
+                api_key=settings.UNIWIRE_API_KEY,
+                api_secret=settings.UNIWIRE_API_SECRET,
+                api_url=settings.UNIWIRE_API_URL
+            )
+            logger.info("Making API call for network invoice creation")
+            print(f"Client configured with:")
+            print(f"  API Key: {client.api_key}")
+            print(f"  API Key: {client.api_secret}")
+            print(f"  API URL: {client.api_url}")
+            print(f"  Sandbox Mode: {client.sandbox_mode}")
+            logger.info(f"Client configured with API URL: {client.api_url}, Sandbox Mode: {client.sandbox_mode}")
+            passthrough_data = {
+                'amount': context['amount'],
+                'currency': context.get('currency', 'USD'),
+                'title': "PEXI - Process Payment",
+                'description': context.get('description', ''),
+                'customer_email': context['customer_email'],
+                'customer_name': context['customer_name'],
+                'customer_phone': context['customer_phone'],
+                'reference_id': context['reference_id'],
+                'metadata': context.get('metadata', {}),
+                'customer_commission_percentage': context['customer_commission_percentage'],
+                'multiple_use': context['multiple_use'] if isinstance(context['multiple_use'], bool) else context['multiple_use'] == "True",
+                'callback_url': callback_url,
+                'cancel_url': cancel_url,
+                'created_at': created_at,
+            }
+            response = client.create_invoice(
+                profile_id=settings.UNIWIRE_PROFILE_ID,
+                kind=COIN_ETH,  # Using ETH as the network coin
+                passthrough=json.dumps(passthrough_data),
+                notes="The resuable wallet",
+            )         
+            if response.get('result'):
+                result  =  {
+                    "reference": response.get('result').get('id'),
+                    "invoice_number": response.get('result').get('id').replace("-", "").upper(),
+                    "payment_url": f"https://uniwire.com/invoice/" + response.get('result').get('id').replace("-", "").upper(),
+                    "amount": context["amount"],
+                    "currency": context["currency"],
+                }
+                context['result'] = result
+                print(result)
+                return render(request, 'checkout/card_payment.html', context)
+            else:
+                logger.error("Network invoice creation failed")
+                return render(request, 'checkout/payment_error.html', {
+                    'error': 'Payment Processing Error',
+                    'message': 'Payment Processing Error'
+                })
+        except UniwireAPIException as e:
+            logger.error(f"Uniwire API error: {e.message}")
+            return render(request, 'checkout/payment_error.html', {
+                    'error': 'Payment Processing Error',
+                    'message': e.message
+            })
+        except Exception as e:
+            logger.error(f"Unexpected error in Uniwire payment creation: {str(e)}")                
     # UBA
     return render(request, 'checkout/process_payment.html', context)
 

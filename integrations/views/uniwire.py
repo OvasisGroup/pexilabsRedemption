@@ -66,8 +66,6 @@ def uniwire_create_invoice(request):
             fee_amount=fee_amount,
             exchange_rate_limit=exchange_rate_limit
         )
-
-
         #  Now crreate a transactions on our end 
         
         return Response(response, status=status.HTTP_201_CREATED)
