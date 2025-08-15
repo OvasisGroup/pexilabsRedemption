@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import checkout, authenticate, transactions
+from .views import checkout, authenticate, transactions, docs
 
 app_name = 'public_api'
 
@@ -17,4 +17,7 @@ urlpatterns = [
     path('transactions/choices/', transactions.get_transaction_choices, name='transaction_choices'),
     path('transactions/<uuid:transaction_id>/', transactions.get_transaction_by_id, name='get_transaction_by_id'),
     path('transactions/reference/<str:reference>/', transactions.get_transaction_by_reference, name='get_transaction_by_reference'),
+    
+    # Documentation endpoint
+    path('docs/', docs.api_documentation, name='api_documentation'),
 ]
