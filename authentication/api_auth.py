@@ -106,37 +106,80 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed(_('Invalid API key format.'))
         
         try:
-            public_key, secret_key = api_key.split(':', 1)
+            provided_public_key, secret_key = api_key.split(':', 1)
         except ValueError:
             raise exceptions.AuthenticationFailed(_('Invalid API key format.'))
         
+        # Try to find the app key by the provided public key
+        app_key = None
+        
+        # First, try to find by exact match (full public key format)
         try:
             app_key = AppKey.objects.select_related('partner').get(
-                public_key=public_key,
+                public_key=provided_public_key,
                 status=AppKeyStatus.ACTIVE
             )
         except AppKey.DoesNotExist:
+            # If not found, check if it's a simplified format (public_key without prefix and partner code)
+            # Look for app keys where the public_key ends with the provided key
+            try:
+                # Find app keys where the public_key contains the provided key as a suffix
+                matching_keys = AppKey.objects.select_related('partner').filter(
+                    public_key__endswith=f"_{provided_public_key}",
+                    status=AppKeyStatus.ACTIVE
+                )
+                
+                if matching_keys.count() == 1:
+                    app_key = matching_keys.first()
+                elif matching_keys.count() > 1:
+                    logger.warning(f"Multiple app keys found for simplified key: {provided_public_key[:10]}...")
+                    raise exceptions.AuthenticationFailed(_('Ambiguous API key.'))
+                else:
+                    # Try one more pattern: look for keys that end with the provided key after an underscore
+                    # This handles cases where the provided key might be the random suffix
+                    potential_keys = AppKey.objects.select_related('partner').filter(
+                        public_key__contains=provided_public_key,
+                        status=AppKeyStatus.ACTIVE
+                    )
+                    
+                    for potential_key in potential_keys:
+                        # Check if the provided key matches the suffix after the last underscore
+                        public_key_parts = potential_key.public_key.split('_')
+                        if len(public_key_parts) >= 2 and public_key_parts[-1] == provided_public_key:
+                            app_key = potential_key
+                            break
+                    
+                    if not app_key:
+                        logger.warning(f"AppKey not found for public key: {provided_public_key[:10]}...")
+                        raise exceptions.AuthenticationFailed(_('Invalid API key.'))
+                    
+            except Exception as e:
+                logger.warning(f"Error searching for simplified API key: {str(e)}")
+                raise exceptions.AuthenticationFailed(_('Invalid API key.'))
+        
+        if not app_key:
             raise exceptions.AuthenticationFailed(_('Invalid API key.'))
         
         # Verify the secret key
         if not app_key.verify_secret(secret_key):
-            logger.warning(f"Invalid secret for API key: {public_key} from IP: {self._get_client_ip(request)}")
+            logger.warning(f"Secret verification failed for public key: {provided_public_key[:10]}...")
             raise exceptions.AuthenticationFailed(_('Invalid API key.'))
         
-        # Check if key is active and not expired
-        if not app_key.is_active():
-            logger.warning(f"Inactive/expired API key: {public_key} from IP: {self._get_client_ip(request)}")
-            raise exceptions.AuthenticationFailed(_('API key is inactive or expired.'))
+        # Check if the key is expired
+        if app_key.is_expired():
+            logger.warning(f"Expired API key used: {provided_public_key[:10]}...")
+            raise exceptions.AuthenticationFailed(_('API key has expired.'))
         
-        # Check IP restrictions
-        client_ip = self._get_client_ip(request)
-        if not app_key.is_ip_allowed(client_ip):
-            logger.warning(f"IP not allowed for API key: {public_key} from IP: {client_ip}")
-            raise exceptions.AuthenticationFailed(_('API key not allowed from this IP address.'))
+        # Check IP restrictions if configured
+        if app_key.allowed_ips:
+            client_ip = self._get_client_ip(request)
+            if not app_key.is_ip_allowed(client_ip):
+                logger.warning(f"IP {client_ip} not allowed for API key: {provided_public_key[:10]}...")
+                raise exceptions.AuthenticationFailed(_('IP address not allowed.'))
         
-        # Check partner status
+        # Check if partner is active
         if not app_key.partner.is_active:
-            logger.warning(f"Inactive partner for API key: {public_key}")
+            logger.warning(f"Inactive partner for API key: {provided_public_key[:10]}...")
             raise exceptions.AuthenticationFailed(_('Partner account is inactive.'))
         
         # Record usage
@@ -149,7 +192,8 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
         # In a real implementation, you might want to associate API keys with actual user accounts
         user = self.get_or_create_api_user(app_key)
         
-        logger.info(f"Successful API key authentication: {public_key} from IP: {client_ip}")
+        client_ip = self._get_client_ip(request)
+        logger.info(f"Successful API key authentication for: {provided_public_key[:10]}... (resolved to {app_key.public_key[:10]}...) from IP: {client_ip}")
         
         return (user, app_key)
     

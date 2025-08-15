@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'shop',  # Shop app for products and cart
     'documentation',  # Documentation app
     'widget_tweaks',
+    'public_api',  # Public API app
 ]
 
 MIDDLEWARE = [
