@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PexiLabs API Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'pexi-blue': '#3B82F6',
+                        'pexi-dark': '#1E293B',
+                        'pexi-gray': '#64748B'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .code-block {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+        .method-get { @apply bg-gradient-to-r from-green-100 to-green-50 text-green-800 border-green-200 shadow-sm; }
+        .method-post { @apply bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border-blue-200 shadow-sm; }
+        .method-put { @apply bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 border-yellow-200 shadow-sm; }
+        .method-delete { @apply bg-gradient-to-r from-red-100 to-red-50 text-red-800 border-red-200 shadow-sm; }
+        .required-param { @apply bg-gradient-to-r from-red-50 to-red-25 border-l-4 border-red-400 shadow-sm; }
+        .optional-param { @apply bg-gradient-to-r from-gray-50 to-gray-25 border-l-4 border-gray-300 shadow-sm; }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg border-b border-purple-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-black rounded-lg px-3 py-2">
+                            <img class="h-8 sm:h-10 w-auto" src="https://www.pexipay.com/_next/image?url=%2Fimages%2Fpexi_logo.png&w=256&q=75" alt="PexiPay">
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20 text-white border border-white border-opacity-30">
+                            <i class="fas fa-circle text-green-300 mr-1 text-xs"></i>
+                            Live Documentation
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-white text-opacity-90">
+                        Base URL: 
+                        <code class="bg-white bg-opacity-20 text-white px-2 py-1 rounded text-xs border border-white border-opacity-30">
+                            {% if is_development %}
+                                {{ base_urls.development }}
+                            {% else %}
+                                {{ base_urls.production }}
+                            {% endif %}
+                        </code>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar Navigation -->
+            <div class="lg:w-1/4">
+                <div class="sticky top-8">
+                    <nav class="glass-effect rounded-xl shadow-lg p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Navigation</h3>
+                        <ul class="space-y-2">
+                            <li><a href="#overview" class="block text-sm text-gray-600 hover:text-pexi-blue transition-colors">Overview</a></li>
+                            <li><a href="#authentication" class="block text-sm text-gray-600 hover:text-pexi-blue transition-colors">Authentication</a></li>
+                            {% for category_key, category in api_endpoints.items %}
+                            <li>
+                                <a href="#{{ category_key }}" class="block text-sm text-gray-600 hover:text-pexi-blue transition-colors">{{ category.title }}</a>
+                                <ul class="ml-4 mt-1 space-y-1">
+                                    {% for endpoint in category.endpoints %}
+                                    <li><a href="#{{ category_key }}-{{ forloop.counter }}" class="block text-xs text-gray-500 hover:text-pexi-blue transition-colors">{{ endpoint.name }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                            {% endfor %}
+                            <li><a href="#testing" class="block text-sm text-gray-600 hover:text-pexi-blue transition-colors">API Testing</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="lg:w-3/4">
+                <!-- Overview Section -->
+                <section id="overview" class="mb-12">
+                    <div class="glass-effect rounded-xl shadow-lg p-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-6">API Overview</h2>
+                        <div class="prose max-w-none">
+                            <p class="text-lg text-gray-600 mb-6">
+                                Welcome to the PexiLabs API documentation. Our RESTful API allows you to integrate payment processing, 
+                                transaction management, and merchant services into your applications.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border border-blue-200">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-blue-500 rounded-lg p-2 mr-3">
+                                            <i class="fas fa-shield-alt text-white text-lg"></i>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Secure</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600">All API endpoints use industry-standard security practices with API key authentication.</p>
+                                </div>
+                                
+                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border border-green-200">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-green-500 rounded-lg p-2 mr-3">
+                                            <i class="fas fa-bolt text-white text-lg"></i>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-900">Fast</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Optimized for performance with efficient data structures and caching.</p>
+                                </div>
+                                
+                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border border-purple-200">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-purple-500 rounded-lg p-2 mr-3">
+                                            <i class="fas fa-code text-white text-lg"></i>
+                                        </div>
+                                        <h3 class="text-lg font-semibold text-gray-900">RESTful</h3>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Clean, predictable URLs and standard HTTP methods for easy integration.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                                <div class="flex">
+                                    <i class="fas fa-exclamation-triangle text-yellow-400 mr-3 mt-1"></i>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-yellow-800">Development Environment</h4>
+                                        <p class="text-sm text-yellow-700 mt-1">
+                                            {% if is_development %}
+                                                You are currently viewing the development environment. Use this for testing and integration.
+                                            {% else %}
+                                                You are viewing the production environment documentation.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Authentication Section -->
+                <section id="authentication" class="mb-12">
+                    <div class="glass-effect rounded-xl shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Authentication</h2>
+                        
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">API Key Format</h3>
+                            <p class="text-gray-600 mb-4">API keys follow the format: <code class="bg-gray-100 px-2 py-1 rounded text-sm">{{ auth_info.api_key_format }}</code></p>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="text-sm font-semibold text-gray-900 mb-2">Header Options</h4>
+                                <div class="space-y-2">
+                                    {% for header in auth_info.header_options %}
+                                    <code class="block bg-gray-800 text-green-400 px-3 py-2 rounded text-sm">{{ header }}</code>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">API Scopes</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                {% for scope in auth_info.scopes %}
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex items-center mb-2">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                                            {{ scope.name }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">{{ scope.description }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Endpoints Sections -->
+                {% for category_key, category in api_endpoints.items %}
+                <section id="{{ category_key }}" class="mb-12">
+                    <div class="glass-effect rounded-xl shadow-lg p-8 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ category.title }}</h2>
+                        <p class="text-gray-600 mb-8">{{ category.description }}</p>
+                        
+                        {% for endpoint in category.endpoints %}
+                        <div id="{{ category_key }}-{{ forloop.counter }}" class="mb-8 {% if not forloop.last %}border-b pb-8{% endif %}">
+                            <div class="flex items-center mb-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium method-{{ endpoint.method|lower }} border mr-4">
+                                    {{ endpoint.method }}
+                                </span>
+                                <code class="text-lg font-mono text-gray-800">{{ endpoint.path }}</code>
+                            </div>
+                            
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ endpoint.name }}</h3>
+                            <p class="text-gray-600 mb-4">{{ endpoint.description }}</p>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                                <!-- Request Details -->
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Request</h4>
+                                    
+                                    <div class="mb-4">
+                                        <h5 class="text-sm font-semibold text-gray-700 mb-2">Authentication</h5>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                            {% if 'Required' in endpoint.authentication %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                            {{ endpoint.authentication }}
+                                        </span>
+                                    </div>
+                                    
+                                    {% if endpoint.parameters %}
+                                    <div class="mb-4">
+                                        <h5 class="text-sm font-semibold text-gray-700 mb-3">Parameters</h5>
+                                        <div class="space-y-3">
+                                            {% for param in endpoint.parameters %}
+                                            <div class="border rounded-lg p-2 sm:p-3 {% if param.required %}required-param{% else %}optional-param{% endif %}">
+                                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 gap-1 sm:gap-2">
+                                                    <code class="text-xs sm:text-sm font-mono text-gray-800">{{ param.name }}</code>
+                                                    <div class="flex items-center space-x-2">
+                                                        <span class="text-xs text-gray-500">{{ param.type }}</span>
+                                                        {% if param.required %}
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            required
+                                                        </span>
+                                                        {% else %}
+                                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                            optional
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <p class="text-sm text-gray-600">{{ param.description }}</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Response Example -->
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Response Example</h4>
+                                    <div class="code-block rounded-lg p-2 sm:p-3 md:p-4 overflow-x-auto">
+                                        <pre class="text-xs sm:text-sm"><code>{{ endpoint.response_example|safe }}</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- cURL Example -->
+                            <div class="mt-6">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-3">cURL Example</h4>
+                                <div class="code-block rounded-lg p-2 sm:p-3 md:p-4 overflow-x-auto">
+                                    <pre class="text-xs sm:text-sm"><code>curl -X {{ endpoint.method }} "{% if is_development %}{{ base_urls.development }}{% else %}{{ base_urls.production }}{% endif %}{{ endpoint.path }}" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_API_KEY_HERE"{% if endpoint.method == 'POST' %} \
+  -d '{"key": "value"}'{% endif %}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endfor %}
+
+                <!-- API Testing Section -->
+                <section id="endpoints" class="mb-12">
+                    <div class="glass-effect rounded-xl shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">API Testing</h2>
+                        
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                                <h3 class="text-lg font-semibold text-blue-900">Interactive Testing</h3>
+                            </div>
+                            <p class="text-blue-800 mb-4">
+                                Test API endpoints directly from your browser. All test requests are made to the current environment.
+                            </p>
+                            <button onclick="openTestModal()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all">
+                                <i class="fas fa-play mr-2"></i>
+                                Open API Tester
+                            </button>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="border rounded-lg p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Quick Test Commands</h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-700 mb-1">Test Authentication</h4>
+                                        <code class="block bg-gray-800 text-green-400 px-3 py-2 rounded text-xs overflow-x-auto">
+curl -X POST "{% if is_development %}{{ base_urls.development }}{% else %}{{ base_urls.production }}{% endif %}/api/auth/verify/" \
+  -H "X-API-Key: YOUR_API_KEY"
+                                        </code>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-gray-700 mb-1">List Transactions</h4>
+                                        <code class="block bg-gray-800 text-green-400 px-3 py-2 rounded text-xs overflow-x-auto">
+curl -X GET "{% if is_development %}{{ base_urls.development }}{% else %}{{ base_urls.production }}{% endif %}/api/transactions/" \
+  -H "X-API-Key: YOUR_API_KEY"
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border rounded-lg p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Response Codes</h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mr-3">200</span>
+                                        <span class="text-sm text-gray-600">Success</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mr-3">400</span>
+                                        <span class="text-sm text-gray-600">Bad Request</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 mr-3">401</span>
+                                        <span class="text-sm text-gray-600">Unauthorized</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 mr-3">404</span>
+                                        <span class="text-sm text-gray-600">Not Found</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800 mr-3">500</span>
+                                        <span class="text-sm text-gray-600">Server Error</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Test Modal -->
+    <div id="api-test-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b">
+                    <h3 class="text-xl font-semibold text-gray-900">API Tester</h3>
+                    <button onclick="closeTestModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal Content -->
+                <div class="p-6">
+                    <div class="grid lg:grid-cols-2 gap-6">
+                        <!-- Request Configuration -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Request Configuration</h4>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Endpoint</label>
+                                    <select id="test-endpoint" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select an endpoint...</option>
+                                        {% for category_key, category in api_endpoints.items %}
+                                            {% for endpoint in category.endpoints %}
+                                            <option value="{{ endpoint.method }}|{{ endpoint.path }}|{{ endpoint.name }}">{{ endpoint.method }} {{ endpoint.path }} - {{ endpoint.name }}</option>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                                    <input type="text" id="test-api-key" placeholder="your_public_key:your_secret_key" 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Request Body (JSON)</label>
+                                    <textarea id="test-body" rows="6" placeholder='{"key": "value"}' 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                </div>
+                                
+                                <button onclick="testApiEndpoint()" 
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        id="test-btn">
+                                    <i class="fas fa-play mr-2"></i>
+                                    Send Request
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Response -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Response</h4>
+                            <div id="test-response" class="bg-gray-800 text-green-400 p-4 rounded-lg min-h-[300px] overflow-x-auto">
+                                <div class="text-gray-500 text-center py-8">
+                                    <i class="fas fa-code text-2xl mb-2"></i>
+                                    <p class="text-sm">Response will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functions
+        function openTestModal() {
+            document.getElementById('api-test-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeTestModal() {
+            document.getElementById('api-test-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // API testing function
+        function testApiEndpoint() {
+            const btn = document.getElementById('test-btn');
+            const originalText = btn.innerHTML;
+            const endpoint = document.getElementById('test-endpoint').value;
+            const apiKey = document.getElementById('test-api-key').value;
+            const body = document.getElementById('test-body').value;
+            
+            if (!endpoint) {
+                alert('Please select an endpoint');
+                return;
+            }
+            
+            if (!apiKey) {
+                alert('Please enter your API key');
+                return;
+            }
+            
+            const [method, path, name] = endpoint.split('|');
+            const baseUrl = '{% if is_development %}{{ base_urls.development }}{% else %}{{ base_urls.production }}{% endif %}';
+            
+            // Update button to show loading
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+            
+            const requestOptions = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey
+                }
+            };
+            
+            if (method === 'POST' && body) {
+                try {
+                    JSON.parse(body); // Validate JSON
+                    requestOptions.body = body;
+                } catch (e) {
+                    alert('Invalid JSON in request body');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    return;
+                }
+            }
+            
+            fetch(baseUrl + path, requestOptions)
+                .then(response => {
+                    return response.json().then(data => ({
+                        status: response.status,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        data: data
+                    }));
+                })
+                .then(result => {
+                    const responseElement = document.getElementById('test-response');
+                    responseElement.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                    
+                    if (result.ok) {
+                        responseElement.className = 'bg-gray-800 text-green-400 p-4 rounded-lg min-h-[300px] overflow-x-auto';
+                    } else {
+                        responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-lg min-h-[300px] overflow-x-auto';
+                    }
+                })
+                .catch(error => {
+                    const responseElement = document.getElementById('test-response');
+                    responseElement.innerHTML = `<pre>${JSON.stringify({error: error.message}, null, 2)}</pre>`;
+                    responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-lg min-h-[300px] overflow-x-auto';
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+        }
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Format JSON in response examples
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.code-block pre code').forEach(block => {
+                try {
+                    const content = block.textContent;
+                    if (content.trim().startsWith('{') || content.trim().startsWith('[')) {
+                        const formatted = JSON.stringify(JSON.parse(content), null, 2);
+                        block.textContent = formatted;
+                    }
+                } catch (e) {
+                    // Not JSON, leave as is
+                }
+            });
+        });
+    </script>
+</body>
+</html>

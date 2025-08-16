@@ -36,10 +36,8 @@ urlpatterns = [
     # path('api/transactions/', include('transactions.urls')),
     path('integrations/', include('integrations.urls')),
     
-    # API Documentation URLs (commented out temporarily)
-    # path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    # path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    # path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Public API endpoints
+    path('api/v1/', include('public_api.urls')),
 ]
 
 # Serve media files during development

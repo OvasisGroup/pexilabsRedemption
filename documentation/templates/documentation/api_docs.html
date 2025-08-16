@@ -83,7 +83,7 @@
             <div class="relative h-full w-full bg-white">
                 <div class="h-full flex flex-col">
                     <!-- Modal Header -->
-                    <div class="flex items-center justify-between p-6 border-b bg-gray-50">
+                    <div class="flex items-center justify-between p-3 sm:p-4 md:p-6 border-b bg-gray-50">
                         <h3 class="text-xl font-semibold text-gray-900">Checkout API Test</h3>
                         <button onclick="closeApiTestModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200">
                             <i class="fas fa-times text-xl"></i>
@@ -91,9 +91,9 @@
                     </div>
                     
                     <!-- Modal Content -->
-                    <div class="flex-1 overflow-y-auto p-6">
+                    <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
                         <!-- Test Mode Banner -->
-                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 sm:p-4 mb-4 sm:mb-6">
                             <div class="flex items-center">
                                 <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
                                 <div>
@@ -104,13 +104,13 @@
                         </div>
                         
                         <!-- API Test Container -->
-                        <div class="flex flex-col xl:flex-row gap-8">
+                        <div class="flex flex-col xl:flex-row gap-4 sm:gap-6 xl:gap-8">
                             <!-- Left Column - Request Configuration -->
                             <div class="flex-1">
                                 <h4 class="text-lg font-medium text-gray-900 mb-4">Request Configuration</h4>
                                 
                                 <!-- API Endpoint -->
-                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                <div class="bg-gray-50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                                     <h5 class="text-md font-medium text-gray-900 mb-2">Endpoint</h5>
                                     <div class="flex items-center space-x-2">
                                         <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">POST</span>
@@ -196,7 +196,7 @@
                                             <i class="fas fa-copy mr-1"></i>Copy
                                         </button>
                                     </div>
-                                    <pre id="curl-command" class="text-xs sm:text-sm bg-gray-800 text-green-400 p-2 sm:p-3 rounded overflow-x-auto whitespace-pre-wrap break-all sm:break-normal">curl -X POST http://localhost:8001/checkout/make-payment/ \
+                                    <pre id="curl-command" class="text-xs sm:text-sm bg-gray-800 text-green-400 p-2 sm:p-3 md:p-4 rounded overflow-x-auto whitespace-pre-wrap break-all sm:break-normal max-h-48 sm:max-h-64 md:max-h-80">curl -X POST http://localhost:8001/checkout/make-payment/ \
   -H "Authorization: Bearer YOUR_API_KEY_HERE" \
   -H "Content-Type: application/json" \
   -d '{
@@ -333,11 +333,11 @@
                 const responseElement = document.getElementById('api-response');
                 responseElement.innerHTML = `<pre>${JSON.stringify(responseData, null, 2)}</pre>`;
                 
-                // Add color coding based on success/failure
+                // Add color coding based on success/failure with responsive classes
                 if (result.ok) {
-                    responseElement.className = 'bg-gray-800 text-green-400 p-4 rounded-md overflow-auto max-h-96';
+                    responseElement.className = 'bg-gray-800 text-green-400 p-2 sm:p-3 md:p-4 rounded min-h-[150px] sm:min-h-[200px] text-xs sm:text-sm overflow-x-auto max-h-64 sm:max-h-80 md:max-h-96';
                 } else {
-                    responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-md overflow-auto max-h-96';
+                    responseElement.className = 'bg-gray-800 text-red-400 p-2 sm:p-3 md:p-4 rounded min-h-[150px] sm:min-h-[200px] text-xs sm:text-sm overflow-x-auto max-h-64 sm:max-h-80 md:max-h-96';
                 }
                 
                 // Reset button
@@ -356,7 +356,7 @@
                 
                 const responseElement = document.getElementById('api-response');
                 responseElement.innerHTML = `<pre>${JSON.stringify(errorResponse, null, 2)}</pre>`;
-                responseElement.className = 'bg-gray-800 text-red-400 p-4 rounded-md overflow-auto max-h-96';
+                responseElement.className = 'bg-gray-800 text-red-400 p-2 sm:p-3 md:p-4 rounded min-h-[150px] sm:min-h-[200px] text-xs sm:text-sm overflow-x-auto max-h-64 sm:max-h-80 md:max-h-96';
                 
                 // Reset button
                 btn.disabled = false;
