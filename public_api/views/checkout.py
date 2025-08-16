@@ -106,6 +106,7 @@ def make_payment(request):
       -d '{
         "amount": 100.00,
         "currency": "USD",
+        "payment_method":"card",
         "customer_email": "customer@example.com",
         "customer_name": "John Doe",
         "customer_phone": "+1234567890",
@@ -248,6 +249,9 @@ def make_payment(request):
         process_url += f"&description={quote(str(payment_session['description']))}"
         process_url += f"&callback_url={quote(str(payment_session['callback_url']))}"
         process_url += f"&cancel_url={quote(str(payment_session['cancel_url']))}"
+
+
+        print(f"DEBUG: Process URL: {process_url}")
         
         # Log API usage
         app_key.record_usage()
@@ -549,6 +553,8 @@ def process_payment(request):
     created_at = request.GET.get('created_at', '')
     callback_url = request.GET.get('callback_url', '')
     cancel_url = request.GET.get('cancel_url', '')
+
+
     
     if not all([
         session_id, 
